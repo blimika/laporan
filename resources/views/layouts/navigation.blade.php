@@ -15,17 +15,20 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('pegawais.index')" :active="request()->routeIs('pegawais.*')">
-                        {{ __('Data Pegawai') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('anggarans.index')" :active="request()->routeIs('anggarans.*')">
-                        {{ __('Data Anggaran') }}
-                    </x-nav-link>
                     <x-nav-link :href="route('surat-tugas.index')" :active="request()->routeIs('surat-tugas.*') || request()->routeIs('spd.*')">
                         {{ __('Surat Tugas & SPD') }}
                     </x-nav-link>
                     <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')">
                         {{ __('Laporan AI') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('hanya-laporan.index')" :active="request()->routeIs('hanya-laporan.*')">
+                        {{ __('Hanya Laporan') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('pegawais.index')" :active="request()->routeIs('pegawais.*')">
+                        {{ __('Data Pegawai') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('anggarans.index')" :active="request()->routeIs('anggarans.*')">
+                        {{ __('Data Anggaran') }}
                     </x-nav-link>
                     
                     @if(in_array(auth()->user()->role, ['super', 'admin']))
@@ -118,17 +121,20 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('pegawais.index')" :active="request()->routeIs('pegawais.*')">
-                {{ __('Data Pegawai') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('anggarans.index')" :active="request()->routeIs('anggarans.*')">
-                {{ __('Data Anggaran') }}
-            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('surat-tugas.index')" :active="request()->routeIs('surat-tugas.*') || request()->routeIs('spd.*')">
                 {{ __('Surat Tugas & SPD') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')">
                 {{ __('Laporan AI') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('hanya-laporan.index')" :active="request()->routeIs('hanya-laporan.*')">
+                {{ __('Hanya Laporan') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('pegawais.index')" :active="request()->routeIs('pegawais.*')">
+                {{ __('Data Pegawai') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('anggarans.index')" :active="request()->routeIs('anggarans.*')">
+                {{ __('Data Anggaran') }}
             </x-responsive-nav-link>
 
             @if(in_array(auth()->user()->role, ['super', 'admin']))

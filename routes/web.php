@@ -41,6 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('laporan', \App\Http\Controllers\LaporanPerjalananController::class);
     Route::get('export/laporan/{laporan}', [\App\Http\Controllers\LaporanPerjalananController::class, 'exportPdf'])->name('export.laporan');
 
+    Route::post('hanya-laporan/generate', [\App\Http\Controllers\HanyaLaporanController::class, 'generate'])->name('hanya-laporan.generate');
+    Route::get('export/hanya-laporan/{hanyaLaporan}', [\App\Http\Controllers\HanyaLaporanController::class, 'exportPdf'])->name('export.hanya-laporan');
+    Route::resource('hanya-laporan', \App\Http\Controllers\HanyaLaporanController::class);
+
     // Admin Routes
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', \App\Http\Controllers\UserController::class);

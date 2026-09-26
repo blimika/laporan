@@ -80,7 +80,13 @@
             <tr>
                 <td>Waktu Pelaksanaan</td>
                 <td>:</td>
-                <td>{{ $tglBerangkatStr }} s.d. {{ $tglKembaliStr }}</td>
+                <td>
+                    @if($suratTugas->tgl_berangkat->equalTo($suratTugas->tgl_kembali))
+                        {{ $tglBerangkatStr }}
+                    @else
+                        {{ $tglBerangkatStr }} s.d. {{ $tglKembaliStr }}
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td>Pembebanan</td>

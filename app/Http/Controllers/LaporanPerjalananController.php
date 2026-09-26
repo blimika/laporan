@@ -44,6 +44,7 @@ class LaporanPerjalananController extends Controller
             'pegawai_ditemui' => 'required|string',
             'kategori' => 'required|string',
             'kendala_ditemui' => 'nullable|string',
+            'is_8_jam' => 'nullable|boolean',
         ]);
 
         // Call AI

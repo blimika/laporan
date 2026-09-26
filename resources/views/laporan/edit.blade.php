@@ -108,6 +108,13 @@
                             <div id="image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
                         </div>
                         
+                        <div class="mb-4 flex items-center">
+                            <input type="checkbox" id="is_8_jam" name="is_8_jam" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
+                            <label for="is_8_jam" class="ml-2 block text-sm text-gray-900">
+                                Perjadin 8 Jam (Format Tabel Waktu & Kegiatan 08.00 - 17.00)
+                            </label>
+                        </div>
+                        
                         <div class="mb-4">
                             <button type="button" id="btn-generate" onclick="generateAI()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>

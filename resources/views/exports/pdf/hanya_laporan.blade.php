@@ -46,14 +46,14 @@
                 <span style="display:inline-block; width: 15px;">1.</span> Surat Tugas Nomor
             </td>
             <td class="w-2">:</td>
-            <td>{{ $laporan->suratTugas->nomor_surat }}</td>
+            <td>{{ $laporan->nomor_st }}</td>
         </tr>
         <tr>
             <td>
                 <span style="display:inline-block; width: 15px;">2.</span> SPD Nomor
             </td>
             <td>:</td>
-            <td>{{ $laporan->suratTugas->spd->nomor_spd ?? '-' }}</td>
+            <td>{{ $laporan->nomor_spd ?? '-' }}</td>
         </tr>
     </table>
     <br>
@@ -104,7 +104,7 @@
                 Tujuan perjalanan adalah
             </td>
             <td class="w-2">:</td>
-            <td>{{ $laporan->suratTugas->tugas }}</td>
+            <td>{{ $laporan->tujuan_perjalanan }}</td>
         </tr>
     </table>
     <br>
@@ -124,8 +124,8 @@
         Mataram, {{ $tglLaporanStr }}<br>
         Yang melaksanakan tugas,
         <div style="margin-top: 48pt;">
-            <strong><u>{{ $laporan->suratTugas->pegawai->nama }}</u></strong><br>
-            NIP. {{ $laporan->suratTugas->pegawai->nip }}
+            <strong><u>{{ $laporan->nama_pegawai }}</u></strong><br>
+            NIP. {{ $laporan->nip_pegawai }}
         </div>
     </div>
 
@@ -160,3 +160,4 @@
     @endif
 </body>
 </html>
+

@@ -51,6 +51,36 @@ class SuratTugasController extends Controller
         return redirect()->route('surat-tugas.index')->with('success', 'Surat Tugas berhasil dibuat.');
     }
 
+    public function edit(\App\Models\SuratTugas $suratTuga)
+    {
+        $pegawais = \App\Models\Pegawai::all();
+        $anggarans = \App\Models\Anggaran::all();
+        $suratTugas = $suratTuga; // Alias the variable to match our standard naming
+        return view('surat_tugas.edit', compact('suratTugas', 'pegawais', 'anggarans'));
+    }
+
+    public function update(Request $request, \App\Models\SuratTugas $suratTuga)
+    {
+        $suratTugas = $suratTuga;
+        
+        $validated = $request->validate([
+            'nomor_surat' => 'required|unique:surat_tugas,nomor_surat,' . $suratTugas->id,
+            'pegawai_id' => 'required|exists:pegawais,id',
+            'kepala_pegawai_id' => 'required|exists:pegawais,id',
+            'pembebanan_anggaran_id' => 'required|exists:anggarans,id',
+            'uraian_pembebanan' => 'required|string',
+            'tujuan' => 'required|string',
+            'tugas' => 'required|string',
+            'tgl_surat' => 'required|date',
+            'tgl_berangkat' => 'required|date',
+            'tgl_kembali' => 'required|date|after_or_equal:tgl_berangkat',
+        ]);
+
+        $suratTugas->update($validated);
+
+        return redirect()->route('surat-tugas.index')->with('success', 'Surat Tugas berhasil diperbarui.');
+    }
+
     public function exportPdf(\App\Models\SuratTugas $suratTugas, \App\Services\DocumentExportService $exportService)
     {
         return $exportService->exportSuratTugas($suratTugas);

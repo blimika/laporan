@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Input Laporan Perjalanan (Generate AI)') }}
+            {{ __('Edit Hanya Laporan (Generate AI)') }}
         </h2>
     </x-slot>
 
@@ -9,68 +9,72 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <p class="mb-4 text-gray-600">Lengkapi parameter di bawah ini untuk menggenerate draft Laporan menggunakan AI (Gemini).</p>
-                    
-                    @php
-                        $stJson = $suratTugas->mapWithKeys(function ($item) {
-                            return [$item->id => [
-                                'tgl_kembali' => $item->tgl_kembali->format('Y-m-d'),
-                                'tgl_berangkat' => $item->tgl_berangkat->format('Y-m-d'),
-                                'tujuan' => $item->tujuan,
-                                'tugas' => $item->tugas,
-                            ]];
-                        })->toJson();
-                    @endphp
+                    <p class="mb-4 text-gray-600">Fitur ini memungkinkan Anda membuat laporan lepas tanpa mengikat ke database Surat Tugas & SPD. Lengkapi parameter di bawah ini untuk menggenerate laporan menggunakan AI.</p>
 
-                    <form id="laporan-form" method="POST" action="{{ route('laporan.store') }}" enctype="multipart/form-data">
+                    <form id="laporan-form" method="POST" action="{{ route('hanya-laporan.update', $hanyaLaporan->id) }}" enctype="multipart/form-data">
                         @csrf
+                        @method('PUT')
 
-                        <!-- Surat Tugas -->
-                        <div class="mb-4">
-                            <x-input-label for="surat_tugas_id" :value="__('Pilih Surat Tugas (Belum ada Laporan)')" />
-                            <select id="surat_tugas_id" name="surat_tugas_id" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" required onchange="fillSuratTugas(this)">
-                                <option value="">-- Surat Tugas --</option>
-                                @foreach($suratTugas as $st)
-                                    <option value="{{ $st->id }}">{{ $st->nomor_surat }} - {{ $st->pegawai->nama }}</option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('surat_tugas_id')" class="mt-2" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <x-input-label for="nama_pegawai" :value="__('Nama Pegawai')" />
+                                <x-text-input id="nama_pegawai" class="block mt-1 w-full" type="text" name="nama_pegawai" :value="old('nama_pegawai', $hanyaLaporan->nama_pegawai)" required />
+                                <x-input-error :messages="$errors->get('nama_pegawai')" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-input-label for="nip_pegawai" :value="__('NIP Pegawai')" />
+                                <x-text-input id="nip_pegawai" class="block mt-1 w-full" type="text" name="nip_pegawai" :value="old('nip_pegawai', $hanyaLaporan->nip_pegawai)" required />
+                                <x-input-error :messages="$errors->get('nip_pegawai')" class="mt-2" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <x-input-label for="nomor_st" :value="__('Nomor Surat Tugas')" />
+                                <x-text-input id="nomor_st" class="block mt-1 w-full" type="text" name="nomor_st" :value="old('nomor_st', $hanyaLaporan->nomor_st)" required />
+                                <x-input-error :messages="$errors->get('nomor_st')" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-input-label for="nomor_spd" :value="__('Nomor SPD (Opsional)')" />
+                                <x-text-input id="nomor_spd" class="block mt-1 w-full" type="text" name="nomor_spd" :value="old('nomor_spd', $hanyaLaporan->nomor_spd)" />
+                                <x-input-error :messages="$errors->get('nomor_spd')" class="mt-2" />
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="tgl_laporan" :value="__('Tanggal Laporan Dibuat')" />
-                                <x-text-input id="tgl_laporan" class="block mt-1 w-full" type="date" name="tgl_laporan" :value="old('tgl_laporan', date('Y-m-d'))" required />
+                                <x-text-input id="tgl_laporan" class="block mt-1 w-full" type="date" name="tgl_laporan" :value="old('tgl_laporan', $hanyaLaporan->tgl_laporan->format('Y-m-d'))" required />
                             </div>
                             <div>
                                 <x-input-label for="tgl_perjalanan" :value="__('Tanggal Perjalanan (Pelaksanaan)')" />
-                                <x-text-input id="tgl_perjalanan" class="block mt-1 w-full" type="date" name="tgl_perjalanan" :value="old('tgl_perjalanan')" required />
+                                <x-text-input id="tgl_perjalanan" class="block mt-1 w-full" type="date" name="tgl_perjalanan" :value="old('tgl_perjalanan', $hanyaLaporan->tgl_perjalanan->format('Y-m-d'))" required />
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="lokasi_perjalanan" :value="__('Lokasi (Instansi / Desa / Tempat)')" />
-                                <x-text-input id="lokasi_perjalanan" class="block mt-1 w-full" type="text" name="lokasi_perjalanan" :value="old('lokasi_perjalanan')" required />
+                                <x-text-input id="lokasi_perjalanan" class="block mt-1 w-full" type="text" name="lokasi_perjalanan" :value="old('lokasi_perjalanan', $hanyaLaporan->lokasi_perjalanan)" required />
                             </div>
                             <div>
                                 <x-input-label for="tujuan_perjalanan" :value="__('Tujuan Perjalanan (Singkat)')" />
-                                <x-text-input id="tujuan_perjalanan" class="block mt-1 w-full" type="text" name="tujuan_perjalanan" :value="old('tujuan_perjalanan')" required />
+                                <x-text-input id="tujuan_perjalanan" class="block mt-1 w-full" type="text" name="tujuan_perjalanan" :value="old('tujuan_perjalanan', $hanyaLaporan->tujuan_perjalanan)" required />
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="pegawai_ditemui" :value="__('Pihak / Pegawai yang Ditemui')" />
-                                <x-text-input id="pegawai_ditemui" class="block mt-1 w-full" type="text" name="pegawai_ditemui" :value="old('pegawai_ditemui')" required />
+                                <x-text-input id="pegawai_ditemui" class="block mt-1 w-full" type="text" name="pegawai_ditemui" :value="old('pegawai_ditemui', $hanyaLaporan->pegawai_ditemui)" required />
                             </div>
                             <div>
                                 <x-input-label for="kategori" :value="__('Kategori Perjalanan')" />
                                 <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" required>
-                                    <option value="Translok Koordinasi">Translok Koordinasi</option>
-                                    <option value="Pengawasan / Supervisi Lapangan">Pengawasan / Supervisi Lapangan</option>
-                                    <option value="Verifikasi Data">Verifikasi Data</option>
-                                    <option value="Pendataan Lapangan">Pendataan Lapangan</option>
+                                    <option value="Translok Koordinasi" {{ old('kategori', $hanyaLaporan->kategori) == 'Translok Koordinasi' ? 'selected' : '' }}>Translok Koordinasi</option>
+                                    <option value="Pengawasan / Supervisi Lapangan" {{ old('kategori', $hanyaLaporan->kategori) == 'Pengawasan / Supervisi Lapangan' ? 'selected' : '' }}>Pengawasan / Supervisi Lapangan</option>
+                                    <option value="Verifikasi Data" {{ old('kategori', $hanyaLaporan->kategori) == 'Verifikasi Data' ? 'selected' : '' }}>Verifikasi Data</option>
+                                    <option value="Pendataan Lapangan" {{ old('kategori', $hanyaLaporan->kategori) == 'Pendataan Lapangan' ? 'selected' : '' }}>Pendataan Lapangan</option>
                                 </select>
                             </div>
                         </div>
@@ -78,20 +82,35 @@
                         <!-- Kendala -->
                         <div class="mb-4">
                             <x-input-label for="kendala_ditemui" :value="__('Kendala / Masalah yang Ditemukan (Opsional)')" />
-                            <textarea id="kendala_ditemui" name="kendala_ditemui" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" rows="2" placeholder="Contoh: Responden tidak ada di tempat, cuaca buruk, atau biarkan kosong jika lancar.">{{ old('kendala_ditemui') }}</textarea>
+                            <textarea id="kendala_ditemui" name="kendala_ditemui" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" rows="2" placeholder="Contoh: Responden tidak ada di tempat, cuaca buruk, atau biarkan kosong jika lancar.">{{ old('kendala_ditemui', $hanyaLaporan->kendala_ditemui) }}</textarea>
                             <x-input-error :messages="$errors->get('kendala_ditemui')" class="mt-2" />
                         </div>
 
                         <!-- Upload Dokumentasi -->
                         <div class="mb-4 p-4 border border-gray-200 rounded bg-gray-50">
-                            <x-input-label for="fotos" :value="__('Upload Foto Dokumentasi (Bisa lebih dari 1 foto)')" />
+                            <x-input-label for="fotos" :value="__('Upload Tambahan Foto Dokumentasi')" />
                             <input id="fotos" name="fotos[]" type="file" multiple accept="image/*" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" onchange="previewImages(event)" />
-                            <p class="mt-1 text-xs text-gray-500">Format: JPG/PNG. Anda dapat memblok beberapa foto sekaligus saat memilih.</p>
+                            <p class="mt-1 text-xs text-gray-500">Abaikan jika tidak ingin menambah foto. Anda dapat memblok beberapa foto sekaligus saat memilih.</p>
                             
-                            <!-- Container Preview -->
                             <div id="image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
+
+                            @if($hanyaLaporan->dokumentasi && $hanyaLaporan->dokumentasi->count() > 0)
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <p class="text-sm font-semibold mb-2">Foto Dokumentasi Tersimpan (Centang untuk Hapus):</p>
+                                <div class="flex flex-wrap gap-4">
+                                    @foreach($hanyaLaporan->dokumentasi as $dok)
+                                        <div class="relative w-32 h-32 border rounded overflow-hidden">
+                                            <img src="{{ asset($dok->file_path) }}" class="object-cover w-full h-full">
+                                            <div class="absolute top-0 right-0 bg-white bg-opacity-75 p-1 rounded-bl">
+                                                <input type="checkbox" name="delete_fotos[]" value="{{ $dok->id }}" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
                         </div>
-                        
+
                         <div class="mb-4 flex items-center">
                             <input type="checkbox" id="is_8_jam" name="is_8_jam" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
                             <label for="is_8_jam" class="ml-2 block text-sm text-gray-900">
@@ -108,14 +127,14 @@
                         </div>
 
                         <!-- Hasil AI -->
-                        <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-md" id="hasil-container" style="{{ old('hasil_perjalanan') ? '' : 'display:none;' }}">
+                        <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-md" id="hasil-container" style="{{ old('hasil_perjalanan', $hanyaLaporan->hasil_perjalanan) ? '' : 'display:none;' }}">
                             <x-input-label for="hasil_perjalanan" :value="__('Narasi Laporan (Silakan Review & Edit)')" />
-                            <textarea id="hasil_perjalanan" name="hasil_perjalanan" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" rows="10">{{ old('hasil_perjalanan') }}</textarea>
+                            <textarea id="hasil_perjalanan" name="hasil_perjalanan" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" rows="10">{{ old('hasil_perjalanan', $hanyaLaporan->hasil_perjalanan) }}</textarea>
                             <x-input-error :messages="$errors->get('hasil_perjalanan')" class="mt-2" />
                         </div>
 
                         <div class="flex items-center justify-end mt-6">
-                            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md mr-4" href="{{ route('laporan.index') }}">
+                            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md mr-4" href="{{ route('hanya-laporan.index') }}">
                                 Batal
                             </a>
                             <x-primary-button class="bg-green-600 hover:bg-green-700">
@@ -129,18 +148,6 @@
     </div>
 
     <script>
-        const stData = {!! $stJson !!};
-        function fillSuratTugas(select) {
-            const id = select.value;
-            if (id && stData[id]) {
-                const data = stData[id];
-                document.getElementById('tgl_laporan').value = data.tgl_kembali;
-                document.getElementById('tgl_perjalanan').value = data.tgl_berangkat;
-                document.getElementById('lokasi_perjalanan').value = data.tujuan;
-                document.getElementById('tujuan_perjalanan').value = data.tugas;
-            }
-        }
-
         async function generateAI() {
             const btn = document.getElementById('btn-generate');
             const indicator = document.getElementById('loading-indicator');
@@ -160,7 +167,7 @@
 
             try {
                 const formData = new FormData(form);
-                const response = await fetch("{{ route('laporan.generate') }}", {
+                const response = await fetch("{{ route('hanya-laporan.generate') }}", {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': formData.get('_token'),
@@ -185,7 +192,7 @@
 
         function previewImages(event) {
             const container = document.getElementById('image-preview-container');
-            container.innerHTML = ''; // Reset container
+            container.innerHTML = '';
 
             const files = event.target.files;
             if (files) {
@@ -211,3 +218,4 @@
         }
     </script>
 </x-app-layout>
+

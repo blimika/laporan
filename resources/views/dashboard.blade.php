@@ -11,7 +11,6 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
                 <div class="p-6 text-gray-900 border-b border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900">Selamat datang, {{ Auth::user()->name }}!</h3>
-                    <p class="mt-1 text-sm text-gray-600">Pilih modul di bawah ini untuk mengelola Sistem Laporan Perjalanan Dinas (Translok).</p>
                 </div>
             </div>
 

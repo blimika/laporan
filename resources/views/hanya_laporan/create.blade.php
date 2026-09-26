@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Input Laporan Perjalanan (Generate AI)') }}
+            {{ __('Buat Hanya Laporan (Generate AI)') }}
         </h2>
     </x-slot>
 
@@ -9,32 +9,35 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <p class="mb-4 text-gray-600">Lengkapi parameter di bawah ini untuk menggenerate draft Laporan menggunakan AI (Gemini).</p>
-                    
-                    @php
-                        $stJson = $suratTugas->mapWithKeys(function ($item) {
-                            return [$item->id => [
-                                'tgl_kembali' => $item->tgl_kembali->format('Y-m-d'),
-                                'tgl_berangkat' => $item->tgl_berangkat->format('Y-m-d'),
-                                'tujuan' => $item->tujuan,
-                                'tugas' => $item->tugas,
-                            ]];
-                        })->toJson();
-                    @endphp
+                    <p class="mb-4 text-gray-600">Fitur ini memungkinkan Anda membuat laporan lepas tanpa mengikat ke database Surat Tugas & SPD. Lengkapi parameter di bawah ini untuk menggenerate laporan menggunakan AI.</p>
 
-                    <form id="laporan-form" method="POST" action="{{ route('laporan.store') }}" enctype="multipart/form-data">
+                    <form id="laporan-form" method="POST" action="{{ route('hanya-laporan.store') }}" enctype="multipart/form-data">
                         @csrf
 
-                        <!-- Surat Tugas -->
-                        <div class="mb-4">
-                            <x-input-label for="surat_tugas_id" :value="__('Pilih Surat Tugas (Belum ada Laporan)')" />
-                            <select id="surat_tugas_id" name="surat_tugas_id" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" required onchange="fillSuratTugas(this)">
-                                <option value="">-- Surat Tugas --</option>
-                                @foreach($suratTugas as $st)
-                                    <option value="{{ $st->id }}">{{ $st->nomor_surat }} - {{ $st->pegawai->nama }}</option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('surat_tugas_id')" class="mt-2" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <x-input-label for="nama_pegawai" :value="__('Nama Pegawai')" />
+                                <x-text-input id="nama_pegawai" class="block mt-1 w-full" type="text" name="nama_pegawai" :value="old('nama_pegawai')" required />
+                                <x-input-error :messages="$errors->get('nama_pegawai')" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-input-label for="nip_pegawai" :value="__('NIP Pegawai')" />
+                                <x-text-input id="nip_pegawai" class="block mt-1 w-full" type="text" name="nip_pegawai" :value="old('nip_pegawai')" required />
+                                <x-input-error :messages="$errors->get('nip_pegawai')" class="mt-2" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <x-input-label for="nomor_st" :value="__('Nomor Surat Tugas')" />
+                                <x-text-input id="nomor_st" class="block mt-1 w-full" type="text" name="nomor_st" :value="old('nomor_st')" required />
+                                <x-input-error :messages="$errors->get('nomor_st')" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-input-label for="nomor_spd" :value="__('Nomor SPD (Opsional)')" />
+                                <x-text-input id="nomor_spd" class="block mt-1 w-full" type="text" name="nomor_spd" :value="old('nomor_spd')" />
+                                <x-input-error :messages="$errors->get('nomor_spd')" class="mt-2" />
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -91,7 +94,7 @@
                             <!-- Container Preview -->
                             <div id="image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
                         </div>
-                        
+
                         <div class="mb-4 flex items-center">
                             <input type="checkbox" id="is_8_jam" name="is_8_jam" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
                             <label for="is_8_jam" class="ml-2 block text-sm text-gray-900">
@@ -115,7 +118,7 @@
                         </div>
 
                         <div class="flex items-center justify-end mt-6">
-                            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md mr-4" href="{{ route('laporan.index') }}">
+                            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md mr-4" href="{{ route('hanya-laporan.index') }}">
                                 Batal
                             </a>
                             <x-primary-button class="bg-green-600 hover:bg-green-700">
@@ -129,18 +132,6 @@
     </div>
 
     <script>
-        const stData = {!! $stJson !!};
-        function fillSuratTugas(select) {
-            const id = select.value;
-            if (id && stData[id]) {
-                const data = stData[id];
-                document.getElementById('tgl_laporan').value = data.tgl_kembali;
-                document.getElementById('tgl_perjalanan').value = data.tgl_berangkat;
-                document.getElementById('lokasi_perjalanan').value = data.tujuan;
-                document.getElementById('tujuan_perjalanan').value = data.tugas;
-            }
-        }
-
         async function generateAI() {
             const btn = document.getElementById('btn-generate');
             const indicator = document.getElementById('loading-indicator');
@@ -160,7 +151,7 @@
 
             try {
                 const formData = new FormData(form);
-                const response = await fetch("{{ route('laporan.generate') }}", {
+                const response = await fetch("{{ route('hanya-laporan.generate') }}", {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': formData.get('_token'),
@@ -185,7 +176,7 @@
 
         function previewImages(event) {
             const container = document.getElementById('image-preview-container');
-            container.innerHTML = ''; // Reset container
+            container.innerHTML = '';
 
             const files = event.target.files;
             if (files) {
