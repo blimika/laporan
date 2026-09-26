@@ -30,6 +30,7 @@ class LoginRequest extends FormRequest
         return [
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
+            'tahun_id' => ['required', 'exists:tahuns,id'],
         ];
     }
 

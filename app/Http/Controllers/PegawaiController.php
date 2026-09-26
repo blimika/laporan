@@ -3,9 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class PegawaiController extends Controller
+class PegawaiController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                if (auth()->check() && auth()->user()->role === 'user') {
+                    abort(403, 'Anda hanya dapat melihat data.');
+                }
+                return $next($request);
+            }, except: ['index', 'downloadTemplate']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -19,7 +33,8 @@ class PegawaiController extends Controller
                   ->orWhere('nip', 'like', "%{$search}%");
         }
 
-        $pegawais = $query->latest()->paginate(10)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $pegawais = $query->latest()->paginate($perPage)->withQueryString();
         return view('pegawai.index', compact('pegawais'));
     }
 
@@ -31,7 +46,13 @@ class PegawaiController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nip' => 'required|string|unique:pegawais,nip',
+            'nip' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rule::unique('pegawais')->where(function ($query) {
+                    return $query->where('satker_id', session('satker_id'));
+                })
+            ],
             'nama' => 'required|string|max:255',
             'golongan' => 'nullable|string',
             'pangkat' => 'nullable|string',
@@ -54,7 +75,13 @@ class PegawaiController extends Controller
         $pegawai = \App\Models\Pegawai::findOrFail($id);
         
         $validated = $request->validate([
-            'nip' => 'required|string|unique:pegawais,nip,' . $id,
+            'nip' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rule::unique('pegawais')->where(function ($query) {
+                    return $query->where('satker_id', session('satker_id'));
+                })->ignore($id)
+            ],
             'nama' => 'required|string|max:255',
             'golongan' => 'nullable|string',
             'pangkat' => 'nullable|string',

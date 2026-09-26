@@ -29,7 +29,7 @@
                         <!-- PPK Pegawai -->
                         <div class="mb-4">
                             <x-input-label for="ppk_pegawai_id" :value="__('Pejabat Pembuat Komitmen (PPK)')" />
-                            <select id="ppk_pegawai_id" name="ppk_pegawai_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                            <select id="ppk_pegawai_id" name="ppk_pegawai_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
                                 <option value="">-- Pilih PPK --</option>
                                 @foreach($pegawais as $pegawai)
                                     <option value="{{ $pegawai->id }}">{{ $pegawai->nama }} ({{ $pegawai->nip }})</option>
@@ -41,7 +41,7 @@
                         <!-- Kendaraan -->
                         <div class="mb-4">
                             <x-input-label for="kendaraan" :value="__('Alat Angkutan yang Digunakan')" />
-                            <select id="kendaraan" name="kendaraan" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                            <select id="kendaraan" name="kendaraan" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
                                 <option value="Kendaraan Dinas">Kendaraan Dinas</option>
                                 <option value="Kendaraan Umum">Kendaraan Umum</option>
                                 <option value="Kendaraan Pribadi">Kendaraan Pribadi</option>

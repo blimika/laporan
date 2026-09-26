@@ -40,6 +40,15 @@ Route::middleware('auth')->group(function () {
     Route::post('laporan/generate', [\App\Http\Controllers\LaporanPerjalananController::class, 'generate'])->name('laporan.generate');
     Route::resource('laporan', \App\Http\Controllers\LaporanPerjalananController::class);
     Route::get('export/laporan/{laporan}', [\App\Http\Controllers\LaporanPerjalananController::class, 'exportPdf'])->name('export.laporan');
+
+    // Admin Routes
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::resource('users', \App\Http\Controllers\UserController::class);
+        Route::resource('satkers', \App\Http\Controllers\SatkerController::class);
+        Route::resource('tahuns', \App\Http\Controllers\TahunController::class);
+        Route::get('/ai-provider', [\App\Http\Controllers\AiProviderController::class, 'edit'])->name('ai_provider.edit');
+        Route::put('/ai-provider', [\App\Http\Controllers\AiProviderController::class, 'update'])->name('ai_provider.update');
+    });
 });
 
 require __DIR__.'/auth.php';

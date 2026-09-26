@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Anggaran extends Model
 {
     /** @use HasFactory<AnggaranFactory> */
-    use HasFactory;
+    use HasFactory, Traits\HasContext;
 
     protected $guarded = [];
 

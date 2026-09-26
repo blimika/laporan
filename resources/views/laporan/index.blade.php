@@ -18,16 +18,29 @@
 
                     <!-- Search Form -->
                     <div class="mb-4 bg-gray-50 p-4 rounded-lg border">
-                        <form action="{{ route('laporan.index') }}" method="GET" class="flex items-center space-x-2">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. Surat atau Kategori..." class="w-full sm:w-1/3 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
-                            <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded text-sm">
-                                Cari
-                            </button>
-                            @if(request('search'))
-                                <a href="{{ route('laporan.index') }}" class="text-gray-500 hover:text-gray-700 text-sm py-2 px-3 border border-gray-300 rounded hover:bg-gray-100">
-                                    Reset
-                                </a>
-                            @endif
+                        <form action="{{ route('laporan.index') }}" method="GET" class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center space-x-2 w-full sm:w-auto">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. Surat atau Kategori..." class="w-full sm:w-64 border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm text-sm">
+                                <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded text-sm">
+                                    Cari
+                                </button>
+                                @if(request('search'))
+                                    <a href="{{ route('laporan.index') }}" class="text-gray-500 hover:text-gray-700 text-sm py-2 px-3 border border-gray-300 rounded hover:bg-gray-100">
+                                        Reset
+                                    </a>
+                                @endif
+                            </div>
+
+                            <div class="flex items-center space-x-2 w-full sm:w-auto">
+                                <label for="per_page" class="text-sm text-gray-700">Tampilkan:</label>
+                                <select name="per_page" id="per_page" onchange="this.form.submit()" class="border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm text-sm py-2">
+                                    <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5</option>
+                                    <option value="10" {{ request('per_page', '10') == '10' ? 'selected' : '' }}>10</option>
+                                    <option value="20" {{ request('per_page') == '20' ? 'selected' : '' }}>20</option>
+                                    <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+                                    <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
+                                </select>
+                            </div>
                         </form>
                     </div>
 

@@ -24,6 +24,18 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
+        <!-- Tahun -->
+        <div class="mt-4">
+            <x-input-label for="tahun_id" :value="__('Tahun')" />
+            <select id="tahun_id" name="tahun_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
+                <option value="">-- Pilih Tahun --</option>
+                @foreach($tahuns as $tahun)
+                    <option value="{{ $tahun->id }}">{{ $tahun->tahun }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('tahun_id')" class="mt-2" />
+        </div>
+
         <!-- Remember Me -->
         <div class="block mt-4">
             <label for="remember_me" class="inline-flex items-center">

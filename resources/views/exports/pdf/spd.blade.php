@@ -47,7 +47,13 @@
 
     <div class="logo-container">
         <img src="{{ public_path('logobps.jpg') }}" alt="Logo BPS" style="width: 80px; height: auto; margin-bottom: 0px;">
-        <div class="instansi-header" style="margin-top: 3px;">BADAN PUSAT STATISTIK<br>KOTA MATARAM</div>
+        @php
+            $satkerName = strtoupper($spd->suratTugas->satker->nama ?? 'Instansi');
+            $satkerName = str_replace('BPS ', 'BADAN PUSAT STATISTIK ', $satkerName);
+            $instansi = 'BADAN PUSAT STATISTIK';
+            $daerah = str_replace('BADAN PUSAT STATISTIK ', '', $satkerName);
+        @endphp
+        <div class="instansi-header" style="margin-top: 3px;">{{ $instansi }}<br>{{ $daerah }}</div>
     </div>
 
     <table class="info-header">
@@ -161,7 +167,7 @@
                 <table style="width:100%; border:none; margin:0; padding:0; border-collapse:collapse;">
                     <tr>
                         <td style="border:none; padding:1px; width:20px;">a.</td>
-                        <td style="border:none; padding:1px;" colspan="2">BADAN PUSAT STATISTIK KOTA MATARAM</td>
+                        <td style="border:none; padding:1px;" colspan="2">{{ $satkerName }}</td>
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;">b.</td>
@@ -222,7 +228,7 @@
         <tr>
             <td colspan="3" style="padding-top: 10px;">
                 Pejabat Pembuat Komitmen<br>
-                BPS Kota Mataram<br><br><br><br><br>
+                {{ $spd->suratTugas->satker->nama ?? 'Instansi' }}<br><br><br><br><br>
                 <strong><u>{{ $spd->ppkPegawai->nama ?? '.......................................' }}</u></strong><br>
                 NIP. {{ $spd->ppkPegawai->nip ?? '.......................................' }}
             </td>
@@ -256,8 +262,8 @@
             </tr>
         </table>
         <div style="margin-top: 15px; margin-left: 15px;">
-            Kepala Badan Pusat Statistik<br>
-            Kota Mataram<br><br><br><br><br>
+            Kepala {{ $instansi }}<br>
+            {{ ucwords(strtolower($daerah)) }}<br><br><br><br><br>
             <strong><u>{{ $spd->suratTugas->kepalaPegawai->nama ?? '.......................................' }}</u></strong><br>
             NIP. {{ $spd->suratTugas->kepalaPegawai->nip ?? '.......................................' }}
         </div>

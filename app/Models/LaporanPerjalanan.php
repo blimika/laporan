@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class LaporanPerjalanan extends Model
 {
     /** @use HasFactory<LaporanPerjalananFactory> */
-    use HasFactory;
+    use HasFactory, Traits\HasContext;
 
     protected $guarded = [];
 

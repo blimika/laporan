@@ -32,7 +32,7 @@
                             <!-- Pegawai Pelaksana -->
                             <div>
                                 <x-input-label for="pegawai_id" :value="__('Pegawai Pelaksana (Yang Ditugaskan)')" />
-                                <select id="pegawai_id" name="pegawai_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                                <select id="pegawai_id" name="pegawai_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
                                     <option value="">-- Pilih Pegawai --</option>
                                     @foreach($pegawais as $pegawai)
                                         <option value="{{ $pegawai->id }}">{{ $pegawai->nama }} ({{ $pegawai->nip }})</option>
@@ -44,7 +44,7 @@
                             <!-- Kepala Pegawai -->
                             <div>
                                 <x-input-label for="kepala_pegawai_id" :value="__('Penandatangan ST (Kepala Satker)')" />
-                                <select id="kepala_pegawai_id" name="kepala_pegawai_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                                <select id="kepala_pegawai_id" name="kepala_pegawai_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
                                     <option value="">-- Pilih Kepala Satker --</option>
                                     @foreach($pegawais as $pegawai)
                                         <option value="{{ $pegawai->id }}">{{ $pegawai->nama }} ({{ $pegawai->nip }})</option>
@@ -57,7 +57,7 @@
                         <div class="mt-4">
                             <!-- Tugas -->
                             <x-input-label for="tugas" :value="__('Maksud / Tujuan Tugas')" />
-                            <textarea id="tugas" name="tugas" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3" required>{{ old('tugas') }}</textarea>
+                            <textarea id="tugas" name="tugas" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" rows="3" required>{{ old('tugas') }}</textarea>
                             <x-input-error :messages="$errors->get('tugas')" class="mt-2" />
                         </div>
 
@@ -87,7 +87,7 @@
                         <div class="mt-4">
                             <!-- Pembebanan Anggaran -->
                             <x-input-label for="pembebanan_anggaran_id" :value="__('Pembebanan Anggaran (MAK)')" />
-                            <select id="pembebanan_anggaran_id" name="pembebanan_anggaran_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                            <select id="pembebanan_anggaran_id" name="pembebanan_anggaran_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
                                 <option value="">-- Pilih Anggaran --</option>
                                 @foreach($anggarans as $anggaran)
                                     <option value="{{ $anggaran->id }}">{{ $anggaran->mak }} - {{ $anggaran->kegiatan_uraian }}</option>

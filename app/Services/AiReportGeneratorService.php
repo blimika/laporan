@@ -7,19 +7,67 @@ use Illuminate\Support\Facades\Log;
 
 class AiReportGeneratorService
 {
-    /**
-     * Generate narasi laporan perjalanan dinas using Gemini API
-     */
     public function generate(array $data): ?string
     {
         $prompt = $this->buildPrompt($data);
 
-        $apiKey = config('services.gemini.key');
+        // Ambil provider & key dari tabel satkers
+        $satkerId = session('satker_id');
+        $satker = \App\Models\Satker::find($satkerId);
 
+        if (!$satker) {
+            return 'Error: Satuan Kerja tidak ditemukan di sesi Anda.';
+        }
+
+        $provider = $satker->ai_provider ?? 'gemini';
+
+        if ($provider === 'deepseek') {
+            return $this->generateWithDeepseek($prompt, $satker->deepseek_api_key);
+        }
+
+        return $this->generateWithGemini($prompt, $satker->gemini_api_key);
+    }
+
+    private function generateWithDeepseek(string $prompt, ?string $apiKey): string
+    {
+        if (empty($apiKey)) {
+            Log::error('Deepseek API Key is not set.');
+            return 'Error: API Key Deepseek untuk Satker Anda belum dikonfigurasi oleh Admin.';
+        }
+
+        $url = 'https://api.deepseek.com/chat/completions';
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($url, [
+                'model' => 'deepseek-chat',
+                'messages' => [
+                    ['role' => 'system', 'content' => 'Anda adalah asisten AI.'],
+                    ['role' => 'user', 'content' => $prompt]
+                ],
+                'max_tokens' => 1024,
+            ]);
+
+            if ($response->successful()) {
+                $result = $response->json();
+                return $result['choices'][0]['message']['content'] ?? null;
+            }
+
+            Log::error('Deepseek API Error: '.$response->body());
+            return 'Error: Gagal menghasilkan narasi dari AI Deepseek.';
+        } catch (\Exception $e) {
+            Log::error('Deepseek API Exception: '.$e->getMessage());
+            return 'Error: Terjadi kesalahan saat menghubungi API Deepseek.';
+        }
+    }
+
+    private function generateWithGemini(string $prompt, ?string $apiKey): string
+    {
         if (empty($apiKey)) {
             Log::error('Gemini API Key is not set.');
-
-            return 'Error: API Key Gemini belum dikonfigurasi.';
+            return 'Error: API Key Gemini untuk Satker Anda belum dikonfigurasi oleh Admin.';
         }
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='.$apiKey;
@@ -35,7 +83,6 @@ class AiReportGeneratorService
                 ],
             ]);
 
-            // Jika gagal (seperti error 503 high demand), fallback ke model cadangan
             if ($response->failed()) {
                 Log::warning('Gemini 2.5 Flash gagal, mencoba fallback. Error: '.$response->body());
                 $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='.$apiKey;
@@ -56,16 +103,13 @@ class AiReportGeneratorService
 
             if ($response->successful()) {
                 $result = $response->json();
-
                 return $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
             }
 
             Log::error('Gemini API Error: '.$response->body());
-
             return 'Error: Gagal menghasilkan narasi dari AI.';
         } catch (\Exception $e) {
             Log::error('Gemini API Exception: '.$e->getMessage());
-
             return 'Error: Terjadi kesalahan saat menghubungi API.';
         }
     }

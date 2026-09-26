@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pegawai extends Model
 {
     /** @use HasFactory<PegawaiFactory> */
-    use HasFactory;
+    use HasFactory, Traits\HasContext;
 
     protected $guarded = [];
 

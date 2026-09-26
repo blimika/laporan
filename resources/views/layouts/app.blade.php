@@ -15,6 +15,24 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <!-- @vite(['resources/css/app.css', 'resources/js/app.js']) -->
+        <style>
+            /* Select2 Override for Input Borders */
+            .select2-container--default .select2-selection--single,
+            .select2-container--default .select2-selection--multiple {
+                border-color: #9ca3af !important; /* Tailwind gray-400 */
+                min-height: 42px;
+                display: flex;
+                align-items: center;
+            }
+            .select2-container--default.select2-container--focus .select2-selection--single,
+            .select2-container--default.select2-container--focus .select2-selection--multiple {
+                border-color: #000 !important; /* Tailwind black */
+                box-shadow: 0 0 0 1px #000 !important;
+            }
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 40px !important;
+            }
+        </style>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">

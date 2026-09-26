@@ -16,7 +16,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        $satkers = \App\Models\Satker::all();
+        $tahuns = \App\Models\Tahun::where('aktif', true)->get();
+        
+        return view('auth.login', compact('satkers', 'tahuns'));
     }
 
     /**
@@ -27,6 +30,17 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        
+        $user = auth()->user();
+        if ($user->role === 'super') {
+            // Superadmin views all or we let them have no satker_id initially
+            // For now, set it to null so they see everything, or they can switch later
+            $request->session()->put('satker_id', null);
+        } else {
+            // Admin and User use their bound satker
+            $request->session()->put('satker_id', $user->satker_id);
+        }
+        $request->session()->put('tahun_id', $request->tahun_id);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

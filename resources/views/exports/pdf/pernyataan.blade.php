@@ -37,7 +37,7 @@
         <tr><td>NIP</td><td>:</td><td>{{ $spd->suratTugas->pegawai->nip }}</td></tr>
         <tr><td>Pangkat/Golongan</td><td>:</td><td>{{ $spd->suratTugas->pegawai->golongan }} - {{ $spd->suratTugas->pegawai->pangkat }}</td></tr>
         <tr><td>Jabatan</td><td>:</td><td>{{ $spd->suratTugas->pegawai->jabatan }}</td></tr>
-        <tr><td>Unit Kerja</td><td>:</td><td>BPS Kota Mataram</td></tr>
+        <tr><td>Unit Kerja</td><td>:</td><td>{{ $spd->suratTugas->satker->nama ?? 'Instansi' }}</td></tr>
     </table>
     
     <p style="text-align: justify; margin-bottom: 20px;">

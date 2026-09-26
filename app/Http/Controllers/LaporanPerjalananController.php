@@ -21,7 +21,8 @@ class LaporanPerjalananController extends Controller
                   })->orWhere('kategori', 'like', "%{$search}%");
         }
 
-        $laporans = $query->latest()->paginate(10)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $laporans = $query->latest()->paginate($perPage)->withQueryString();
         return view('laporan.index', compact('laporans'));
     }
 

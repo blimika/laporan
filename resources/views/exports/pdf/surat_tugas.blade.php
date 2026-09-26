@@ -38,7 +38,15 @@
 
     <div class="logo-container">
         <img src="{{ public_path('logobps.jpg') }}" alt="Logo BPS" style="width: 100px; height: auto; margin-bottom: 0px;">
-        <div class="instansi-header" style="margin-top: 5px;">BADAN PUSAT STATISTIK<br>KOTA MATARAM</div>
+        @php
+            $satkerName = strtoupper($suratTugas->satker->nama ?? 'Instansi');
+            // Jika ada kata BPS, ubah menjadi BADAN PUSAT STATISTIK
+            $satkerName = str_replace('BPS ', 'BADAN PUSAT STATISTIK ', $satkerName);
+            // Pecah nama menjadi 2 baris (instansi dan nama kota/kab)
+            $instansi = 'BADAN PUSAT STATISTIK';
+            $daerah = str_replace('BADAN PUSAT STATISTIK ', '', $satkerName);
+        @endphp
+        <div class="instansi-header" style="margin-top: 5px;">{{ $instansi }}<br>{{ $daerah }}</div>
     </div>
 
     <div class="text-center" style="margin-top: 30px;">
@@ -48,7 +56,7 @@
 
     <div style="margin-top: 30px;">
         <p>Yang bertandatangan di bawah ini:</p>
-        <p class="text-center" style="font-weight: bold; margin-top:20px; margin-bottom:20px;">KEPALA BADAN PUSAT STATISTIK KOTA MATARAM</p>
+        <p class="text-center" style="font-weight: bold; margin-top:20px; margin-bottom:20px;">KEPALA {{ $satkerName }}</p>
         <p>Memberi tugas kepada:</p>
     </div>
 
@@ -87,8 +95,8 @@
 
     <div class="signature">
         Mataram, {{ $tglSuratStr }}<br>
-        Kepala Badan Pusat Statistik<br>
-        Kota Mataram
+        Kepala {{ $instansi }}<br>
+        {{ ucwords(strtolower($daerah)) }}
         <br><br><br><br><br>
         <strong><u>{{ $suratTugas->kepalaPegawai->nama ?? '.......................................' }}</u></strong><br>
         NIP. {{ $suratTugas->kepalaPegawai->nip ?? '.......................................' }}

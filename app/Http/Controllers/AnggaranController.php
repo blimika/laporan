@@ -3,9 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class AnggaranController extends Controller
+class AnggaranController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                if (auth()->check() && auth()->user()->role === 'user') {
+                    abort(403, 'Anda hanya dapat melihat data.');
+                }
+                return $next($request);
+            }, except: ['index', 'downloadTemplate', 'show']),
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -20,7 +34,8 @@ class AnggaranController extends Controller
                   ->orWhere('tahun', 'like', "%{$search}%");
         }
 
-        $anggarans = $query->latest()->paginate(10)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $anggarans = $query->latest()->paginate($perPage)->withQueryString();
         return view('anggaran.index', compact('anggarans'));
     }
 
@@ -36,7 +51,8 @@ class AnggaranController extends Controller
                 'required',
                 'string',
                 \Illuminate\Validation\Rule::unique('anggarans')->where(function ($query) use ($request) {
-                    return $query->where('tahun', $request->tahun);
+                    return $query->where('tahun', $request->tahun)
+                                 ->where('satker_id', session('satker_id'));
                 })
             ],
             'tahun' => 'required|digits:4|integer',
@@ -81,7 +97,8 @@ class AnggaranController extends Controller
                 'required',
                 'string',
                 \Illuminate\Validation\Rule::unique('anggarans')->where(function ($query) use ($request) {
-                    return $query->where('tahun', $request->tahun);
+                    return $query->where('tahun', $request->tahun)
+                                 ->where('satker_id', session('satker_id'));
                 })->ignore($id)
             ],
             'tahun' => 'required|digits:4|integer',
