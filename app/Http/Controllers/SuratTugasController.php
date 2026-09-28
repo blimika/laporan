@@ -86,19 +86,24 @@ class SuratTugasController extends Controller
         return $exportService->exportSuratTugas($suratTugas);
     }
 
-    public function destroy(\App\Models\SuratTugas $suratTugas)
+    public function destroy(\App\Models\SuratTugas $suratTuga)
     {
         // Because of foreign keys, we might need to delete SPD and Laporan explicitly if cascade is not set, 
         // but Laravel eloquent delete() will just delete it, and DB cascade will handle the rest if set up.
         // Let's explicitly delete related to be safe
-        if ($suratTugas->laporanPerjalanan) {
-            $suratTugas->laporanPerjalanan->delete();
+        if ($suratTuga->laporanPerjalanan) {
+            foreach ($suratTuga->laporanPerjalanan->dokumentasi as $dok) {
+                if (file_exists(public_path($dok->file_path))) {
+                    unlink(public_path($dok->file_path));
+                }
+            }
+            $suratTuga->laporanPerjalanan->delete();
         }
-        if ($suratTugas->spd) {
-            $suratTugas->spd->delete();
+        if ($suratTuga->spd) {
+            $suratTuga->spd->delete();
         }
         
-        $suratTugas->delete();
+        $suratTuga->delete();
 
         return redirect()->route('surat-tugas.index')->with('success', 'Surat Tugas dan semua data terkait berhasil dihapus.');
     }
