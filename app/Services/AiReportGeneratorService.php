@@ -20,19 +20,34 @@ class AiReportGeneratorService
         }
 
         $provider = $satker->ai_provider ?? 'gemini';
-
-        if ($provider === 'deepseek') {
-            return $this->generateWithDeepseek($prompt, $satker->deepseek_api_key);
+        
+        $apiKey = null;
+        $isCentralized = $satker->is_centralized_api;
+        
+        if ($isCentralized) {
+            $apiKey = $provider === 'deepseek' ? $satker->deepseek_api_key : $satker->gemini_api_key;
+        } else {
+            $user = auth()->user();
+            if (!$user) {
+                return 'Error: Anda belum login.';
+            }
+            $apiKey = $provider === 'deepseek' ? $user->deepseek_api_key : $user->gemini_api_key;
         }
 
-        return $this->generateWithGemini($prompt, $satker->gemini_api_key);
+        if ($provider === 'deepseek') {
+            return $this->generateWithDeepseek($prompt, $apiKey, $isCentralized);
+        }
+
+        return $this->generateWithGemini($prompt, $apiKey, $isCentralized);
     }
 
-    private function generateWithDeepseek(string $prompt, ?string $apiKey): string
+    private function generateWithDeepseek(string $prompt, ?string $apiKey, bool $isCentralized): string
     {
         if (empty($apiKey)) {
             Log::error('Deepseek API Key is not set.');
-            return 'Error: API Key Deepseek untuk Satker Anda belum dikonfigurasi oleh Admin.';
+            return $isCentralized 
+                ? 'Error: API Key Deepseek untuk Satker Anda belum dikonfigurasi oleh Admin.'
+                : 'Error: Anda belum mengisi Deepseek API Key di pengaturan Profil Anda.';
         }
 
         $url = 'https://api.deepseek.com/chat/completions';
@@ -63,11 +78,13 @@ class AiReportGeneratorService
         }
     }
 
-    private function generateWithGemini(string $prompt, ?string $apiKey): string
+    private function generateWithGemini(string $prompt, ?string $apiKey, bool $isCentralized): string
     {
         if (empty($apiKey)) {
             Log::error('Gemini API Key is not set.');
-            return 'Error: API Key Gemini untuk Satker Anda belum dikonfigurasi oleh Admin.';
+            return $isCentralized 
+                ? 'Error: API Key Gemini untuk Satker Anda belum dikonfigurasi oleh Admin.'
+                : 'Error: Anda belum mengisi Google Gemini API Key di pengaturan Profil Anda.';
         }
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='.$apiKey;

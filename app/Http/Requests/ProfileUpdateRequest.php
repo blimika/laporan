@@ -28,6 +28,7 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'gemini_api_key' => ['nullable', 'string'],
+            'deepseek_api_key' => ['nullable', 'string'],
         ];
     }
 }

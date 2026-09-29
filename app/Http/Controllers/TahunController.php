@@ -12,20 +12,31 @@ class TahunController extends Controller
     }
     
     public function store(Request $request) {
-        Tahun::create($request->all());
+        $data = $request->all();
+        $data['aktif'] = $request->has('aktif') ? 1 : 0;
+        if ($data['aktif']) {
+            Tahun::query()->update(['aktif' => 0]);
+        }
+        Tahun::create($data);
         return back()->with('success', 'Berhasil ditambahkan');
     }
     
+    public function edit($id) {
+        $tahun = Tahun::findOrFail($id);
+        return view('admin.tahuns.edit', compact('tahun'));
+    }
+
     public function update(Request $request, $id) {
         $record = Tahun::findOrFail($id);
-        if ($request->has('password') && $request->password != '') {
-            $data = $request->except('password');
-            $data['password'] = bcrypt($request->password);
-            $record->update($data);
-        } else {
-            $record->update($request->except('password'));
+        $data = $request->all();
+        $data['aktif'] = $request->has('aktif') ? 1 : 0;
+        
+        if ($data['aktif']) {
+            Tahun::where('id', '!=', $id)->update(['aktif' => 0]);
         }
-        return back()->with('success', 'Berhasil diupdate');
+        
+        $record->update($data);
+        return redirect()->route('admin.tahuns.index')->with('success', 'Berhasil diupdate');
     }
     
     public function destroy($id) {

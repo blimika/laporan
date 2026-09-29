@@ -53,6 +53,27 @@
             @endif
         </div>
 
+        @if($user->satker && !$user->satker->is_centralized_api)
+        <div class="pt-4 border-t border-gray-200 mt-4">
+            <h3 class="text-md font-medium text-gray-900 mb-4">Pengaturan API Key Pribadi</h3>
+            <p class="text-sm text-gray-600 mb-4">Satker Anda dikonfigurasi untuk menggunakan API Key masing-masing user. Silakan masukkan API Key Anda di bawah ini agar dapat menggunakan fitur AI.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <x-input-label for="gemini_api_key" :value="__('Google Gemini API Key')" />
+                    <x-text-input id="gemini_api_key" name="gemini_api_key" type="password" class="mt-1 block w-full" :value="old('gemini_api_key', $user->gemini_api_key)" autocomplete="off" />
+                    <x-input-error class="mt-2" :messages="$errors->get('gemini_api_key')" />
+                </div>
+
+                <div>
+                    <x-input-label for="deepseek_api_key" :value="__('Deepseek API Key')" />
+                    <x-text-input id="deepseek_api_key" name="deepseek_api_key" type="password" class="mt-1 block w-full" :value="old('deepseek_api_key', $user->deepseek_api_key)" autocomplete="off" />
+                    <x-input-error class="mt-2" :messages="$errors->get('deepseek_api_key')" />
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

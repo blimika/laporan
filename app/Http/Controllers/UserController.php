@@ -25,6 +25,11 @@ class UserController extends Controller
         return back()->with('success', 'Berhasil ditambahkan');
     }
     
+    public function edit($id) {
+        $user = User::findOrFail($id);
+        return view('admin.users.edit', compact('user'));
+    }
+
     public function update(Request $request, $id) {
         $record = User::findOrFail($id);
         if ($request->has('password') && $request->password != '') {
@@ -34,7 +39,7 @@ class UserController extends Controller
         } else {
             $record->update($request->except('password'));
         }
-        return back()->with('success', 'Berhasil diupdate');
+        return redirect()->route('admin.users.index')->with('success', 'Berhasil diupdate');
     }
     
     public function destroy($id) {

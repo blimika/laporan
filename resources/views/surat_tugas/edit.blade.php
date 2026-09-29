@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Edit Surat Tugas') }}
@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <form method="POST" action="{{ route('surat-tugas.update', $suratTugas) }}">
@@ -117,6 +117,23 @@
                             <x-input-error :messages="$errors->get('uraian_pembebanan')" class="mt-2" />
                         </div>
 
+                        @if(auth()->user()->role === 'super' || auth()->user()->role === 'admin')
+                        <div class="mt-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+                            <!-- Ubah Pembuat -->
+                            <x-input-label for="user_id" :value="__('Ubah Pembuat (Username)')" />
+                            <p class="text-xs text-gray-500 mb-2">Hanya Admin & Superadmin yang dapat memindahkan kepemilikan Surat Tugas ke user lain.</p>
+                            <select id="user_id" name="user_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm select2">
+                                <option value="">-- Kosongkan (Tanpa Pembuat) --</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ old('user_id', $suratTugas->user_id) == $user->id ? 'selected' : '' }}>
+                                        {{ $user->username }} ({{ $user->name }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
+                        </div>
+                        @endif
+
                         <div class="flex items-center justify-end mt-6">
                             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-4" href="{{ route('surat-tugas.index') }}">
                                 {{ __('Batal') }}
@@ -149,6 +166,10 @@
             });
             $('#pembebanan_anggaran_id').select2({
                 placeholder: "-- Pilih Anggaran --",
+                width: '100%'
+            });
+            $('#user_id').select2({
+                placeholder: "-- Kosongkan (Tanpa Pembuat) --",
                 width: '100%'
             });
 

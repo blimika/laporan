@@ -11,7 +11,7 @@ class SuratTugasController extends Controller
      */
     public function index(Request $request)
     {
-        $query = \App\Models\SuratTugas::with(['pegawai', 'anggaran', 'spd']);
+        $query = \App\Models\SuratTugas::with(['pegawai', 'anggaran', 'spd', 'user']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -56,7 +56,15 @@ class SuratTugasController extends Controller
         $pegawais = \App\Models\Pegawai::all();
         $anggarans = \App\Models\Anggaran::all();
         $suratTugas = $suratTuga; // Alias the variable to match our standard naming
-        return view('surat_tugas.edit', compact('suratTugas', 'pegawais', 'anggarans'));
+        
+        $users = collect();
+        if (auth()->user()->role === 'super') {
+            $users = \App\Models\User::all();
+        } elseif (auth()->user()->role === 'admin') {
+            $users = \App\Models\User::where('satker_id', auth()->user()->satker_id)->get();
+        }
+        
+        return view('surat_tugas.edit', compact('suratTugas', 'pegawais', 'anggarans', 'users'));
     }
 
     public function update(Request $request, \App\Models\SuratTugas $suratTuga)
@@ -74,6 +82,7 @@ class SuratTugasController extends Controller
             'tgl_surat' => 'required|date',
             'tgl_berangkat' => 'required|date',
             'tgl_kembali' => 'required|date|after_or_equal:tgl_berangkat',
+            'user_id' => 'nullable|exists:users,id',
         ]);
 
         $suratTugas->update($validated);

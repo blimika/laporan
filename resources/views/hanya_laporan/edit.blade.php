@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <p class="mb-4 text-gray-600">Fitur ini memungkinkan Anda membuat laporan lepas tanpa mengikat ke database Surat Tugas & SPD. Lengkapi parameter di bawah ini untuk menggenerate laporan menggunakan AI.</p>
@@ -18,12 +18,29 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="nama_pegawai" :value="__('Nama Pegawai')" />
-                                <x-text-input id="nama_pegawai" class="block mt-1 w-full" type="text" name="nama_pegawai" :value="old('nama_pegawai', $hanyaLaporan->nama_pegawai)" required />
+                                <select id="nama_pegawai" name="nama_pegawai" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm select2" required>
+                                    <option value="">-- Pilih Pegawai --</option>
+                                    <!-- Jika nama_pegawai lama tidak ada di tabel pegawais -->
+                                    @php $namaFound = false; @endphp
+                                    @foreach($pegawais as $p)
+                                        <option value="{{ $p->nama }}" data-nip="{{ $p->nip }}" {{ old('nama_pegawai', $hanyaLaporan->nama_pegawai) == $p->nama ? 'selected' : '' }}>
+                                            {{ $p->nama }}
+                                        </option>
+                                        @if(old('nama_pegawai', $hanyaLaporan->nama_pegawai) == $p->nama)
+                                            @php $namaFound = true; @endphp
+                                        @endif
+                                    @endforeach
+                                    @if(!$namaFound && $hanyaLaporan->nama_pegawai)
+                                        <option value="{{ $hanyaLaporan->nama_pegawai }}" data-nip="{{ $hanyaLaporan->nip_pegawai }}" selected>
+                                            {{ $hanyaLaporan->nama_pegawai }} (Data lama)
+                                        </option>
+                                    @endif
+                                </select>
                                 <x-input-error :messages="$errors->get('nama_pegawai')" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="nip_pegawai" :value="__('NIP Pegawai')" />
-                                <x-text-input id="nip_pegawai" class="block mt-1 w-full" type="text" name="nip_pegawai" :value="old('nip_pegawai', $hanyaLaporan->nip_pegawai)" required />
+                                <x-text-input id="nip_pegawai" class="block mt-1 w-full bg-gray-100" type="text" name="nip_pegawai" :value="old('nip_pegawai', $hanyaLaporan->nip_pegawai)" required readonly />
                                 <x-input-error :messages="$errors->get('nip_pegawai')" class="mt-2" />
                             </div>
                         </div>
@@ -70,12 +87,19 @@
                             </div>
                             <div>
                                 <x-input-label for="kategori" :value="__('Kategori Perjalanan')" />
-                                <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" required>
-                                    <option value="Translok Koordinasi" {{ old('kategori', $hanyaLaporan->kategori) == 'Translok Koordinasi' ? 'selected' : '' }}>Translok Koordinasi</option>
-                                    <option value="Pengawasan / Supervisi Lapangan" {{ old('kategori', $hanyaLaporan->kategori) == 'Pengawasan / Supervisi Lapangan' ? 'selected' : '' }}>Pengawasan / Supervisi Lapangan</option>
-                                    <option value="Verifikasi Data" {{ old('kategori', $hanyaLaporan->kategori) == 'Verifikasi Data' ? 'selected' : '' }}>Verifikasi Data</option>
-                                    <option value="Pendataan Lapangan" {{ old('kategori', $hanyaLaporan->kategori) == 'Pendataan Lapangan' ? 'selected' : '' }}>Pendataan Lapangan</option>
+                                @php
+                                    $standardKategori = ['Translok Koordinasi', 'Pengawasan / Supervisi Lapangan', 'Verifikasi Data', 'Pendataan Lapangan'];
+                                    $isCustom = !in_array(old('kategori', $hanyaLaporan->kategori), $standardKategori) && $hanyaLaporan->kategori;
+                                    $selectedValue = $isCustom ? 'Custom' : old('kategori', $hanyaLaporan->kategori);
+                                @endphp
+                                <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required onchange="toggleCustomKategori()">
+                                    <option value="Translok Koordinasi" {{ $selectedValue == 'Translok Koordinasi' ? 'selected' : '' }}>Translok Koordinasi</option>
+                                    <option value="Pengawasan / Supervisi Lapangan" {{ $selectedValue == 'Pengawasan / Supervisi Lapangan' ? 'selected' : '' }}>Pengawasan / Supervisi Lapangan</option>
+                                    <option value="Verifikasi Data" {{ $selectedValue == 'Verifikasi Data' ? 'selected' : '' }}>Verifikasi Data</option>
+                                    <option value="Pendataan Lapangan" {{ $selectedValue == 'Pendataan Lapangan' ? 'selected' : '' }}>Pendataan Lapangan</option>
+                                    <option value="Custom" {{ $selectedValue == 'Custom' ? 'selected' : '' }}>Custom (Isi Sendiri)</option>
                                 </select>
+                                <input type="text" id="kategori_custom" name="kategori_custom" class="block mt-2 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm {{ $isCustom ? '' : 'hidden' }}" placeholder="Masukkan kategori perjalanan" value="{{ $isCustom ? old('kategori_custom', $hanyaLaporan->kategori) : '' }}" {{ $isCustom ? 'required' : '' }}>
                             </div>
                         </div>
 
@@ -216,6 +240,44 @@
                 }
             }
         }
+        
+        // Custom Kategori Logic
+        function toggleCustomKategori() {
+            const select = document.getElementById('kategori');
+            const customInput = document.getElementById('kategori_custom');
+            if (select.value === 'Custom') {
+                customInput.classList.remove('hidden');
+                customInput.setAttribute('required', 'required');
+            } else {
+                customInput.classList.add('hidden');
+                customInput.removeAttribute('required');
+            }
+        }
+
+        // Initialize Select2 and NIP autofill
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery !== 'undefined') {
+                $('#nama_pegawai').select2({
+                    placeholder: "-- Pilih Pegawai --",
+                    width: '100%'
+                });
+
+                $('#nama_pegawai').on('change', function() {
+                    const selectedOption = $(this).find('option:selected');
+                    const nip = selectedOption.data('nip');
+                    if (nip) {
+                        $('#nip_pegawai').val(nip);
+                    } else {
+                        $('#nip_pegawai').val('');
+                    }
+                });
+            }
+        });
     </script>
+    
+    <!-- Select2 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </x-app-layout>
 

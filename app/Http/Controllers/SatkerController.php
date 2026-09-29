@@ -30,16 +30,15 @@ class SatkerController extends Controller implements HasMiddleware
         return back()->with('success', 'Berhasil ditambahkan');
     }
     
+    public function edit($id) {
+        $satker = Satker::findOrFail($id);
+        return view('admin.satkers.edit', compact('satker'));
+    }
+
     public function update(Request $request, $id) {
         $record = Satker::findOrFail($id);
-        if ($request->has('password') && $request->password != '') {
-            $data = $request->except('password');
-            $data['password'] = bcrypt($request->password);
-            $record->update($data);
-        } else {
-            $record->update($request->except('password'));
-        }
-        return back()->with('success', 'Berhasil diupdate');
+        $record->update($request->all());
+        return redirect()->route('admin.satkers.index')->with('success', 'Berhasil diupdate');
     }
     
     public function destroy($id) {

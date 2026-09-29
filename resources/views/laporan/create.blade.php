@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <p class="mb-4 text-gray-600">Lengkapi parameter di bawah ini untuk menggenerate draft Laporan menggunakan AI (Gemini).</p>
@@ -66,12 +66,14 @@
                             </div>
                             <div>
                                 <x-input-label for="kategori" :value="__('Kategori Perjalanan')" />
-                                <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" required>
+                                <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required onchange="toggleCustomKategori()">
                                     <option value="Translok Koordinasi">Translok Koordinasi</option>
                                     <option value="Pengawasan / Supervisi Lapangan">Pengawasan / Supervisi Lapangan</option>
                                     <option value="Verifikasi Data">Verifikasi Data</option>
                                     <option value="Pendataan Lapangan">Pendataan Lapangan</option>
+                                    <option value="Custom">Custom (Isi Sendiri)</option>
                                 </select>
+                                <input type="text" id="kategori_custom" name="kategori_custom" class="block mt-2 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm hidden" placeholder="Masukkan kategori perjalanan">
                             </div>
                         </div>
 
@@ -207,6 +209,19 @@
                         reader.readAsDataURL(file);
                     }
                 }
+            }
+        }
+
+        // Custom Kategori Logic
+        function toggleCustomKategori() {
+            const select = document.getElementById('kategori');
+            const customInput = document.getElementById('kategori_custom');
+            if (select.value === 'Custom') {
+                customInput.classList.remove('hidden');
+                customInput.setAttribute('required', 'required');
+            } else {
+                customInput.classList.add('hidden');
+                customInput.removeAttribute('required');
             }
         }
     </script>

@@ -63,6 +63,8 @@ class AiProviderController extends Controller implements HasMiddleware
             'deepseek_api_key' => 'nullable|string',
         ]);
 
+        $validated['is_centralized_api'] = $request->has('is_centralized_api') ? 1 : 0;
+
         $satker->update($validated);
 
         return redirect()->back()->with('success', 'Pengaturan Provider AI berhasil disimpan.');

@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <p class="mb-4 text-gray-600">Lengkapi parameter di bawah ini untuk menggenerate draft Laporan menggunakan AI (Gemini).</p>
@@ -64,12 +64,19 @@
                             </div>
                             <div>
                                 <x-input-label for="kategori" :value="__('Kategori Perjalanan')" />
-                                <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" required>
-                                    <option value="Translok Koordinasi" {{ (old('kategori', $laporan->kategori) == 'Translok Koordinasi') ? 'selected' : '' }}>Translok Koordinasi</option>
-                                    <option value="Pengawasan / Supervisi Lapangan" {{ (old('kategori', $laporan->kategori) == 'Pengawasan / Supervisi Lapangan') ? 'selected' : '' }}>Pengawasan / Supervisi Lapangan</option>
-                                    <option value="Verifikasi Data" {{ (old('kategori', $laporan->kategori) == 'Verifikasi Data') ? 'selected' : '' }}>Verifikasi Data</option>
-                                    <option value="Pendataan Lapangan" {{ (old('kategori', $laporan->kategori) == 'Pendataan Lapangan') ? 'selected' : '' }}>Pendataan Lapangan</option>
+                                @php
+                                    $standardKategori = ['Translok Koordinasi', 'Pengawasan / Supervisi Lapangan', 'Verifikasi Data', 'Pendataan Lapangan'];
+                                    $isCustom = !in_array(old('kategori', $laporan->kategori), $standardKategori) && $laporan->kategori;
+                                    $selectedValue = $isCustom ? 'Custom' : old('kategori', $laporan->kategori);
+                                @endphp
+                                <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required onchange="toggleCustomKategori()">
+                                    <option value="Translok Koordinasi" {{ $selectedValue == 'Translok Koordinasi' ? 'selected' : '' }}>Translok Koordinasi</option>
+                                    <option value="Pengawasan / Supervisi Lapangan" {{ $selectedValue == 'Pengawasan / Supervisi Lapangan' ? 'selected' : '' }}>Pengawasan / Supervisi Lapangan</option>
+                                    <option value="Verifikasi Data" {{ $selectedValue == 'Verifikasi Data' ? 'selected' : '' }}>Verifikasi Data</option>
+                                    <option value="Pendataan Lapangan" {{ $selectedValue == 'Pendataan Lapangan' ? 'selected' : '' }}>Pendataan Lapangan</option>
+                                    <option value="Custom" {{ $selectedValue == 'Custom' ? 'selected' : '' }}>Custom (Isi Sendiri)</option>
                                 </select>
+                                <input type="text" id="kategori_custom" name="kategori_custom" class="block mt-2 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm {{ $isCustom ? '' : 'hidden' }}" placeholder="Masukkan kategori perjalanan" value="{{ $isCustom ? old('kategori_custom', $laporan->kategori) : '' }}" {{ $isCustom ? 'required' : '' }}>
                             </div>
                         </div>
 
@@ -241,6 +248,19 @@
             // Remove visually
             const container = document.getElementById('photo-container-' + id);
             container.remove();
+        }
+
+        // Custom Kategori Logic
+        function toggleCustomKategori() {
+            const select = document.getElementById('kategori');
+            const customInput = document.getElementById('kategori_custom');
+            if (select.value === 'Custom') {
+                customInput.classList.remove('hidden');
+                customInput.setAttribute('required', 'required');
+            } else {
+                customInput.classList.add('hidden');
+                customInput.removeAttribute('required');
+            }
         }
     </script>
 </x-app-layout>

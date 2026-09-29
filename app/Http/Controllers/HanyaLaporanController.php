@@ -27,7 +27,8 @@ class HanyaLaporanController extends Controller
 
     public function create()
     {
-        return view('hanya_laporan.create');
+        $pegawais = \App\Models\Pegawai::all();
+        return view('hanya_laporan.create', compact('pegawais'));
     }
 
     public function generate(Request $request, \App\Services\AiReportGeneratorService $aiService)
@@ -37,9 +38,14 @@ class HanyaLaporanController extends Controller
             'lokasi_perjalanan' => 'required|string',
             'pegawai_ditemui' => 'required|string',
             'kategori' => 'required|string',
+            'kategori_custom' => 'nullable|string',
             'kendala_ditemui' => 'nullable|string',
             'is_8_jam' => 'nullable|boolean',
         ]);
+
+        if ($data['kategori'] === 'Custom' && !empty($data['kategori_custom'])) {
+            $data['kategori'] = $data['kategori_custom'];
+        }
 
         $hasil_ai = $aiService->generate($data);
 
@@ -64,7 +70,13 @@ class HanyaLaporanController extends Controller
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        $laporan = HanyaLaporan::create($request->except(['_token', 'fotos']));
+        // Merge custom kategori
+        $dataToSave = $request->except(['_token', 'fotos', 'kategori_custom']);
+        if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
+            $dataToSave['kategori'] = $request->kategori_custom;
+        }
+
+        $laporan = HanyaLaporan::create($dataToSave);
 
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
@@ -73,7 +85,7 @@ class HanyaLaporanController extends Controller
                 
                 $laporan->dokumentasi()->create([
                     'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $validated['kategori'],
+                    'keterangan_foto' => 'Dokumentasi ' . $dataToSave['kategori'],
                 ]);
             }
         }
@@ -83,7 +95,8 @@ class HanyaLaporanController extends Controller
 
     public function edit(HanyaLaporan $hanyaLaporan)
     {
-        return view('hanya_laporan.edit', compact('hanyaLaporan'));
+        $pegawais = \App\Models\Pegawai::all();
+        return view('hanya_laporan.edit', compact('hanyaLaporan', 'pegawais'));
     }
 
     public function update(Request $request, HanyaLaporan $hanyaLaporan)
@@ -104,7 +117,13 @@ class HanyaLaporanController extends Controller
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        $hanyaLaporan->update($request->except(['_token', '_method', 'fotos', 'delete_fotos']));
+        // Merge custom kategori
+        $dataToUpdate = $request->except(['_token', '_method', 'fotos', 'delete_fotos', 'kategori_custom']);
+        if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
+            $dataToUpdate['kategori'] = $request->kategori_custom;
+        }
+
+        $hanyaLaporan->update($dataToUpdate);
 
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
@@ -113,7 +132,7 @@ class HanyaLaporanController extends Controller
                 
                 $hanyaLaporan->dokumentasi()->create([
                     'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $validated['kategori'],
+                    'keterangan_foto' => 'Dokumentasi ' . $dataToUpdate['kategori'],
                 ]);
             }
         }

@@ -43,9 +43,14 @@ class LaporanPerjalananController extends Controller
             'tujuan_perjalanan' => 'required|string',
             'pegawai_ditemui' => 'required|string',
             'kategori' => 'required|string',
+            'kategori_custom' => 'nullable|string',
             'kendala_ditemui' => 'nullable|string',
             'is_8_jam' => 'nullable|boolean',
         ]);
+
+        if ($data['kategori'] === 'Custom' && !empty($data['kategori_custom'])) {
+            $data['kategori'] = $data['kategori_custom'];
+        }
 
         // Call AI
         $hasil_ai = $aiService->generate($data);
@@ -68,6 +73,11 @@ class LaporanPerjalananController extends Controller
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
         ]);
 
+        $kategori = $validated['kategori'];
+        if ($kategori === 'Custom' && $request->filled('kategori_custom')) {
+            $kategori = $request->kategori_custom;
+        }
+
         $laporan = \App\Models\LaporanPerjalanan::create([
             'surat_tugas_id' => $validated['surat_tugas_id'],
             'tgl_laporan' => $validated['tgl_laporan'],
@@ -75,7 +85,7 @@ class LaporanPerjalananController extends Controller
             'lokasi_perjalanan' => $validated['lokasi_perjalanan'],
             'tujuan_perjalanan' => $validated['tujuan_perjalanan'],
             'pegawai_ditemui' => $validated['pegawai_ditemui'],
-            'kategori' => $validated['kategori'],
+            'kategori' => $kategori,
             'kendala_ditemui' => $validated['kendala_ditemui'],
             'hasil_perjalanan' => $validated['hasil_perjalanan'],
         ]);
@@ -89,7 +99,7 @@ class LaporanPerjalananController extends Controller
                 
                 $laporan->dokumentasi()->create([
                     'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $validated['kategori'],
+                    'keterangan_foto' => 'Dokumentasi ' . $kategori,
                 ]);
             }
         }
@@ -118,13 +128,18 @@ class LaporanPerjalananController extends Controller
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
+        $kategori = $validated['kategori'];
+        if ($kategori === 'Custom' && $request->filled('kategori_custom')) {
+            $kategori = $request->kategori_custom;
+        }
+
         $laporan->update([
             'tgl_laporan' => $validated['tgl_laporan'],
             'tgl_perjalanan' => $validated['tgl_perjalanan'],
             'lokasi_perjalanan' => $validated['lokasi_perjalanan'],
             'tujuan_perjalanan' => $validated['tujuan_perjalanan'],
             'pegawai_ditemui' => $validated['pegawai_ditemui'],
-            'kategori' => $validated['kategori'],
+            'kategori' => $kategori,
             'kendala_ditemui' => $validated['kendala_ditemui'],
             'hasil_perjalanan' => $validated['hasil_perjalanan'],
         ]);
@@ -137,7 +152,7 @@ class LaporanPerjalananController extends Controller
                 
                 $laporan->dokumentasi()->create([
                     'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $validated['kategori'],
+                    'keterangan_foto' => 'Dokumentasi ' . $kategori,
                 ]);
             }
         }

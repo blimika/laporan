@@ -46,4 +46,9 @@ class SuratTugas extends Model
     {
         return $this->hasOne(LaporanPerjalanan::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
