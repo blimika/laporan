@@ -173,11 +173,24 @@
 
                 const data = await response.json();
                 
-                hasilTextarea.value = data.hasil;
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        alert('Validasi form gagal. Mohon periksa kembali isian Anda.');
+                        return;
+                    }
+                    throw new Error(data.message || 'Terjadi kesalahan dari server AI.');
+                }
+                
+                if (data.hasil && data.hasil.startsWith('Error:')) {
+                    alert(data.hasil);
+                    return;
+                }
+                
+                hasilTextarea.value = data.hasil || 'Terjadi kesalahan tidak diketahui.';
                 hasilContainer.style.display = 'block';
                 
             } catch (error) {
-                alert('Terjadi kesalahan saat menghubungi server AI.');
+                alert(error.message || 'Terjadi kesalahan saat menghubungi server AI.');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('opacity-50');

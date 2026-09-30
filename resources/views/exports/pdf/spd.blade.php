@@ -108,7 +108,7 @@
         <tr>
             <td class="text-center">4</td>
             <td>Maksud perjalanan dinas</td>
-            <td>{{ $spd->suratTugas->tujuan }}/{{ $spd->suratTugas->tugas }}</td>
+            <td>{{ $spd->suratTugas->tugas }}</td>
         </tr>
         <tr>
             <td class="text-center">5</td>
@@ -171,38 +171,38 @@
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;">b.</td>
-                        <td style="border:none; padding:1px; width:80px;">Program</td>
-                        <td style="border:none; padding:1px;">: (054.01.GG) Program Penyediaan dan Pelayanan Informasi Statistik</td>
+                        <td style="border:none; padding:1px; width:80px; vertical-align:top;">Program</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">: ({{ $spd->suratTugas->anggaran->program_kode ?? '-' }}) {{ $spd->suratTugas->anggaran->program_uraian ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;"></td>
-                        <td style="border:none; padding:1px;">Kegiatan</td>
-                        <td style="border:none; padding:1px;">: (2902) Penyediaan dan Pengembangan Statistik Distribusi</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">Kegiatan</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">: ({{ $spd->suratTugas->anggaran->kegiatan_kode ?? '-' }}) {{ $spd->suratTugas->anggaran->kegiatan_uraian ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;"></td>
-                        <td style="border:none; padding:1px;">Output</td>
-                        <td style="border:none; padding:1px;">: (FAN) Pemenuhan Prioritas Direktif Presiden</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">Output</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">: ({{ $spd->suratTugas->anggaran->output_kode ?? '-' }}) {{ $spd->suratTugas->anggaran->output_uraian ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;"></td>
-                        <td style="border:none; padding:1px;">Suboutput</td>
-                        <td style="border:none; padding:1px;">: (ZZ1) Pemenuhan Prioritas Direktif Presiden</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">Suboutput</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">: ({{ $spd->suratTugas->anggaran->suboutput_kode ?? '-' }}) {{ $spd->suratTugas->anggaran->suboutput_uraian ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;"></td>
-                        <td style="border:none; padding:1px;">Komponen</td>
-                        <td style="border:none; padding:1px;">: (051) SENSUS EKONOMI 2026</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">Komponen</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">: ({{ $spd->suratTugas->anggaran->komponen_kode ?? '-' }}) {{ $spd->suratTugas->anggaran->komponen_uraian ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;"></td>
-                        <td style="border:none; padding:1px;">Subkomponen</td>
-                        <td style="border:none; padding:1px;">: (A) TANPA SUB KOMPONEN</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">Subkomponen</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">: ({{ $spd->suratTugas->anggaran->subkomponen_kode ?? '-' }}) {{ $spd->suratTugas->anggaran->subkomponen_uraian ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td style="border:none; padding:1px;"></td>
-                        <td style="border:none; padding:1px;">Akun</td>
-                        <td style="border:none; padding:1px;">: (524113) Belanja Perjalanan Dinas Dalam Kota</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">Akun</td>
+                        <td style="border:none; padding:1px; vertical-align:top;">: ({{ $spd->suratTugas->anggaran->akun_kode ?? '-' }}) {{ $spd->suratTugas->anggaran->akun_uraian ?? '-' }}</td>
                     </tr>
                 </table>
             </td>

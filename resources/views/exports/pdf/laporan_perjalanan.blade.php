@@ -9,6 +9,7 @@
         .content p { margin-top: 0; margin-bottom: 10px; }
         .content table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         .content th, .content td { border: 1px solid black; padding: 5px; vertical-align: top; }
+        .content table th:first-child, .content table td:first-child { width: 15%; }
         .signature { margin-top: 15px; float: right; width: 50%; text-align: center; }
         .page-break { page-break-before: always; }
         .section-title { font-weight: bold; margin-bottom: 2px; margin-top: 8px; }
