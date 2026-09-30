@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
     
     Route::get('spd/create/{suratTugas}', [\App\Http\Controllers\SpdController::class, 'create'])->name('spd.create');
     Route::post('spd/store/{suratTugas}', [\App\Http\Controllers\SpdController::class, 'store'])->name('spd.store');
+    Route::get('spd/edit/{spd}', [\App\Http\Controllers\SpdController::class, 'edit'])->name('spd.edit');
+    Route::put('spd/update/{spd}', [\App\Http\Controllers\SpdController::class, 'update'])->name('spd.update');
 
     Route::get('export/surat-tugas/{suratTugas}', [\App\Http\Controllers\SuratTugasController::class, 'exportPdf'])->name('export.surat-tugas');
     Route::get('export/spd/{spd}', [\App\Http\Controllers\SpdController::class, 'exportPdf'])->name('export.spd');

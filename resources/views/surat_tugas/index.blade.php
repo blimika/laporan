@@ -119,6 +119,12 @@
                                             </a>
                                             
                                             @if($st->spd)
+                                                <!-- Edit SPD -->
+                                                <a href="{{ route('spd.edit', $st->spd->id) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit SPD">
+                                                    <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </a>
                                                 <!-- Cetak SPD -->
                                                 <a href="{{ route('export.spd', $st->spd->id) }}" class="text-green-600 hover:text-green-900" title="Cetak SPD" target="_blank">
                                                     <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
