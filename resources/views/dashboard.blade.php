@@ -9,8 +9,17 @@
         <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-8">
-                <div class="p-6 text-gray-900 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Selamat datang, {{ Auth::user()->name }}!</h3>
+                <div class="p-8 border-b border-gray-200 flex flex-col md:flex-row items-center gap-6">
+                    <img src="{{ asset('images/translok_logo.jpg') }}" alt="Translok.ai" class="h-32 w-32 object-contain rounded-full border border-gray-200 shadow-sm hidden md:block">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Selamat datang di Translok.ai, {{ Auth::user()->name }}!</h3>
+                        <p class="text-gray-600 text-md leading-relaxed">
+                            <strong>Translok.ai: Cerdas Mengelola, Cepat Melapor.</strong><br>
+                            Sistem ini dirancang untuk mengotomatiskan siklus dokumen pertanggungjawaban dinas—mulai dari perencanaan hingga pelaporan akhir. Dengan dukungan <span class="font-semibold text-purple-600">AI Narrative Generator</span>, Translok.ai menyintesis aktivitas lapangan Anda menjadi laporan formal yang terstruktur. Kini Anda dapat mencetak Surat Tugas, SPD, DPR, dan Laporan Pelaksanaan lengkap dengan grid dokumentasi hanya dalam hitungan detik. 
+                            <br><br>
+                            <span class="italic font-medium">Berangkat membawa misi, pulang tanpa beban administrasi.</span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
