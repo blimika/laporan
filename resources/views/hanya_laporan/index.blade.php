@@ -34,10 +34,39 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Laporan</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pegawai</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tujuan Perjalanan</th>
-                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'tgl_perjalanan', 'direction' => ($sort == 'tgl_perjalanan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Waktu</span>
+                                            @if($sort == 'tgl_perjalanan')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nomor_st', 'direction' => ($sort == 'nomor_st' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Nomor ST</span>
+                                            @if($sort == 'nomor_st')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nama_pegawai', 'direction' => ($sort == 'nama_pegawai' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Nama Pegawai</span>
+                                            @if($sort == 'nama_pegawai')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'tujuan_perjalanan', 'direction' => ($sort == 'tujuan_perjalanan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Tujuan Perjalanan</span>
+                                            @if($sort == 'tujuan_perjalanan')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pembuat</th>
                                     <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
@@ -45,11 +74,14 @@
                                 @forelse ($laporans as $lap)
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $lap->tgl_laporan->format('d/m/Y') }}
+                                            {{ $lap->tgl_perjalanan->format('d/m/Y') }}<br>
+                                            <span class="text-xs text-gray-500">Lap: {{ $lap->tgl_laporan->format('d/m/Y') }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $lap->nomor_st }}
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900">
                                             <div class="font-medium text-gray-900">{{ $lap->nama_pegawai }}</div>
-                                            <div class="text-gray-500 text-xs">ST: {{ $lap->nomor_st }}</div>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500">
                                             <div class="font-medium text-gray-900">
@@ -61,11 +93,12 @@
                                                 @endif
                                             </div>
                                             <div class="text-xs">{{ $lap->tujuan_perjalanan }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            <span class="mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                                 {{ $lap->kategori }}
                                             </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                                            {{ $lap->user ? $lap->user->name : '-' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                             <div class="flex justify-center space-x-2">
@@ -112,7 +145,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                             Belum ada data laporan.
                                         </td>
                                     </tr>

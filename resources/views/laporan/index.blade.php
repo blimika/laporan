@@ -20,7 +20,7 @@
                     <div class="mb-4 bg-gray-50 p-4 rounded-lg border">
                         <form action="{{ route('laporan.index') }}" method="GET" class="flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div class="flex items-center space-x-2 w-full sm:w-auto">
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. Surat atau Kategori..." class="w-full sm:w-64 border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm text-sm">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. ST, Tujuan, atau Pelaksana..." class="w-full sm:w-64 border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm text-sm">
                                 <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded text-sm">
                                     Cari
                                 </button>
@@ -54,10 +54,38 @@
                         <table class="min-w-full divide-y divide-gray-200 border mt-4">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. ST</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pelaksana</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nomor_surat', 'direction' => ($sort == 'nomor_surat' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>No. ST</span>
+                                            @if($sort == 'nomor_surat')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nama_pegawai', 'direction' => ($sort == 'nama_pegawai' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Pelaksana</span>
+                                            @if($sort == 'nama_pegawai')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'lokasi_perjalanan', 'direction' => ($sort == 'lokasi_perjalanan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Lokasi</span>
+                                            @if($sort == 'lokasi_perjalanan')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'tgl_laporan', 'direction' => ($sort == 'tgl_laporan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Tanggal</span>
+                                            @if($sort == 'tgl_laporan')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Foto</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>

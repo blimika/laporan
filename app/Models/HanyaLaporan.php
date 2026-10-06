@@ -24,4 +24,9 @@ class HanyaLaporan extends Model
     {
         return $this->hasMany(HanyaLaporanDokumentasi::class, 'hanya_laporan_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
 }

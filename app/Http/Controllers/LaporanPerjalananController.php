@@ -11,19 +11,42 @@ class LaporanPerjalananController extends Controller
      */
     public function index(Request $request)
     {
-        $query = \App\Models\LaporanPerjalanan::with(['suratTugas.pegawai', 'dokumentasi']);
+        $query = \App\Models\LaporanPerjalanan::with(['suratTugas.pegawai', 'dokumentasi', 'user'])
+                    ->select('laporan_perjalanans.*')
+                    ->leftJoin('surat_tugas', 'laporan_perjalanans.surat_tugas_id', '=', 'surat_tugas.id')
+                    ->leftJoin('pegawais', 'surat_tugas.pegawai_id', '=', 'pegawais.id');
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('suratTugas', function($q) use ($search) {
-                      $q->where('nomor_surat', 'like', "%{$search}%")
-                        ->orWhere('tugas', 'like', "%{$search}%");
-                  })->orWhere('kategori', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('surat_tugas.nomor_surat', 'like', "%{$search}%")
+                  ->orWhere('surat_tugas.tugas', 'like', "%{$search}%")
+                  ->orWhere('surat_tugas.tujuan', 'like', "%{$search}%")
+                  ->orWhere('laporan_perjalanans.kategori', 'like', "%{$search}%")
+                  ->orWhere('pegawais.nama', 'like', "%{$search}%");
+            });
+        }
+
+        $sort = $request->input('sort', 'laporan_perjalanans.created_at');
+        $direction = $request->input('direction', 'desc');
+        
+        $allowedSorts = [
+            'tgl_laporan' => 'laporan_perjalanans.tgl_laporan',
+            'lokasi_perjalanan' => 'laporan_perjalanans.lokasi_perjalanan',
+            'kategori' => 'laporan_perjalanans.kategori',
+            'nomor_surat' => 'surat_tugas.nomor_surat',
+            'nama_pegawai' => 'pegawais.nama'
+        ];
+
+        if (array_key_exists($sort, $allowedSorts)) {
+            $query->orderBy($allowedSorts[$sort], $direction);
+        } else {
+            $query->latest('laporan_perjalanans.created_at');
         }
 
         $perPage = $request->input('per_page', 10);
-        $laporans = $query->latest()->paginate($perPage)->withQueryString();
-        return view('laporan.index', compact('laporans'));
+        $laporans = $query->paginate($perPage)->withQueryString();
+        return view('laporan.index', compact('laporans', 'sort', 'direction'));
     }
 
     public function create()

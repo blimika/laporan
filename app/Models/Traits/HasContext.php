@@ -16,10 +16,10 @@ trait HasContext
                 $builder->where($builder->getModel()->getTable() . '.tahun_id', session('tahun_id'));
             }
             
-            // Check if user role is 'user' and table is surat_tugas or laporan_perjalanans
+            // Check if user role is 'user' and table is surat_tugas, laporan_perjalanans, or hanya_laporans
             if (auth()->check() && auth()->user()->role === 'user') {
                 $table = $builder->getModel()->getTable();
-                if (in_array($table, ['surat_tugas', 'laporan_perjalanans'])) {
+                if (in_array($table, ['surat_tugas', 'laporan_perjalanans', 'hanya_laporans'])) {
                     $builder->where($table . '.user_id', auth()->id());
                 }
             }
@@ -32,7 +32,7 @@ trait HasContext
             if (session()->get('tahun_id')) {
                 $model->tahun_id = session('tahun_id');
             }
-            if (auth()->check() && in_array($model->getTable(), ['surat_tugas', 'laporan_perjalanans'])) {
+            if (auth()->check() && in_array($model->getTable(), ['surat_tugas', 'laporan_perjalanans', 'hanya_laporans'])) {
                 if (empty($model->user_id)) {
                     $model->user_id = auth()->id();
                 }

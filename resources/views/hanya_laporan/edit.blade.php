@@ -15,6 +15,22 @@
                         @csrf
                         @method('PUT')
 
+                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
+                            <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <h4 class="font-bold text-yellow-800 mb-2">Pindahkan Kepemilikan Laporan (Khusus Admin)</h4>
+                                <x-input-label for="user_id" :value="__('Pembuat Laporan')" />
+                                <select id="user_id" name="user_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm select2">
+                                    <option value="">-- Kosongkan Jika Tidak Ingin Mengubah Pembuat --</option>
+                                    @foreach($users as $u)
+                                        <option value="{{ $u->id }}" {{ old('user_id', $hanyaLaporan->user_id) == $u->id ? 'selected' : '' }}>
+                                            {{ $u->name }} ({{ $u->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
+                            </div>
+                        @endif
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="nama_pegawai" :value="__('Nama Pegawai')" />

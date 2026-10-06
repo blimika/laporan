@@ -30,4 +30,9 @@ class LaporanPerjalanan extends Model
     {
         return $this->hasMany(LaporanDokumentasi::class, 'laporan_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

@@ -17,7 +17,8 @@
                             <strong>Translok.ai: Cerdas Mengelola, Cepat Melapor.</strong><br>
                             Sistem ini dirancang untuk mengotomatiskan siklus dokumen pertanggungjawaban dinas—mulai dari perencanaan hingga pelaporan akhir. Dengan dukungan <span class="font-semibold text-purple-600">AI Narrative Generator</span>, Translok.ai menyintesis aktivitas lapangan Anda menjadi laporan formal yang terstruktur. Kini Anda dapat mencetak Surat Tugas, SPD, DPR, dan Laporan Pelaksanaan lengkap dengan grid dokumentasi hanya dalam hitungan detik. 
                             <br><br>
-                            <span class="italic font-medium">Berangkat membawa misi, pulang tanpa beban administrasi.</span>
+                            <span class="italic font-medium">Berangkat membawa misi, pulang tanpa beban administrasi.</span><br>
+                            <span class="font-bold text-green-600">Cair siap menanti 💸</span>
                         </p>
                     </div>
                 </div>

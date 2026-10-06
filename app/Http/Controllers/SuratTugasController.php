@@ -15,13 +15,29 @@ class SuratTugasController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('nomor_surat', 'like', "%{$search}%")
-                  ->orWhere('tugas', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('nomor_surat', 'like', "%{$search}%")
+                  ->orWhere('tugas', 'like', "%{$search}%")
+                  ->orWhere('tujuan', 'like', "%{$search}%")
+                  ->orWhereHas('pegawai', function($q2) use ($search) {
+                      $q2->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc');
+        
+        $allowedSorts = ['nomor_surat', 'tujuan', 'tgl_berangkat'];
+        if (in_array($sort, $allowedSorts)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->latest();
         }
 
         $perPage = $request->input('per_page', 10);
-        $suratTugasList = $query->latest()->paginate($perPage)->withQueryString();
-        return view('surat_tugas.index', compact('suratTugasList'));
+        $suratTugasList = $query->paginate($perPage)->withQueryString();
+        return view('surat_tugas.index', compact('suratTugasList', 'sort', 'direction'));
     }
 
     public function create()
