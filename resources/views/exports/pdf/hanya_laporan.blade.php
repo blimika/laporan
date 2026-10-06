@@ -137,19 +137,92 @@
             DOKUMENTASI
         </div>
         
+        @php
+            $dtVal = $laporan->stamp_datetime ? \Carbon\Carbon::parse($laporan->stamp_datetime)->format('d/m/Y H:i') : '-';
+        @endphp
         @foreach($laporan->dokumentasi as $doc)
             @php
                 $imagePath = public_path($doc->file_path);
                 $imageData = '';
+                $isWord = $isWord ?? false;
+                
                 if(file_exists($imagePath)) {
                     $type = pathinfo($imagePath, PATHINFO_EXTENSION);
                     $data = file_get_contents($imagePath);
+                    
+                    if ($isWord && $laporan->is_stamped && function_exists('imagecreatefromstring')) {
+                        $img = @imagecreatefromstring($data);
+                        if ($img) {
+                            $width = imagesx($img);
+                            $height = imagesy($img);
+                            if ($width > 1000) {
+                                $newWidth = 1000;
+                                $newHeight = intval($height * (1000 / $width));
+                                $newImg = imagecreatetruecolor($newWidth, $newHeight);
+                                imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                imagedestroy($img);
+                                $img = $newImg;
+                                $width = $newWidth;
+                                $height = $newHeight;
+                            }
+                            
+                            $black = imagecolorallocatealpha($img, 0, 0, 0, 50);
+                            $white = imagecolorallocate($img, 255, 255, 255);
+                            $yellow = imagecolorallocate($img, 255, 255, 0);
+                            
+                            $lines = [
+                                $laporan->tujuan_perjalanan,
+                                $dtVal,
+                                $laporan->stamp_koordinat ?? '-'
+                            ];
+                            
+                            $fontSize = 5;
+                            $fontHeight = imagefontheight($fontSize);
+                            $lineSpacing = 5;
+                            $boxHeight = (count($lines) * ($fontHeight + $lineSpacing)) + 10;
+                            
+                            $yOffset = $height - $boxHeight - 10;
+                            
+                            imagefilledrectangle($img, 10, $yOffset, 400, $height - 10, $black);
+                            imagefilledrectangle($img, 10, $yOffset, 15, $height - 10, $yellow);
+                            
+                            $currentY = $yOffset + 5;
+                            foreach ($lines as $line) {
+                                imagestring($img, $fontSize, 21, $currentY + 1, $line, imagecolorallocate($img, 0,0,0));
+                                imagestring($img, $fontSize, 20, $currentY, $line, $white);
+                                $currentY += $fontHeight + $lineSpacing;
+                            }
+                            
+                            ob_start();
+                            imagejpeg($img, null, 90);
+                            $data = ob_get_clean();
+                            imagedestroy($img);
+                            $type = 'jpeg';
+                            $laporan->is_stamped_baked = true; 
+                        }
+                    }
+                    
                     $imageData = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 }
             @endphp
             @if($imageData)
             <div style="text-align: center; margin-bottom: 40px; width: 100%;">
-                <img src="{{ $imageData }}" alt="Dokumentasi" style="max-width: 100%; max-height: 450px; height: auto; width: auto;">
+                <table style="margin: 0 auto; border: none; border-collapse: collapse; width: auto;">
+                    <tr>
+                        <td style="padding: 0; border: none; text-align: left; vertical-align: bottom;">
+                            <img src="{{ $imageData }}" alt="Dokumentasi" style="max-width: 100%; max-height: 450px; display: block; margin: 0;">
+                            @if($laporan->is_stamped && !isset($laporan->is_stamped_baked))
+                                <div style="margin-top: -50px; margin-left: 10px; margin-bottom: 10px;">
+                                    <div style="display: inline-block; color: white; font-size: 10px; font-weight: bold; padding: 2px 5px; padding-left: 6px; border-left: 3px solid yellow; background-color: rgba(0,0,0,0.4); line-height: 1.2;">
+                                        {{ $laporan->tujuan_perjalanan }}<br>
+                                        {{ $dtVal }}<br>
+                                        {{ $laporan->stamp_koordinat ?? '-' }}
+                                    </div>
+                                </div>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
                 @if($laporan->dokumentasi->count() > 1)
                     <div style="margin-top: 10px; font-style: italic; font-size: 10pt;">
                         Gambar {{ $loop->iteration }}: {{ $doc->keterangan_foto }}

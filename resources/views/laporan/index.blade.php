@@ -67,11 +67,21 @@
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $laporan->suratTugas->nomor_surat }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $laporan->suratTugas->pegawai->nama }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $laporan->lokasi_perjalanan }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            {{ $laporan->lokasi_perjalanan }}
+                                            @if($laporan->stamp_koordinat)
+                                                <a href="https://maps.google.com/?q={{ $laporan->stamp_koordinat }}" target="_blank" class="ml-1 text-red-500 hover:text-red-700 inline-block" title="Buka di Google Maps">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z" />
+                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                </a>
+                                            @endif
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $laporan->tgl_laporan->format('d/m/Y') }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @if($laporan->dokumentasi->count() > 0)
-                                                <div class="flex -space-x-2 overflow-hidden cursor-pointer" onclick="showFoto({{ $laporan->dokumentasi->toJson() }})" title="Lihat Foto">
+                                                <div class="flex -space-x-2 overflow-hidden cursor-pointer" onclick="showFoto({{ $laporan->dokumentasi->toJson() }}, {{ $laporan->toJson() }})" title="Lihat Foto">
                                                     @foreach($laporan->dokumentasi->take(3) as $dok)
                                                         <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover hover:opacity-75" src="{{ asset($dok->file_path) }}" alt="Foto">
                                                     @endforeach
@@ -116,6 +126,12 @@
                                             <a href="{{ route('export.laporan', $laporan->id) }}" class="text-purple-600 hover:text-purple-900" title="Cetak PDF Laporan" target="_blank">
                                                 <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </a>
+                                            <!-- Download Word -->
+                                            <a href="{{ route('export.laporan.word', $laporan->id) }}" class="text-blue-600 hover:text-blue-900" title="Download Word" target="_blank">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                 </svg>
                                             </a>
                                         </td>
@@ -178,7 +194,7 @@
     </div>
 
     <script>
-        function showFoto(dokumentasi) {
+        function showFoto(dokumentasi, laporanData = null) {
             const container = document.getElementById('foto-content');
             container.innerHTML = '';
             
@@ -186,10 +202,31 @@
                 const appUrl = "{{ config('app.url') }}";
                 const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
                 
+                let stampHtml = '';
+                if (laporanData && laporanData.is_stamped) {
+                    let dtVal = '-';
+                    if (laporanData.stamp_datetime) {
+                        const dateObj = new Date(laporanData.stamp_datetime);
+                        const d = String(dateObj.getDate()).padStart(2, '0');
+                        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const y = dateObj.getFullYear();
+                        const h = String(dateObj.getHours()).padStart(2, '0');
+                        const min = String(dateObj.getMinutes()).padStart(2, '0');
+                        dtVal = `${d}/${m}/${y} ${h}:${min}`;
+                    }
+                    const koordinat = laporanData.stamp_koordinat || '-';
+                    const tujuan = laporanData.tujuan_perjalanan || '-';
+                    
+                    stampHtml = `<div class="absolute bottom-4 left-4 text-white text-xs sm:text-sm leading-tight font-bold border-l-4 border-yellow-400 pl-2 pointer-events-none drop-shadow-md" style="text-shadow: 1px 1px 3px black, 0 0 2px black;">
+                        ${tujuan}<br>${dtVal}<br>${koordinat}
+                    </div>`;
+                }
+                
                 dokumentasi.forEach(dok => {
                     container.innerHTML += `
-                        <div class="bg-white p-2 rounded max-w-full">
+                        <div class="bg-white p-2 rounded max-w-full relative inline-block">
                             <img src="${baseUrl}/${dok.file_path}" class="max-h-[80vh] object-contain rounded">
+                            ${stampHtml}
                         </div>
                     `;
                 });
@@ -220,12 +257,34 @@
                 fotosHtml = `<div class="col-span-2 mt-2 pt-2 border-t border-gray-100">
                     <p class="text-xs text-gray-500 uppercase font-semibold mb-2">Foto Dokumentasi</p>
                     <div class="flex flex-wrap gap-2">`;
+                
+                let stampHtml = '';
+                if (data.is_stamped) {
+                    let dtVal = '-';
+                    if (data.stamp_datetime) {
+                        const dateObj = new Date(data.stamp_datetime);
+                        const d = String(dateObj.getDate()).padStart(2, '0');
+                        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const y = dateObj.getFullYear();
+                        const h = String(dateObj.getHours()).padStart(2, '0');
+                        const min = String(dateObj.getMinutes()).padStart(2, '0');
+                        dtVal = `${d}/${m}/${y} ${h}:${min}`;
+                    }
+                    const koordinat = data.stamp_koordinat || '-';
+                    const tujuan = data.tujuan_perjalanan || '-';
+                    
+                    stampHtml = `<div class="absolute bottom-1 left-1 text-white text-[8px] leading-tight font-bold border-l-2 border-yellow-400 pl-1 pointer-events-none drop-shadow-md" style="text-shadow: 1px 1px 2px black, 0 0 1px black;">
+                        ${tujuan}<br>${dtVal}<br>${koordinat}
+                    </div>`;
+                }
+
                 dokumentasi.forEach(dok => {
                     // Pastikan url tidak double slash
                     const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
-                    fotosHtml += `<div class="w-24 h-24 overflow-hidden rounded border border-gray-300">
-                                    <a href="${baseUrl}/${dok.file_path}" target="_blank">
+                    fotosHtml += `<div class="w-24 h-24 overflow-hidden rounded border border-gray-300 relative group">
+                                    <a href="${baseUrl}/${dok.file_path}" target="_blank" class="block w-full h-full">
                                         <img src="${baseUrl}/${dok.file_path}" class="object-cover w-full h-full hover:opacity-75 transition-opacity">
+                                        ${stampHtml}
                                     </a>
                                   </div>`;
                 });
@@ -240,7 +299,7 @@
                 ${renderRow('Tanggal Laporan', tglL)}
                 ${renderRow('Tanggal Perjalanan', tglP)}
                 
-                ${renderRow('Lokasi Perjalanan', data.lokasi_perjalanan)}
+                ${renderRow('Lokasi Perjalanan', data.lokasi_perjalanan + (data.stamp_koordinat ? ` <a href="https://maps.google.com/?q=${data.stamp_koordinat}" target="_blank" class="ml-1 text-red-500 hover:text-red-700 inline-block" title="Buka di Google Maps"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></a>` : ''))}
                 ${renderRow('Tujuan Perjalanan', data.tujuan_perjalanan)}
                 
                 ${renderRow('Pegawai Ditemui', data.pegawai_ditemui)}

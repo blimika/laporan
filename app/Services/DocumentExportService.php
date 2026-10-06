@@ -53,4 +53,16 @@ class DocumentExportService
         $safeName = str_replace(['/', '\\'], '_', $laporan->suratTugas->nomor_surat);
         return $pdf->stream('laporan_perjalanan_'.$safeName.'.pdf');
     }
+
+    public function exportLaporanWord(LaporanPerjalanan $laporan)
+    {
+        $laporan->load(['suratTugas.pegawai', 'suratTugas.spd', 'dokumentasi']);
+        $isWord = true;
+        $html = view('exports.pdf.laporan_perjalanan', compact('laporan', 'isWord'))->render();
+
+        $safeName = str_replace(['/', '\\'], '_', $laporan->suratTugas->nomor_surat);
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-word')
+            ->header('Content-Disposition', 'attachment; filename="laporan_perjalanan_' . $safeName . '.doc"');
+    }
 }

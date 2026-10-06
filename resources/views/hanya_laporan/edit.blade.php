@@ -112,27 +112,60 @@
 
                         <!-- Upload Dokumentasi -->
                         <div class="mb-4 p-4 border border-gray-200 rounded bg-gray-50">
-                            <x-input-label for="fotos" :value="__('Upload Tambahan Foto Dokumentasi')" />
-                            <input id="fotos" name="fotos[]" type="file" multiple accept="image/*" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" onchange="previewImages(event)" />
-                            <p class="mt-1 text-xs text-gray-500">Abaikan jika tidak ingin menambah foto. Anda dapat memblok beberapa foto sekaligus saat memilih.</p>
-                            
-                            <div id="image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
-
                             @if($hanyaLaporan->dokumentasi && $hanyaLaporan->dokumentasi->count() > 0)
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <p class="text-sm font-semibold mb-2">Foto Dokumentasi Tersimpan (Centang untuk Hapus):</p>
-                                <div class="flex flex-wrap gap-4">
-                                    @foreach($hanyaLaporan->dokumentasi as $dok)
-                                        <div class="relative w-32 h-32 border rounded overflow-hidden">
-                                            <img src="{{ asset($dok->file_path) }}" class="object-cover w-full h-full">
-                                            <div class="absolute top-0 right-0 bg-white bg-opacity-75 p-1 rounded-bl">
-                                                <input type="checkbox" name="delete_fotos[]" value="{{ $dok->id }}" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                <div class="mb-4">
+                                    <p class="text-xs text-gray-500 uppercase font-semibold mb-2">Foto Dokumentasi Saat Ini (Centang untuk Hapus):</p>
+                                    <div class="flex flex-wrap gap-4">
+                                        @foreach($hanyaLaporan->dokumentasi as $dok)
+                                            <div class="relative w-32 h-32 border rounded overflow-hidden">
+                                                <a href="{{ asset($dok->file_path) }}" target="_blank" class="block w-full h-full">
+                                                    <img src="{{ asset($dok->file_path) }}" class="object-cover w-full h-full hover:opacity-75 transition-opacity">
+                                                    @if($hanyaLaporan->is_stamped)
+                                                        @php
+                                                            $dtVal = $hanyaLaporan->stamp_datetime ? \Carbon\Carbon::parse($hanyaLaporan->stamp_datetime)->format('d/m/Y H:i') : '-';
+                                                        @endphp
+                                                        <div class="absolute bottom-1 left-1 text-white text-[8px] leading-tight font-bold border-l-2 border-yellow-400 pl-1 pointer-events-none drop-shadow-md" style="text-shadow: 1px 1px 2px black, 0 0 1px black;">
+                                                            {{ $hanyaLaporan->tujuan_perjalanan }}<br>{{ $dtVal }}<br>{{ $hanyaLaporan->stamp_koordinat }}
+                                                        </div>
+                                                    @endif
+                                                </a>
+                                                <div class="absolute top-0 right-0 bg-white bg-opacity-75 p-1 rounded-bl">
+                                                    <input type="checkbox" name="delete_fotos[]" value="{{ $dok->id }}" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                                </div>
                                             </div>
-                                        </div>
-                                    @endforeach
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                            <hr class="mb-4">
+                            
+                            <x-input-label for="fotos" :value="__('Upload Tambahan Foto Dokumentasi (Bisa lebih dari 1 foto)')" />
+                            <input id="fotos" name="fotos[]" type="file" multiple accept="image/*" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" onchange="handleFotosChange(event)" />
+                            <p class="mt-1 text-xs text-gray-500">Format: JPG/PNG. Abaikan jika tidak ingin menambah foto.</p>
+
+                            <div class="mt-4 p-4 border border-gray-300 rounded bg-white">
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="check_stamp" name="check_stamp" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50" onchange="toggleStampInputs()" {{ $hanyaLaporan->is_stamped ? 'checked' : '' }}>
+                                    <label for="check_stamp" class="ml-2 block text-sm text-gray-900 font-bold">
+                                        Tambahkan Stamp Foto Dokumentasi
+                                    </label>
+                                </div>
+                                
+                                <div id="stamp_inputs" class="{{ $hanyaLaporan->is_stamped ? '' : 'hidden' }} grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                    <div>
+                                        <x-input-label for="stamp_koordinat" :value="__('Koordinat Lokasi (Manual)')" />
+                                        <x-text-input id="stamp_koordinat" name="stamp_koordinat" class="block mt-1 w-full" type="text" placeholder="Contoh: -6.200000, 106.816666" value="{{ old('stamp_koordinat', $hanyaLaporan->stamp_koordinat) }}" onchange="reprocessImages()" />
+                                        <button type="button" onclick="getLocation()" class="mt-1 text-xs text-blue-600 hover:underline">Ambil Lokasi Saat Ini (GPS)</button>
+                                    </div>
+                                    <div>
+                                        <x-input-label for="stamp_datetime" :value="__('Tanggal & Jam (Manual/Otomatis)')" />
+                                        <x-text-input id="stamp_datetime" name="stamp_datetime" class="block mt-1 w-full" type="datetime-local" value="{{ old('stamp_datetime', $hanyaLaporan->stamp_datetime) }}" onchange="reprocessImages()" />
+                                    </div>
                                 </div>
                             </div>
-                            @endif
+                            
+                            <!-- Container Preview -->
+                            <div id="image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
                         </div>
 
                         <div class="mb-4 flex items-center">
@@ -229,31 +262,117 @@
             }
         }
 
-        function previewImages(event) {
-            const container = document.getElementById('image-preview-container');
-            container.innerHTML = '';
+        let originalFiles = [];
+        
+        function handleFotosChange(event) {
+            const dt = new DataTransfer();
+            for (let i = 0; i < event.target.files.length; i++) {
+                dt.items.add(event.target.files[i]);
+            }
+            originalFiles = Array.from(dt.files);
+            
+            reprocessImages();
+        }
 
-            const files = event.target.files;
-            if (files) {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (file.type.match('image.*')) {
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            const imgDiv = document.createElement('div');
-                            imgDiv.className = 'w-24 h-24 overflow-hidden rounded border border-gray-300';
-                            
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.className = 'object-cover w-full h-full';
-                            
-                            imgDiv.appendChild(img);
-                            container.appendChild(imgDiv);
-                        }
-                        reader.readAsDataURL(file);
-                    }
+        function toggleStampInputs() {
+            const inputs = document.getElementById('stamp_inputs');
+            if (document.getElementById('check_stamp').checked) {
+                inputs.classList.remove('hidden');
+                if (!document.getElementById('stamp_datetime').value) {
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    document.getElementById('stamp_datetime').value = now.toISOString().slice(0,16);
+                }
+            } else {
+                inputs.classList.add('hidden');
+            }
+            reprocessImages();
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('stamp_koordinat').value = position.coords.latitude.toFixed(5) + ", " + position.coords.longitude.toFixed(5);
+                    reprocessImages();
+                }, function(error) {
+                    alert("Gagal mendapatkan lokasi: " + error.message);
+                });
+            } else {
+                alert("Geolocation tidak didukung oleh browser ini.");
+            }
+        }
+
+        function removeExistingPhoto(id) {
+            const container = document.getElementById('photo-container-' + id);
+            if (container) {
+                const checkbox = container.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = true;
+                    container.style.display = 'none';
                 }
             }
+        }
+
+        function reprocessImages() {
+            const container = document.getElementById('image-preview-container');
+            container.innerHTML = '';
+            if (originalFiles.length === 0) return;
+            
+            const isStamped = document.getElementById('check_stamp').checked;
+            const dt = new DataTransfer();
+            
+            const newContainerHTML = document.createElement('div');
+            newContainerHTML.className = 'flex flex-wrap gap-4 mt-2';
+            
+            // Get stamp text
+            const tujuan = document.getElementById('tujuan_perjalanan').value || 'Tujuan Belum Diisi';
+            let dtVal = document.getElementById('stamp_datetime').value;
+            let hariTanggal = 'Tanggal Belum Diisi';
+            if (dtVal) {
+                const dateObj = new Date(dtVal);
+                const d = String(dateObj.getDate()).padStart(2, '0');
+                const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const y = dateObj.getFullYear();
+                const h = String(dateObj.getHours()).padStart(2, '0');
+                const min = String(dateObj.getMinutes()).padStart(2, '0');
+                hariTanggal = `${d}/${m}/${y} ${h}:${min}`;
+            }
+            const koordinat = document.getElementById('stamp_koordinat').value || 'Koordinat Belum Diisi';
+            
+            for (let i = 0; i < originalFiles.length; i++) {
+                const file = originalFiles[i];
+                dt.items.add(file);
+                
+                const previewSrc = URL.createObjectURL(file);
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'w-48 h-48 overflow-hidden rounded border border-gray-300 relative group';
+                
+                const link = document.createElement('a');
+                link.href = previewSrc;
+                link.target = '_blank';
+                link.className = 'block w-full h-full';
+                link.title = 'Klik untuk memperbesar gambar';
+                
+                const img = document.createElement('img');
+                img.src = previewSrc;
+                img.className = 'object-cover w-full h-full';
+                
+                link.appendChild(img);
+                
+                if (isStamped) {
+                    const stampDiv = document.createElement('div');
+                    stampDiv.className = 'absolute bottom-2 left-2 text-white text-[10px] leading-tight font-bold border-l-2 border-yellow-400 pl-1 pointer-events-none drop-shadow-md';
+                    stampDiv.style.textShadow = '1px 1px 2px black, 0 0 1px black';
+                    stampDiv.innerHTML = `${tujuan}<br>${hariTanggal}<br>${koordinat}`;
+                    link.appendChild(stampDiv);
+                }
+                
+                imgDiv.appendChild(link);
+                newContainerHTML.appendChild(imgDiv);
+            }
+            
+            container.appendChild(newContainerHTML);
+            document.getElementById('fotos').files = dt.files;
         }
         
         // Custom Kategori Logic

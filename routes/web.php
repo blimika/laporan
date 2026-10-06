@@ -16,6 +16,9 @@ Route::get('/dashboard', function () {
     ];
     return view('dashboard', compact('stats'));
 })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('test-gd', function() {
+    return function_exists('imagecreatefromjpeg') ? 'GD YES' : 'GD NO';
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -42,9 +45,14 @@ Route::middleware('auth')->group(function () {
     Route::post('laporan/generate', [\App\Http\Controllers\LaporanPerjalananController::class, 'generate'])->name('laporan.generate');
     Route::resource('laporan', \App\Http\Controllers\LaporanPerjalananController::class);
     Route::get('export/laporan/{laporan}', [\App\Http\Controllers\LaporanPerjalananController::class, 'exportPdf'])->name('export.laporan');
+    Route::get('export/laporan/{laporan}/word', [\App\Http\Controllers\LaporanPerjalananController::class, 'exportWord'])->name('export.laporan.word');
 
     Route::post('hanya-laporan/generate', [\App\Http\Controllers\HanyaLaporanController::class, 'generate'])->name('hanya-laporan.generate');
     Route::get('export/hanya-laporan/{hanyaLaporan}', [\App\Http\Controllers\HanyaLaporanController::class, 'exportPdf'])->name('export.hanya-laporan');
+    Route::get('export/hanya-laporan/{hanyaLaporan}/word', [\App\Http\Controllers\HanyaLaporanController::class, 'exportWord'])->name('export.hanya-laporan.word');
+    Route::get('test-gd', function() {
+        return function_exists('imagecreatefromjpeg') ? 'GD YES' : 'GD NO';
+    });
     Route::resource('hanya-laporan', \App\Http\Controllers\HanyaLaporanController::class);
 
     // Admin Routes

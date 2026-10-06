@@ -205,9 +205,13 @@
             
             const tglB = new Date(data.tgl_berangkat).toLocaleDateString('id-ID');
             const tglK = new Date(data.tgl_kembali).toLocaleDateString('id-ID');
+            const tglS = data.tgl_surat ? new Date(data.tgl_surat).toLocaleDateString('id-ID') : '-';
+            const mak = data.anggaran ? data.anggaran.mak : '-';
 
             content.innerHTML = `
                 ${renderRow('Nomor Surat', data.nomor_surat)}
+                ${renderRow('Tanggal Surat', tglS)}
+                ${renderRow('Nomor MAK', mak)}
                 ${renderRow('Pelaksana', pegawai.nama)}
                 
                 <div class="col-span-2 mt-2 pt-2 border-t border-gray-100"></div>

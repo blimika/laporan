@@ -12,6 +12,8 @@
                     <div class="mb-6 p-4 bg-gray-50 rounded border">
                         <h4 class="font-bold mb-2">Detail Surat Tugas</h4>
                         <p><strong>No. ST:</strong> {{ $suratTugas->nomor_surat }}</p>
+                        <p><strong>Tanggal ST:</strong> {{ $suratTugas->tgl_surat ? $suratTugas->tgl_surat->format('d-m-Y') : '-' }}</p>
+                        <p><strong>Nomor MAK:</strong> {{ $suratTugas->anggaran->mak ?? '-' }}</p>
                         <p><strong>Pelaksana:</strong> {{ $suratTugas->pegawai->nama }} ({{ $suratTugas->pegawai->nip }})</p>
                         <p><strong>Tujuan:</strong> {{ $suratTugas->tujuan }}</p>
                     </div>

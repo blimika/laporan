@@ -55,7 +55,7 @@
                             </div>
                             <div>
                                 <x-input-label for="tujuan_perjalanan" :value="__('Tujuan Perjalanan (Singkat)')" />
-                                <x-text-input id="tujuan_perjalanan" class="block mt-1 w-full" type="text" name="tujuan_perjalanan" :value="old('tujuan_perjalanan')" required />
+                                <x-text-input id="tujuan_perjalanan" class="block mt-1 w-full" type="text" name="tujuan_perjalanan" :value="old('tujuan_perjalanan')" required onchange="reprocessImages()" />
                             </div>
                         </div>
 
@@ -87,8 +87,29 @@
                         <!-- Upload Dokumentasi -->
                         <div class="mb-4 p-4 border border-gray-200 rounded bg-gray-50">
                             <x-input-label for="fotos" :value="__('Upload Foto Dokumentasi (Bisa lebih dari 1 foto)')" />
-                            <input id="fotos" name="fotos[]" type="file" multiple accept="image/*" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" onchange="previewImages(event)" />
+                            <input id="fotos" name="fotos[]" type="file" multiple accept="image/*" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" onchange="handleFotosChange(event)" />
                             <p class="mt-1 text-xs text-gray-500">Format: JPG/PNG. Anda dapat memblok beberapa foto sekaligus saat memilih.</p>
+                            
+                            <div class="mt-4 p-4 border border-gray-300 rounded bg-white">
+                                <div class="flex items-center mb-2">
+                                    <input type="checkbox" id="check_stamp" name="check_stamp" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50" onchange="toggleStampInputs()">
+                                    <label for="check_stamp" class="ml-2 block text-sm text-gray-900 font-bold">
+                                        Tambahkan Stamp Foto Dokumentasi
+                                    </label>
+                                </div>
+                                
+                                <div id="stamp_inputs" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                    <div>
+                                        <x-input-label for="stamp_koordinat" :value="__('Koordinat Lokasi (Manual)')" />
+                                        <x-text-input id="stamp_koordinat" name="stamp_koordinat" class="block mt-1 w-full" type="text" placeholder="Contoh: -6.200000, 106.816666" onchange="reprocessImages()" />
+                                        <button type="button" onclick="getLocation()" class="mt-1 text-xs text-blue-600 hover:underline">Ambil Lokasi Saat Ini (GPS)</button>
+                                    </div>
+                                    <div>
+                                        <x-input-label for="stamp_datetime" :value="__('Tanggal & Jam (Manual/Otomatis)')" />
+                                        <x-text-input id="stamp_datetime" name="stamp_datetime" class="block mt-1 w-full" type="datetime-local" onchange="reprocessImages()" />
+                                    </div>
+                                </div>
+                            </div>
                             
                             <!-- Container Preview -->
                             <div id="image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
@@ -140,6 +161,7 @@
                 document.getElementById('tgl_perjalanan').value = data.tgl_berangkat;
                 document.getElementById('lokasi_perjalanan').value = data.tujuan;
                 document.getElementById('tujuan_perjalanan').value = data.tugas;
+                reprocessImages();
             }
         }
 
@@ -198,31 +220,107 @@
             }
         }
 
-        function previewImages(event) {
-            const container = document.getElementById('image-preview-container');
-            container.innerHTML = ''; // Reset container
+        let originalFiles = [];
 
-            const files = event.target.files;
-            if (files) {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (file.type.match('image.*')) {
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            const imgDiv = document.createElement('div');
-                            imgDiv.className = 'w-24 h-24 overflow-hidden rounded border border-gray-300';
-                            
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.className = 'object-cover w-full h-full';
-                            
-                            imgDiv.appendChild(img);
-                            container.appendChild(imgDiv);
-                        }
-                        reader.readAsDataURL(file);
-                    }
-                }
+        function handleFotosChange(event) {
+            const dt = new DataTransfer();
+            for (let i = 0; i < event.target.files.length; i++) {
+                dt.items.add(event.target.files[i]);
             }
+            originalFiles = Array.from(dt.files);
+            
+            reprocessImages();
+        }
+
+        function toggleStampInputs() {
+            const inputs = document.getElementById('stamp_inputs');
+            if (document.getElementById('check_stamp').checked) {
+                inputs.classList.remove('hidden');
+                if (!document.getElementById('stamp_datetime').value) {
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    document.getElementById('stamp_datetime').value = now.toISOString().slice(0,16);
+                }
+            } else {
+                inputs.classList.add('hidden');
+            }
+            reprocessImages();
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('stamp_koordinat').value = position.coords.latitude.toFixed(5) + ", " + position.coords.longitude.toFixed(5);
+                    reprocessImages();
+                }, function(error) {
+                    alert("Gagal mendapatkan lokasi: " + error.message);
+                });
+            } else {
+                alert("Geolocation tidak didukung oleh browser ini.");
+            }
+        }
+
+        function reprocessImages() {
+            if (originalFiles.length === 0) return;
+            
+            const container = document.getElementById('image-preview-container');
+            container.innerHTML = '';
+            
+            const isStamped = document.getElementById('check_stamp').checked;
+            const dt = new DataTransfer();
+            
+            const newContainerHTML = document.createElement('div');
+            newContainerHTML.className = 'flex flex-wrap gap-4 mt-2';
+            
+            // Get stamp text
+            const tujuan = document.getElementById('tujuan_perjalanan').value || 'Tujuan Belum Diisi';
+            let dtVal = document.getElementById('stamp_datetime').value;
+            let hariTanggal = 'Tanggal Belum Diisi';
+            if (dtVal) {
+                const dateObj = new Date(dtVal);
+                const d = String(dateObj.getDate()).padStart(2, '0');
+                const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const y = dateObj.getFullYear();
+                const h = String(dateObj.getHours()).padStart(2, '0');
+                const min = String(dateObj.getMinutes()).padStart(2, '0');
+                hariTanggal = `${d}/${m}/${y} ${h}:${min}`;
+            }
+            const koordinat = document.getElementById('stamp_koordinat').value || 'Koordinat Belum Diisi';
+            
+            for (let i = 0; i < originalFiles.length; i++) {
+                const file = originalFiles[i];
+                dt.items.add(file);
+                
+                const previewSrc = URL.createObjectURL(file);
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'w-48 h-48 overflow-hidden rounded border border-gray-300 relative group';
+                
+                const link = document.createElement('a');
+                link.href = previewSrc;
+                link.target = '_blank';
+                link.className = 'block w-full h-full';
+                link.title = 'Klik untuk memperbesar gambar';
+                
+                const img = document.createElement('img');
+                img.src = previewSrc;
+                img.className = 'object-cover w-full h-full';
+                
+                link.appendChild(img);
+                
+                if (isStamped) {
+                    const stampDiv = document.createElement('div');
+                    stampDiv.className = 'absolute bottom-2 left-2 text-white text-[10px] leading-tight font-bold border-l-2 border-yellow-400 pl-1 pointer-events-none drop-shadow-md';
+                    stampDiv.style.textShadow = '1px 1px 2px black, 0 0 1px black';
+                    stampDiv.innerHTML = `${tujuan}<br>${hariTanggal}<br>${koordinat}`;
+                    link.appendChild(stampDiv);
+                }
+                
+                imgDiv.appendChild(link);
+                newContainerHTML.appendChild(imgDiv);
+            }
+            
+            container.appendChild(newContainerHTML);
+            document.getElementById('fotos').files = dt.files;
         }
 
         // Custom Kategori Logic

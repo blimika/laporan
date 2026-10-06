@@ -68,13 +68,17 @@ class HanyaLaporanController extends Controller
             'kendala_ditemui' => 'nullable|string',
             'hasil_perjalanan' => 'required|string',
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
+            'stamp_datetime' => 'nullable|required_with:check_stamp|date',
         ]);
 
         // Merge custom kategori
-        $dataToSave = $request->except(['_token', 'fotos', 'kategori_custom']);
+        $dataToSave = $request->except(['_token', 'fotos', 'kategori_custom', 'check_stamp']);
         if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
             $dataToSave['kategori'] = $request->kategori_custom;
         }
+        
+        $dataToSave['is_stamped'] = $request->has('check_stamp');
 
         $laporan = HanyaLaporan::create($dataToSave);
 
@@ -115,12 +119,20 @@ class HanyaLaporanController extends Controller
             'kendala_ditemui' => 'nullable|string',
             'hasil_perjalanan' => 'required|string',
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
+            'stamp_datetime' => 'nullable|required_with:check_stamp|date',
         ]);
 
         // Merge custom kategori
-        $dataToUpdate = $request->except(['_token', '_method', 'fotos', 'delete_fotos', 'kategori_custom']);
+        $dataToUpdate = $request->except(['_token', '_method', 'fotos', 'delete_fotos', 'kategori_custom', 'check_stamp']);
         if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
             $dataToUpdate['kategori'] = $request->kategori_custom;
+        }
+        
+        $dataToUpdate['is_stamped'] = $request->has('check_stamp');
+        if (!$request->has('check_stamp')) {
+            $dataToUpdate['stamp_koordinat'] = null;
+            $dataToUpdate['stamp_datetime'] = null;
         }
 
         $hanyaLaporan->update($dataToUpdate);
@@ -154,8 +166,19 @@ class HanyaLaporanController extends Controller
 
     public function exportPdf(HanyaLaporan $hanyaLaporan)
     {
+        $hanyaLaporan->load('dokumentasi');
         $pdf = Pdf::loadView('exports.pdf.hanya_laporan', ['laporan' => $hanyaLaporan]);
         return $pdf->stream('Hanya_Laporan_'.$hanyaLaporan->id.'.pdf');
+    }
+
+    public function exportWord(HanyaLaporan $hanyaLaporan)
+    {
+        $hanyaLaporan->load('dokumentasi');
+        $isWord = true;
+        $html = view('exports.pdf.hanya_laporan', ['laporan' => $hanyaLaporan, 'isWord' => $isWord])->render();
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-word')
+            ->header('Content-Disposition', 'attachment; filename="Hanya_Laporan_' . $hanyaLaporan->id . '.doc"');
     }
 
     public function destroy(HanyaLaporan $hanyaLaporan)

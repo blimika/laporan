@@ -70,6 +70,9 @@ class LaporanPerjalananController extends Controller
             'kategori' => 'required|string',
             'kendala_ditemui' => 'nullable|string',
             'hasil_perjalanan' => 'required|string',
+            'check_stamp' => 'nullable',
+            'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
+            'stamp_datetime' => 'nullable|required_with:check_stamp|string',
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
         ]);
 
@@ -88,6 +91,9 @@ class LaporanPerjalananController extends Controller
             'kategori' => $kategori,
             'kendala_ditemui' => $validated['kendala_ditemui'],
             'hasil_perjalanan' => $validated['hasil_perjalanan'],
+            'is_stamped' => $request->has('check_stamp'),
+            'stamp_koordinat' => $validated['stamp_koordinat'] ?? null,
+            'stamp_datetime' => $validated['stamp_datetime'] ?? null,
         ]);
 
         // Handle foto uploads
@@ -125,6 +131,9 @@ class LaporanPerjalananController extends Controller
             'kategori' => 'required|string',
             'kendala_ditemui' => 'nullable|string',
             'hasil_perjalanan' => 'required|string',
+            'check_stamp' => 'nullable',
+            'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
+            'stamp_datetime' => 'nullable|required_with:check_stamp|string',
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
@@ -142,6 +151,9 @@ class LaporanPerjalananController extends Controller
             'kategori' => $kategori,
             'kendala_ditemui' => $validated['kendala_ditemui'],
             'hasil_perjalanan' => $validated['hasil_perjalanan'],
+            'is_stamped' => $request->has('check_stamp'),
+            'stamp_koordinat' => $validated['stamp_koordinat'] ?? null,
+            'stamp_datetime' => $validated['stamp_datetime'] ?? null,
         ]);
 
         // Handle foto uploads
@@ -176,6 +188,11 @@ class LaporanPerjalananController extends Controller
     public function exportPdf(\App\Models\LaporanPerjalanan $laporan, \App\Services\DocumentExportService $exportService)
     {
         return $exportService->exportLaporan($laporan);
+    }
+
+    public function exportWord(\App\Models\LaporanPerjalanan $laporan, \App\Services\DocumentExportService $exportService)
+    {
+        return $exportService->exportLaporanWord($laporan);
     }
 
     public function destroy(\App\Models\LaporanPerjalanan $laporan)
