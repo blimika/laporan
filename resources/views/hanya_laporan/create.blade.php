@@ -111,7 +111,7 @@
                                 <div id="stamp_inputs" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                                     <div>
                                         <x-input-label for="stamp_koordinat" :value="__('Koordinat Lokasi (Manual)')" />
-                                        <x-text-input id="stamp_koordinat" name="stamp_koordinat" class="block mt-1 w-full" type="text" placeholder="Contoh: -6.200000, 106.816666" onchange="reprocessImages()" />
+                                        <x-text-input id="stamp_koordinat" name="stamp_koordinat" class="block mt-1 w-full" type="text" placeholder="Contoh: -6.200000, 106.816666" onchange="formatKoordinat(this)" />
                                         <button type="button" onclick="getLocation()" class="mt-1 text-xs text-blue-600 hover:underline">Ambil Lokasi Saat Ini (GPS)</button>
                                     </div>
                                     <div>
@@ -245,10 +245,23 @@
             reprocessImages();
         }
 
+        function formatKoordinat(input) {
+            let val = input.value.trim();
+            if (val) {
+                const coords = val.match(/-?\d+\.\d+/g);
+                if (coords && coords.length >= 2) {
+                    const lat = parseFloat(coords[0]).toFixed(6);
+                    const lng = parseFloat(coords[1]).toFixed(6);
+                    input.value = `${lat}, ${lng}`;
+                }
+            }
+            reprocessImages();
+        }
+
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
-                    document.getElementById('stamp_koordinat').value = position.coords.latitude.toFixed(5) + ", " + position.coords.longitude.toFixed(5);
+                    document.getElementById('stamp_koordinat').value = position.coords.latitude.toFixed(6) + ", " + position.coords.longitude.toFixed(6);
                     reprocessImages();
                 }, function(error) {
                     alert("Gagal mendapatkan lokasi: " + error.message);
