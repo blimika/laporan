@@ -3,17 +3,36 @@
 <head>
     <title>Laporan Perjalanan Dinas</title>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.2; margin: 0; padding: 20px 40px; }
+        @page {
+            margin: 20mm 25mm 20mm 25mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
+        }
         .text-center { text-align: center; }
-        .content { text-align: justify; line-height: 1.4; margin-top: 10px; }
-        .content p { margin-top: 0; margin-bottom: 10px; }
-        .content table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .content th, .content td { border: 1px solid black; padding: 5px; vertical-align: top; }
+        .content { text-align: justify; line-height: 1.4; margin-top: 6px; }
+        .content p { margin-top: 0; margin-bottom: 8px; }
+        .content table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        .content th, .content td { border: 1px solid black; padding: 4px; vertical-align: top; }
         .content table th:first-child, .content table td:first-child { width: 15%; }
-        .signature { margin-top: 15px; float: right; width: 50%; text-align: center; }
+        .keep-together {
+            page-break-inside: avoid;
+        }
+        .signature-table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+            margin-top: 15px;
+            page-break-inside: avoid;
+        }
         .page-break { page-break-before: always; }
-        .section-title { font-weight: bold; margin-bottom: 2px; margin-top: 8px; }
-        .info-table { width: 100%; margin-left: 15px; margin-bottom: 2px; }
+        .section-title { font-weight: bold; margin-bottom: 2px; margin-top: 6px; }
+        .section-table { width: 100%; border-spacing: 0; margin-top: 6px; margin-bottom: 2px; }
+        .info-table { width: 100%; margin-left: 5%; margin-bottom: 8px; }
         .info-table td { padding: 1px 0; vertical-align: top; }
         .w-35 { width: 35%; }
         .w-2 { width: 2%; }
@@ -31,17 +50,17 @@
         $tglLaporanStr = $laporan->tgl_laporan->format('d') . ' ' . $months[(int)$laporan->tgl_laporan->format('m')] . ' ' . $laporan->tgl_laporan->format('Y');
     @endphp
 
-    <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 30px;">
+    <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 15px;">
         LAPORAN PERJALANAN DINAS
     </div>
 
-    <table style="width: 100%; border-spacing: 0;">
+    <table class="section-table">
         <tr>
             <td style="width: 5%; vertical-align: top; font-weight: bold;">I.</td>
             <td style="width: 95%; font-weight: bold;">DASAR HUKUM</td>
         </tr>
     </table>
-    <table class="info-table" style="margin-left: 5%;">
+    <table class="info-table">
         <tr>
             <td style="width: 35%;">
                 <span style="display:inline-block; width: 15px;">1.</span> Surat Tugas Nomor
@@ -53,19 +72,18 @@
             <td>
                 <span style="display:inline-block; width: 15px;">2.</span> SPD Nomor
             </td>
-            <td>:</td>
+            <td class="w-2">:</td>
             <td>{{ $laporan->nomor_spd ?? '-' }}</td>
         </tr>
     </table>
-    <br>
 
-    <table style="width: 100%; border-spacing: 0;">
+    <table class="section-table">
         <tr>
             <td style="width: 5%; vertical-align: top; font-weight: bold;">II.</td>
             <td style="width: 95%; font-weight: bold;">WAKTU PELAKSANAAN</td>
         </tr>
     </table>
-    <table class="info-table" style="margin-left: 5%;">
+    <table class="info-table">
         <tr>
             <td style="width: 35%;">
                 Perjalanan dilaksanakan pada tanggal
@@ -74,15 +92,14 @@
             <td>{{ $tglPerjalananStr }}</td>
         </tr>
     </table>
-    <br>
 
-    <table style="width: 100%; border-spacing: 0;">
+    <table class="section-table">
         <tr>
             <td style="width: 5%; vertical-align: top; font-weight: bold;">III.</td>
             <td style="width: 95%; font-weight: bold;">LOKASI</td>
         </tr>
     </table>
-    <table class="info-table" style="margin-left: 5%;">
+    <table class="info-table">
         <tr>
             <td style="width: 35%;">
                 Lokasi perjalanan adalah
@@ -91,15 +108,14 @@
             <td>{{ $laporan->lokasi_perjalanan }}</td>
         </tr>
     </table>
-    <br>
 
-    <table style="width: 100%; border-spacing: 0;">
+    <table class="section-table">
         <tr>
             <td style="width: 5%; vertical-align: top; font-weight: bold;">IV.</td>
             <td style="width: 95%; font-weight: bold;">TUJUAN PERJALANAN</td>
         </tr>
     </table>
-    <table class="info-table" style="margin-left: 5%;">
+    <table class="info-table">
         <tr>
             <td style="width: 35%;">
                 Tujuan perjalanan adalah
@@ -108,26 +124,64 @@
             <td>{{ $laporan->tujuan_perjalanan }}</td>
         </tr>
     </table>
-    <br>
 
-    <table style="width: 100%; border-spacing: 0;">
+    <table class="section-table">
         <tr>
             <td style="width: 5%; vertical-align: top; font-weight: bold;">V.</td>
             <td style="width: 95%; font-weight: bold;">HASIL PERJALANAN</td>
         </tr>
     </table>
 
-    <div class="content">
-        {!! \Illuminate\Support\Str::markdown($laporan->hasil_perjalanan) !!}
-    </div>
+    @php
+        $text = trim(str_replace("\r\n", "\n", $laporan->hasil_perjalanan ?? ''));
+        $isTable = (strpos($text, '|---') !== false || strpos($text, '| ---') !== false || strpos($text, '|:---') !== false);
+        $mainContent = '';
+        $lastContent = '';
 
-    <div class="signature">
-        Mataram, {{ $tglLaporanStr }}<br>
-        Yang melaksanakan tugas,
-        <div style="margin-top: 48pt;">
-            <strong><u>{{ $laporan->nama_pegawai }}</u></strong><br>
-            NIP. {{ $laporan->nip_pegawai }}
+        if ($isTable) {
+            $mainContent = $text;
+            $lastContent = '';
+        } else {
+            $paragraphs = preg_split('/\n\s*\n/', $text);
+            if (count($paragraphs) > 1) {
+                $lastP = array_pop($paragraphs);
+                $mainContent = implode("\n\n", $paragraphs);
+                $lastContent = $lastP;
+            } else {
+                $mainContent = '';
+                $lastContent = $text;
+            }
+        }
+    @endphp
+
+    @if(!empty($mainContent))
+        <div class="content">
+            {!! \Illuminate\Support\Str::markdown($mainContent) !!}
         </div>
+    @endif
+
+    <div class="keep-together">
+        @if(!empty($lastContent))
+            <div class="content">
+                {!! \Illuminate\Support\Str::markdown($lastContent) !!}
+            </div>
+        @endif
+
+        <table class="signature-table">
+            <tr>
+                <td style="width: 50%; border: none;"></td>
+                <td style="width: 50%; border: none; text-align: center; vertical-align: top;">
+                    Mataram, {{ $tglLaporanStr }}<br>
+                    Yang melaksanakan tugas,
+                    <div style="margin-top: 45pt;">
+                        <strong><u>{{ $laporan->nama_pegawai }}</u></strong>
+                        @if(!empty(trim($laporan->nip_pegawai ?? '')) && trim($laporan->nip_pegawai) !== '-')
+                            <br>NIP. {{ $laporan->nip_pegawai }}
+                        @endif
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 
     @if($laporan->dokumentasi->count() > 0)

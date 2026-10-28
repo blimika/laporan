@@ -31,32 +31,48 @@
                             </div>
                         @endif
 
+                        @php
+                            $currentNama = old('nama_pegawai', $hanyaLaporan->nama_pegawai ?? '');
+                            $currentNip = old('nip_pegawai', $hanyaLaporan->nip_pegawai ?? '');
+                            $namaInDb = $pegawais->contains('nama', $currentNama);
+                            $isCustomPegawai = !empty($currentNama) && !$namaInDb;
+                        @endphp
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
-                                <x-input-label for="nama_pegawai" :value="__('Nama Pegawai')" />
-                                <select id="nama_pegawai" name="nama_pegawai" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm select2" required>
-                                    <option value="">-- Pilih Pegawai --</option>
-                                    <!-- Jika nama_pegawai lama tidak ada di tabel pegawais -->
-                                    @php $namaFound = false; @endphp
-                                    @foreach($pegawais as $p)
-                                        <option value="{{ $p->nama }}" data-nip="{{ $p->nip }}" {{ old('nama_pegawai', $hanyaLaporan->nama_pegawai) == $p->nama ? 'selected' : '' }}>
-                                            {{ $p->nama }}
-                                        </option>
-                                        @if(old('nama_pegawai', $hanyaLaporan->nama_pegawai) == $p->nama)
-                                            @php $namaFound = true; @endphp
+                                <div class="flex items-center justify-between">
+                                    <x-input-label for="nama_pegawai_select" :value="__('Nama Pegawai')" />
+                                    <label class="inline-flex items-center text-xs text-purple-700 hover:text-purple-900 cursor-pointer select-none">
+                                        <input type="checkbox" id="check_custom_pegawai" class="rounded border-gray-300 text-purple-600 shadow-sm mr-1 focus:ring-purple-500" onchange="toggleCustomPegawai()" {{ $isCustomPegawai ? 'checked' : '' }}>
+                                        Nama Custom (Non-Database)
+                                    </label>
+                                </div>
+                                <div id="wrapper_select_pegawai" class="mt-1 {{ $isCustomPegawai ? 'hidden' : '' }}">
+                                    <select id="nama_pegawai_select" class="block w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm select2">
+                                        <option value="">-- Pilih atau Ketik Nama Pegawai --</option>
+                                        @foreach($pegawais as $p)
+                                            <option value="{{ $p->nama }}" data-nip="{{ $p->nip }}" {{ (!$isCustomPegawai && $currentNama == $p->nama) ? 'selected' : '' }}>
+                                                {{ $p->nama }}
+                                            </option>
+                                        @endforeach
+                                        @if($isCustomPegawai)
+                                            <option value="{{ $currentNama }}" data-nip="{{ $currentNip }}" selected>
+                                                {{ $currentNama }} (Custom)
+                                            </option>
                                         @endif
-                                    @endforeach
-                                    @if(!$namaFound && $hanyaLaporan->nama_pegawai)
-                                        <option value="{{ $hanyaLaporan->nama_pegawai }}" data-nip="{{ $hanyaLaporan->nip_pegawai }}" selected>
-                                            {{ $hanyaLaporan->nama_pegawai }} (Data lama)
-                                        </option>
-                                    @endif
-                                </select>
+                                    </select>
+                                </div>
+                                <div id="wrapper_custom_pegawai" class="mt-1 {{ $isCustomPegawai ? '' : 'hidden' }}">
+                                    <input type="text" id="nama_pegawai_custom" class="border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm block w-full" placeholder="Masukkan nama pegawai custom..." value="{{ $currentNama }}">
+                                </div>
+                                <input type="hidden" name="nama_pegawai" id="nama_pegawai" value="{{ $currentNama }}">
                                 <x-input-error :messages="$errors->get('nama_pegawai')" class="mt-2" />
                             </div>
                             <div>
-                                <x-input-label for="nip_pegawai" :value="__('NIP Pegawai')" />
-                                <x-text-input id="nip_pegawai" class="block mt-1 w-full bg-gray-100" type="text" name="nip_pegawai" :value="old('nip_pegawai', $hanyaLaporan->nip_pegawai)" required readonly />
+                                <div class="flex items-center justify-between">
+                                    <x-input-label for="nip_pegawai" :value="__('NIP Pegawai (Opsional)')" />
+                                    <span class="text-xs text-gray-500">Kosongkan jika tidak ada NIP</span>
+                                </div>
+                                <input type="text" id="nip_pegawai" name="nip_pegawai" class="border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm block mt-1 w-full" placeholder="Contoh: 19850101... (opsional)" value="{{ $currentNip }}">
                                 <x-input-error :messages="$errors->get('nip_pegawai')" class="mt-2" />
                             </div>
                         </div>
@@ -184,19 +200,34 @@
                             <div id="image-preview-container" class="mt-4 flex flex-wrap gap-4"></div>
                         </div>
 
-                        <div class="mb-4 flex items-center">
-                            <input type="checkbox" id="is_8_jam" name="is_8_jam" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
-                            <label for="is_8_jam" class="ml-2 block text-sm text-gray-900">
-                                Perjadin 8 Jam (Format Tabel Waktu & Kegiatan 08.00 - 17.00)
-                            </label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 items-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+                            <div>
+                                <x-input-label for="panjang_narasi" :value="__('Panjang Narasi AI (Hasil Perjalanan)')" class="font-semibold text-purple-900" />
+                                <select id="panjang_narasi" name="panjang_narasi" class="block mt-1 w-full border-gray-300 focus:border-purple-600 focus:ring-purple-600 rounded-md shadow-sm text-sm">
+                                    <option value="minimal_2">Minimal 2 Paragraf (Standar Ringkas)</option>
+                                    <option value="3_paragraf">3 Paragraf (Lengkap)</option>
+                                    <option value="lebih">Lebih dari 2 Paragraf (Mendalam / 4+ Paragraf)</option>
+                                </select>
+                                <span class="text-xs text-purple-700 mt-1 block">Tentukan panjang narasi paragraf yang akan dihasilkan AI.</span>
+                            </div>
+                            <div class="pt-2">
+                                <label class="inline-flex items-center text-sm text-gray-900 cursor-pointer select-none">
+                                    <input type="checkbox" id="is_8_jam" name="is_8_jam" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50" onchange="toggle8JamOption()">
+                                    <span class="ml-2 font-medium">Perjadin 8 Jam (Format Tabel Waktu & Kegiatan)</span>
+                                </label>
+                                <p class="text-xs text-gray-500 ml-6 mt-1">Jika dicentang, AI otomatis menyusun tabel jadwal dari 08.00 - 17.00 WITA.</p>
+                            </div>
                         </div>
                         
                         <div class="mb-4">
-                            <button type="button" id="btn-generate" onclick="generateAI()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
+                            <button type="button" id="btn-generate" onclick="generateAI()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 rounded-md inline-flex items-center shadow">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                 <span>Generate dengan AI ✨</span>
                             </button>
-                            <span id="loading-indicator" class="ml-3 text-sm text-gray-500 hidden">Sedang menyusun narasi... mohon tunggu.</span>
+                            <span id="loading-indicator" class="ml-3 text-sm text-purple-700 font-medium hidden">
+                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-700 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Sedang menyusun laporan... mohon tunggu.
+                            </span>
                         </div>
 
                         <!-- Hasil AI -->
@@ -227,6 +258,12 @@
             const hasilContainer = document.getElementById('hasil-container');
             const hasilTextarea = document.getElementById('hasil_perjalanan');
             
+            syncNamaPegawai();
+            if (!document.getElementById('nama_pegawai').value) {
+                alert('Silakan pilih atau isi Nama Pegawai terlebih dahulu.');
+                return;
+            }
+
             // Validate form
             const form = document.getElementById('laporan-form');
             if(!form.checkValidity()) {
@@ -404,6 +441,57 @@
             document.getElementById('fotos').files = dt.files;
         }
         
+        // Sync Nama Pegawai ke Hidden Input
+        function syncNamaPegawai() {
+            const isCustom = document.getElementById('check_custom_pegawai').checked;
+            const hiddenInput = document.getElementById('nama_pegawai');
+            if (isCustom) {
+                hiddenInput.value = document.getElementById('nama_pegawai_custom').value.trim();
+            } else {
+                const selectVal = $('#nama_pegawai_select').val();
+                hiddenInput.value = selectVal ? selectVal.trim() : '';
+            }
+        }
+
+        // Custom Pegawai Logic
+        function toggleCustomPegawai() {
+            const isCustom = document.getElementById('check_custom_pegawai').checked;
+            const selectWrapper = document.getElementById('wrapper_select_pegawai');
+            const customWrapper = document.getElementById('wrapper_custom_pegawai');
+            const customInput = document.getElementById('nama_pegawai_custom');
+            const nipInput = document.getElementById('nip_pegawai');
+
+            if (isCustom) {
+                selectWrapper.classList.add('hidden');
+                customWrapper.classList.remove('hidden');
+                if (!customInput.value) {
+                    customInput.value = $('#nama_pegawai_select').val() || '';
+                }
+                customInput.focus();
+            } else {
+                customWrapper.classList.add('hidden');
+                selectWrapper.classList.remove('hidden');
+                const selectedOpt = $('#nama_pegawai_select').find('option:selected');
+                if (selectedOpt.length && selectedOpt.data('nip')) {
+                    nipInput.value = selectedOpt.data('nip');
+                }
+            }
+            syncNamaPegawai();
+        }
+
+        // Toggle 8 Jam vs Paragraf Option
+        function toggle8JamOption() {
+            const is8Jam = document.getElementById('is_8_jam').checked;
+            const panjangSelect = document.getElementById('panjang_narasi');
+            if (is8Jam) {
+                panjangSelect.disabled = true;
+                panjangSelect.classList.add('bg-gray-100', 'text-gray-400');
+            } else {
+                panjangSelect.disabled = false;
+                panjangSelect.classList.remove('bg-gray-100', 'text-gray-400');
+            }
+        }
+
         // Custom Kategori Logic
         function toggleCustomKategori() {
             const select = document.getElementById('kategori');
@@ -419,19 +507,45 @@
 
         // Initialize Select2 and NIP autofill
         document.addEventListener('DOMContentLoaded', function() {
+            const customInput = document.getElementById('nama_pegawai_custom');
+            if (customInput) {
+                customInput.addEventListener('input', syncNamaPegawai);
+            }
+
             if (typeof jQuery !== 'undefined') {
-                $('#nama_pegawai').select2({
-                    placeholder: "-- Pilih Pegawai --",
+                $('#nama_pegawai_select').select2({
+                    placeholder: "-- Pilih atau Ketik Nama Pegawai --",
+                    tags: true,
                     width: '100%'
                 });
 
-                $('#nama_pegawai').on('change', function() {
+                $('#nama_pegawai_select').on('change', function() {
                     const selectedOption = $(this).find('option:selected');
                     const nip = selectedOption.data('nip');
                     if (nip) {
                         $('#nip_pegawai').val(nip);
-                    } else {
-                        $('#nip_pegawai').val('');
+                    }
+                    syncNamaPegawai();
+                });
+            }
+
+            syncNamaPegawai();
+
+            const form = document.getElementById('laporan-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    syncNamaPegawai();
+                    const nama = document.getElementById('nama_pegawai').value;
+                    if (!nama) {
+                        e.preventDefault();
+                        alert('Nama Pegawai wajib diisi!');
+                        const isCustom = document.getElementById('check_custom_pegawai').checked;
+                        if (isCustom) {
+                            document.getElementById('nama_pegawai_custom').focus();
+                        } else {
+                            $('#nama_pegawai_select').select2('open');
+                        }
+                        return false;
                     }
                 });
             }

@@ -89,6 +89,9 @@
                             <div class="ml-4 flex-1">
                                 <p class="text-sm text-gray-500 font-medium">Laporan Dibuat</p>
                                 <h4 class="text-2xl font-bold text-gray-900">{{ number_format($stats['laporan']) }}</h4>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    {{ $stats['laporan_perjalanan'] ?? 0 }} Perjadin &bull; {{ $stats['hanya_laporan'] ?? 0 }} Hanya Laporan
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\HanyaLaporan;
 use App\Models\HanyaLaporanDokumentasi;
+use App\Models\Pegawai;
+use App\Models\User;
+use App\Services\AiReportGeneratorService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
 class HanyaLaporanController extends Controller
 {
@@ -15,16 +18,16 @@ class HanyaLaporanController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nomor_st', 'like', "%{$search}%")
-                  ->orWhere('tujuan_perjalanan', 'like', "%{$search}%")
-                  ->orWhere('nama_pegawai', 'like', "%{$search}%");
+                    ->orWhere('tujuan_perjalanan', 'like', "%{$search}%")
+                    ->orWhere('nama_pegawai', 'like', "%{$search}%");
             });
         }
 
         $sort = $request->input('sort', 'created_at');
         $direction = $request->input('direction', 'desc');
-        
+
         $allowedSorts = ['nomor_st', 'nama_pegawai', 'tujuan_perjalanan', 'tgl_perjalanan'];
         if (in_array($sort, $allowedSorts)) {
             $query->orderBy($sort, $direction);
@@ -34,16 +37,18 @@ class HanyaLaporanController extends Controller
 
         $perPage = $request->input('per_page', 10);
         $laporans = $query->paginate($perPage)->withQueryString();
+
         return view('hanya_laporan.index', compact('laporans', 'sort', 'direction'));
     }
 
     public function create()
     {
-        $pegawais = \App\Models\Pegawai::all();
+        $pegawais = Pegawai::all();
+
         return view('hanya_laporan.create', compact('pegawais'));
     }
 
-    public function generate(Request $request, \App\Services\AiReportGeneratorService $aiService)
+    public function generate(Request $request, AiReportGeneratorService $aiService)
     {
         $data = $request->validate([
             'tujuan_perjalanan' => 'required|string',
@@ -53,9 +58,10 @@ class HanyaLaporanController extends Controller
             'kategori_custom' => 'nullable|string',
             'kendala_ditemui' => 'nullable|string',
             'is_8_jam' => 'nullable|boolean',
+            'panjang_narasi' => 'nullable|string',
         ]);
 
-        if ($data['kategori'] === 'Custom' && !empty($data['kategori_custom'])) {
+        if ($data['kategori'] === 'Custom' && ! empty($data['kategori_custom'])) {
             $data['kategori'] = $data['kategori_custom'];
         }
 
@@ -68,7 +74,7 @@ class HanyaLaporanController extends Controller
     {
         $validated = $request->validate([
             'nama_pegawai' => 'required|string',
-            'nip_pegawai' => 'required|string',
+            'nip_pegawai' => 'nullable|string',
             'nomor_st' => 'required|string',
             'nomor_spd' => 'nullable|string',
             'tgl_laporan' => 'required|date',
@@ -89,19 +95,19 @@ class HanyaLaporanController extends Controller
         if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
             $dataToSave['kategori'] = $request->kategori_custom;
         }
-        
+
         $dataToSave['is_stamped'] = $request->has('check_stamp');
 
         $laporan = HanyaLaporan::create($dataToSave);
 
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
-                $filename = time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $filename = time().'_'.uniqid().'.'.$foto->getClientOriginalExtension();
                 $foto->move(public_path('uploads/dokumentasi'), $filename);
-                
+
                 $laporan->dokumentasi()->create([
-                    'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $dataToSave['kategori'],
+                    'file_path' => 'uploads/dokumentasi/'.$filename,
+                    'keterangan_foto' => 'Dokumentasi '.$dataToSave['kategori'],
                 ]);
             }
         }
@@ -111,15 +117,16 @@ class HanyaLaporanController extends Controller
 
     public function edit(HanyaLaporan $hanyaLaporan)
     {
-        $pegawais = \App\Models\Pegawai::all();
+        $pegawais = Pegawai::all();
         $users = collect();
         if (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin') {
-            $userQuery = \App\Models\User::query();
+            $userQuery = User::query();
             if (auth()->user()->role === 'admin') {
                 $userQuery->where('satker_id', auth()->user()->satker_id);
             }
             $users = $userQuery->get();
         }
+
         return view('hanya_laporan.edit', compact('hanyaLaporan', 'pegawais', 'users'));
     }
 
@@ -127,7 +134,7 @@ class HanyaLaporanController extends Controller
     {
         $rules = [
             'nama_pegawai' => 'required|string',
-            'nip_pegawai' => 'required|string',
+            'nip_pegawai' => 'nullable|string',
             'nomor_st' => 'required|string',
             'nomor_spd' => 'nullable|string',
             'tgl_laporan' => 'required|date',
@@ -159,9 +166,9 @@ class HanyaLaporanController extends Controller
         if (array_key_exists('user_id', $dataToUpdate) && empty($dataToUpdate['user_id'])) {
             unset($dataToUpdate['user_id']);
         }
-        
+
         $dataToUpdate['is_stamped'] = $request->has('check_stamp');
-        if (!$request->has('check_stamp')) {
+        if (! $request->has('check_stamp')) {
             $dataToUpdate['stamp_koordinat'] = null;
             $dataToUpdate['stamp_datetime'] = null;
         }
@@ -170,12 +177,12 @@ class HanyaLaporanController extends Controller
 
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
-                $filename = time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $filename = time().'_'.uniqid().'.'.$foto->getClientOriginalExtension();
                 $foto->move(public_path('uploads/dokumentasi'), $filename);
-                
+
                 $hanyaLaporan->dokumentasi()->create([
-                    'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $dataToUpdate['kategori'],
+                    'file_path' => 'uploads/dokumentasi/'.$filename,
+                    'keterangan_foto' => 'Dokumentasi '.$dataToUpdate['kategori'],
                 ]);
             }
         }
@@ -199,6 +206,7 @@ class HanyaLaporanController extends Controller
     {
         $hanyaLaporan->load('dokumentasi');
         $pdf = Pdf::loadView('exports.pdf.hanya_laporan', ['laporan' => $hanyaLaporan]);
+
         return $pdf->stream('Hanya_Laporan_'.$hanyaLaporan->id.'.pdf');
     }
 
@@ -207,9 +215,10 @@ class HanyaLaporanController extends Controller
         $hanyaLaporan->load('dokumentasi');
         $isWord = true;
         $html = view('exports.pdf.hanya_laporan', ['laporan' => $hanyaLaporan, 'isWord' => $isWord])->render();
+
         return response($html)
             ->header('Content-Type', 'application/vnd.ms-word')
-            ->header('Content-Disposition', 'attachment; filename="Hanya_Laporan_' . $hanyaLaporan->id . '.doc"');
+            ->header('Content-Disposition', 'attachment; filename="Hanya_Laporan_'.$hanyaLaporan->id.'.doc"');
     }
 
     public function destroy(HanyaLaporan $hanyaLaporan)
@@ -220,6 +229,7 @@ class HanyaLaporanController extends Controller
             }
         }
         $hanyaLaporan->delete();
+
         return redirect()->route('hanya-laporan.index')->with('success', 'Laporan berhasil dihapus.');
     }
 }

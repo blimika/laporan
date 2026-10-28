@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Satker;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -13,22 +14,22 @@ class AiReportGeneratorService
 
         // Ambil provider & key dari tabel satkers
         $satkerId = session('satker_id');
-        $satker = \App\Models\Satker::find($satkerId);
+        $satker = Satker::find($satkerId);
 
-        if (!$satker) {
+        if (! $satker) {
             return 'Error: Satuan Kerja tidak ditemukan di sesi Anda.';
         }
 
         $provider = $satker->ai_provider ?? 'gemini';
-        
+
         $apiKey = null;
         $isCentralized = $satker->is_centralized_api;
-        
+
         if ($isCentralized) {
             $apiKey = $provider === 'deepseek' ? $satker->deepseek_api_key : $satker->gemini_api_key;
         } else {
             $user = auth()->user();
-            if (!$user) {
+            if (! $user) {
                 return 'Error: Anda belum login.';
             }
             $apiKey = $provider === 'deepseek' ? $user->deepseek_api_key : $user->gemini_api_key;
@@ -45,7 +46,8 @@ class AiReportGeneratorService
     {
         if (empty($apiKey)) {
             Log::error('Deepseek API Key is not set.');
-            return $isCentralized 
+
+            return $isCentralized
                 ? 'Error: API Key Deepseek untuk Satker Anda belum dikonfigurasi oleh Admin.'
                 : 'Error: Anda belum mengisi Deepseek API Key di pengaturan Profil Anda.';
         }
@@ -54,26 +56,29 @@ class AiReportGeneratorService
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
+                'Authorization' => 'Bearer '.$apiKey,
                 'Content-Type' => 'application/json',
             ])->post($url, [
                 'model' => 'deepseek-chat',
                 'messages' => [
                     ['role' => 'system', 'content' => 'Anda adalah asisten AI.'],
-                    ['role' => 'user', 'content' => $prompt]
+                    ['role' => 'user', 'content' => $prompt],
                 ],
                 'max_tokens' => 1024,
             ]);
 
             if ($response->successful()) {
                 $result = $response->json();
+
                 return $result['choices'][0]['message']['content'] ?? null;
             }
 
             Log::error('Deepseek API Error: '.$response->body());
+
             return 'Error: Gagal menghasilkan narasi dari AI Deepseek.';
         } catch (\Exception $e) {
             Log::error('Deepseek API Exception: '.$e->getMessage());
+
             return 'Error: Terjadi kesalahan saat menghubungi API Deepseek.';
         }
     }
@@ -82,7 +87,8 @@ class AiReportGeneratorService
     {
         if (empty($apiKey)) {
             Log::error('Gemini API Key is not set.');
-            return $isCentralized 
+
+            return $isCentralized
                 ? 'Error: API Key Gemini untuk Satker Anda belum dikonfigurasi oleh Admin.'
                 : 'Error: Anda belum mengisi Google Gemini API Key di pengaturan Profil Anda.';
         }
@@ -120,13 +126,16 @@ class AiReportGeneratorService
 
             if ($response->successful()) {
                 $result = $response->json();
+
                 return $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
             }
 
             Log::error('Gemini API Error: '.$response->body());
+
             return 'Error: Gagal menghasilkan narasi dari AI.';
         } catch (\Exception $e) {
             Log::error('Gemini API Exception: '.$e->getMessage());
+
             return 'Error: Terjadi kesalahan saat menghubungi API.';
         }
     }
@@ -141,7 +150,8 @@ class AiReportGeneratorService
         $pegawai = $data['pegawai_ditemui'] ?? '-';
         $kategori = $data['kategori'] ?? '-';
         $kendala = $data['kendala_ditemui'] ?? 'Tidak ada kendala';
-        $is8Jam = !empty($data['is_8_jam']);
+        $is8Jam = ! empty($data['is_8_jam']);
+        $panjangNarasi = $data['panjang_narasi'] ?? 'minimal_2';
 
         if ($is8Jam) {
             return <<<EOT
@@ -175,10 +185,11 @@ Ketentuan:
 EOT;
         }
 
-        return <<<EOT
+        if ($panjangNarasi === '3_paragraf') {
+            return <<<EOT
 Peran: Anda adalah staf penyusun laporan kedinasan/administrasi pemerintahan di lingkungan instansi statistik/pemerintahan.
 
-Tugas: Susun narasi "Hasil Perjalanan Dinas" transpor lokal dalam bahasa Indonesia baku dan formal. Panjang narasi HARUS TEPAT DUA (2) PARAGRAF saja.
+Tugas: Susun narasi "Hasil Perjalanan Dinas" transpor lokal dalam bahasa Indonesia baku dan formal. Panjang narasi HARUS TEPAT TIGA (3) PARAGRAF.
 
 Data Masukan:
 - Tujuan Perjalanan: {$tujuan}
@@ -187,13 +198,63 @@ Data Masukan:
 - Kategori Kegiatan: {$kategori}
 - Kendala/Masalah yang Dihadapi: {$kendala}
 
-Format Narasi (2 Paragraf):
-- Paragraf 1: Penjelasan kedatangan di lokasi, koordinasi awal dengan pihak yang ditemui, dan rincian pelaksanaan substansi kegiatan.
-- Paragraf 2: Rangkuman temuan atau kendala (jika ada), hasil akhir pelaksanaan, output data, serta tindak lanjut yang diperlukan (jika relevan).
+Format Narasi (3 Paragraf):
+- Paragraf 1: Penjelasan kedatangan di lokasi, koordinasi awal, dan penerimaan oleh pihak/pegawai yang ditemui.
+- Paragraf 2: Rincian pelaksanaan teknis dan substansi kegiatan sesuai tujuan dan kategori kegiatan di lapangan.
+- Paragraf 3: Rangkuman temuan atau kendala yang dihadapi, pencapaian target/output data, serta kesimpulan atau rekomendasi tindak lanjut.
 
 Ketentuan:
 - Hindari bahasa informal, gunakan ejaan EYD/PUEBI dan terminologi birokrasi pemerintahan.
-- Jangan menambahkan salam pembuka/penutup, langsung berikan 2 paragraf narasi.
+- Jangan menambahkan salam pembuka/penutup, langsung berikan 3 paragraf narasi.
+EOT;
+        }
+
+        if ($panjangNarasi === 'lebih') {
+            return <<<EOT
+Peran: Anda adalah staf penyusun laporan kedinasan/administrasi pemerintahan di lingkungan instansi statistik/pemerintahan.
+
+Tugas: Susun narasi "Hasil Perjalanan Dinas" transpor lokal dalam bahasa Indonesia baku dan formal secara mendalam, terperinci, dan komprehensif. Panjang narasi minimal 3 sampai 4 paragraf atau lebih sesuai kebutuhan uraian rincian kegiatan.
+
+Data Masukan:
+- Tujuan Perjalanan: {$tujuan}
+- Lokasi: {$lokasi}
+- Pihak/Pegawai yang Ditemui: {$pegawai}
+- Kategori Kegiatan: {$kategori}
+- Kendala/Masalah yang Dihadapi: {$kendala}
+
+Format Narasi (Minimal 3-4 Paragraf atau Lebih):
+- Paragraf 1: Waktu kedatangan di lokasi, koordinasi awal, dan penerimaan oleh pihak/pegawai yang ditemui.
+- Paragraf 2: Proses dan tahapan teknis pelaksanaan substansi kegiatan di lapangan secara rinci.
+- Paragraf 3: Uraian kendala/masalah teknis yang dihadapi di lapangan serta langkah penanganan langsung yang diambil.
+- Paragraf 4 (dan seterusnya): Hasil akhir yang dicapai, output data konkrit yang dihimpun, serta saran dan rekomendasi tindak lanjut kedinasan.
+
+Ketentuan:
+- Hindari bahasa informal, gunakan ejaan EYD/PUEBI dan terminologi birokrasi pemerintahan.
+- Jangan menambahkan salam pembuka/penutup, langsung berikan narasi lengkap minimal 3-4 paragraf atau lebih.
+EOT;
+        }
+
+        // Default: minimal_2
+        return <<<EOT
+Peran: Anda adalah staf penyusun laporan kedinasan/administrasi pemerintahan di lingkungan instansi statistik/pemerintahan.
+
+Tugas: Susun narasi "Hasil Perjalanan Dinas" transpor lokal dalam bahasa Indonesia baku dan formal. Panjang narasi MINIMAL DUA (2) PARAGRAF atau bisa lebih jika rincian kegiatan memerlukan penjelasan lebih lengkap.
+
+Data Masukan:
+- Tujuan Perjalanan: {$tujuan}
+- Lokasi: {$lokasi}
+- Pihak/Pegawai yang Ditemui: {$pegawai}
+- Kategori Kegiatan: {$kategori}
+- Kendala/Masalah yang Dihadapi: {$kendala}
+
+Format Narasi:
+- Paragraf 1: Penjelasan kedatangan di lokasi, koordinasi awal dengan pihak yang ditemui, dan rincian pelaksanaan substansi kegiatan.
+- Paragraf 2: Rangkuman temuan atau kendala (jika ada), hasil akhir pelaksanaan, output data yang diperoleh, serta tindak lanjut yang diperlukan.
+- Paragraf tambahan (bila diperlukan untuk memperjelas aspek teknis lapangan).
+
+Ketentuan:
+- Hindari bahasa informal, gunakan ejaan EYD/PUEBI dan terminologi birokrasi pemerintahan.
+- Jangan menambahkan salam pembuka/penutup, langsung berikan narasi minimal 2 paragraf atau lebih.
 EOT;
     }
 }
