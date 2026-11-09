@@ -11,12 +11,80 @@
                 <div class="p-6 text-gray-900">
                     <p class="mb-4 text-gray-600">Fitur ini memungkinkan Anda membuat laporan lepas tanpa mengikat ke database Surat Tugas & SPD. Lengkapi parameter di bawah ini untuk menggenerate laporan menggunakan AI.</p>
 
+                    @php
+                        $copiedLaporan = $copiedLaporan ?? null;
+                        $previousReports = $previousReports ?? collect();
+                    @endphp
+
+                    <!-- Card Fitur Copy Laporan Sebelumnya -->
+                    <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="copy_laporan_select" class="text-sm font-bold text-purple-900 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Salin / Copy dari Laporan Sebelumnya
+                            </label>
+                            @if($copiedLaporan)
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs bg-purple-200 text-purple-800 font-medium px-2.5 py-0.5 rounded-full">
+                                        Data Disalin
+                                    </span>
+                                    <a href="{{ route('hanya-laporan.create') }}" class="text-xs text-purple-700 hover:text-purple-900 underline">
+                                        Batal Salin (Form Kosong)
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 items-center">
+                            <div class="w-full">
+                                <select id="copy_laporan_select" class="block w-full border-purple-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm text-sm select2">
+                                    <option value="">-- Pilih Laporan Sebelumnya untuk Menyalin Isian --</option>
+                                    @foreach($previousReports as $prev)
+                                        @php
+                                            $prevData = [
+                                                'id' => $prev->id,
+                                                'nama_pegawai' => $prev->nama_pegawai,
+                                                'nip_pegawai' => $prev->nip_pegawai ?? '',
+                                                'nomor_st' => $prev->nomor_st,
+                                                'nomor_spd' => $prev->nomor_spd ?? '',
+                                                'tgl_laporan' => $prev->tgl_laporan ? ($prev->tgl_laporan instanceof \Carbon\CarbonInterface ? $prev->tgl_laporan->format('Y-m-d') : date('Y-m-d', strtotime($prev->tgl_laporan))) : date('Y-m-d'),
+                                                'tgl_perjalanan' => $prev->tgl_perjalanan ? ($prev->tgl_perjalanan instanceof \Carbon\CarbonInterface ? $prev->tgl_perjalanan->format('Y-m-d') : date('Y-m-d', strtotime($prev->tgl_perjalanan))) : '',
+                                                'lokasi_perjalanan' => $prev->lokasi_perjalanan,
+                                                'tujuan_perjalanan' => $prev->tujuan_perjalanan,
+                                                'pegawai_ditemui' => $prev->pegawai_ditemui,
+                                                'kategori' => $prev->kategori,
+                                                'kendala_ditemui' => $prev->kendala_ditemui ?? '',
+                                            ];
+                                        @endphp
+                                        <option value="{{ $prev->id }}" 
+                                                data-report='@json($prevData)'
+                                                {{ (isset($copiedLaporan->id) && $copiedLaporan->id == $prev->id) ? 'selected' : '' }}>
+                                            {{ $prev->tgl_perjalanan ? ($prev->tgl_perjalanan instanceof \Carbon\CarbonInterface ? $prev->tgl_perjalanan->format('d/m/Y') : date('d/m/Y', strtotime($prev->tgl_perjalanan))) : '-' }} | {{ $prev->nama_pegawai }} | {{ $prev->tujuan_perjalanan }} (ST: {{ $prev->nomor_st }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="button" onclick="applyCopyLaporan()" class="w-full sm:w-auto shrink-0 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm py-2 px-4 rounded-md shadow inline-flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                </svg>
+                                Salin Isian
+                            </button>
+                        </div>
+                        <div id="copy-alert" class="mt-2 text-xs text-purple-700 {{ $copiedLaporan ? '' : 'hidden' }}">
+                            @if($copiedLaporan)
+                                Isian dari <strong>Nama Pegawai</strong> hingga <strong>Kendala</strong> berhasil disalin dari laporan sebelumnya (<em>{{ $copiedLaporan->nama_pegawai }}</em>). Anda dapat menyesuaikan data sebelum men-generate narasi AI.
+                            @endif
+                        </div>
+                    </div>
+
                     <form id="laporan-form" method="POST" action="{{ route('hanya-laporan.store') }}" enctype="multipart/form-data">
                         @csrf
 
                         @php
-                            $currentNama = old('nama_pegawai', '');
-                            $currentNip = old('nip_pegawai', '');
+                            $currentNama = old('nama_pegawai', $copiedLaporan->nama_pegawai ?? '');
+                            $currentNip = old('nip_pegawai', $copiedLaporan->nip_pegawai ?? '');
                             $namaInDb = !empty($currentNama) && $pegawais->contains('nama', $currentNama);
                             $isCustomPegawai = !empty($currentNama) && !$namaInDb;
                         @endphp
@@ -40,7 +108,7 @@
                                     </select>
                                 </div>
                                 <div id="wrapper_custom_pegawai" class="mt-1 {{ $isCustomPegawai ? '' : 'hidden' }}">
-                                    <input type="text" id="nama_pegawai_custom" class="border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm block w-full" placeholder="Masukkan nama pegawai custom..." value="{{ $currentNama }}">
+                                    <input type="text" id="nama_pegawai_custom" class="border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm block w-full" placeholder="Masukkan nama pegawai custom..." value="{{ $isCustomPegawai ? $currentNama : '' }}">
                                 </div>
                                 <input type="hidden" name="nama_pegawai" id="nama_pegawai" value="{{ $currentNama }}">
                                 <x-input-error :messages="$errors->get('nama_pegawai')" class="mt-2" />
@@ -58,60 +126,83 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="nomor_st" :value="__('Nomor Surat Tugas')" />
-                                <x-text-input id="nomor_st" class="block mt-1 w-full" type="text" name="nomor_st" :value="old('nomor_st')" required />
+                                <x-text-input id="nomor_st" class="block mt-1 w-full" type="text" name="nomor_st" :value="old('nomor_st', $copiedLaporan->nomor_st ?? '')" required />
                                 <x-input-error :messages="$errors->get('nomor_st')" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="nomor_spd" :value="__('Nomor SPD (Opsional)')" />
-                                <x-text-input id="nomor_spd" class="block mt-1 w-full" type="text" name="nomor_spd" :value="old('nomor_spd')" />
+                                <x-text-input id="nomor_spd" class="block mt-1 w-full" type="text" name="nomor_spd" :value="old('nomor_spd', $copiedLaporan->nomor_spd ?? '')" />
                                 <x-input-error :messages="$errors->get('nomor_spd')" class="mt-2" />
                             </div>
                         </div>
 
+                        @php
+                            $copiedTglLaporan = null;
+                            if (isset($copiedLaporan->tgl_laporan)) {
+                                $copiedTglLaporan = $copiedLaporan->tgl_laporan instanceof \Carbon\CarbonInterface 
+                                    ? $copiedLaporan->tgl_laporan->format('Y-m-d') 
+                                    : ($copiedLaporan->tgl_laporan ? date('Y-m-d', strtotime($copiedLaporan->tgl_laporan)) : null);
+                            }
+                            $defaultTglLaporan = $copiedTglLaporan ?: date('Y-m-d');
+
+                            $copiedTglPerjalanan = null;
+                            if (isset($copiedLaporan->tgl_perjalanan)) {
+                                $copiedTglPerjalanan = $copiedLaporan->tgl_perjalanan instanceof \Carbon\CarbonInterface 
+                                    ? $copiedLaporan->tgl_perjalanan->format('Y-m-d') 
+                                    : ($copiedLaporan->tgl_perjalanan ? date('Y-m-d', strtotime($copiedLaporan->tgl_perjalanan)) : null);
+                            }
+                        @endphp
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="tgl_laporan" :value="__('Tanggal Laporan Dibuat')" />
-                                <x-text-input id="tgl_laporan" class="block mt-1 w-full" type="date" name="tgl_laporan" :value="old('tgl_laporan', date('Y-m-d'))" required />
+                                <x-text-input id="tgl_laporan" class="block mt-1 w-full" type="date" name="tgl_laporan" :value="old('tgl_laporan', $defaultTglLaporan)" required />
                             </div>
                             <div>
                                 <x-input-label for="tgl_perjalanan" :value="__('Tanggal Perjalanan (Pelaksanaan)')" />
-                                <x-text-input id="tgl_perjalanan" class="block mt-1 w-full" type="date" name="tgl_perjalanan" :value="old('tgl_perjalanan')" required />
+                                <x-text-input id="tgl_perjalanan" class="block mt-1 w-full" type="date" name="tgl_perjalanan" :value="old('tgl_perjalanan', $copiedTglPerjalanan ?? '')" required />
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="lokasi_perjalanan" :value="__('Lokasi (Instansi / Desa / Tempat)')" />
-                                <x-text-input id="lokasi_perjalanan" class="block mt-1 w-full" type="text" name="lokasi_perjalanan" :value="old('lokasi_perjalanan')" required />
+                                <x-text-input id="lokasi_perjalanan" class="block mt-1 w-full" type="text" name="lokasi_perjalanan" :value="old('lokasi_perjalanan', $copiedLaporan->lokasi_perjalanan ?? '')" required />
                             </div>
                             <div>
                                 <x-input-label for="tujuan_perjalanan" :value="__('Tujuan Perjalanan (Singkat)')" />
-                                <x-text-input id="tujuan_perjalanan" class="block mt-1 w-full" type="text" name="tujuan_perjalanan" :value="old('tujuan_perjalanan')" required />
+                                <x-text-input id="tujuan_perjalanan" class="block mt-1 w-full" type="text" name="tujuan_perjalanan" :value="old('tujuan_perjalanan', $copiedLaporan->tujuan_perjalanan ?? '')" required />
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <x-input-label for="pegawai_ditemui" :value="__('Pihak / Pegawai yang Ditemui')" />
-                                <x-text-input id="pegawai_ditemui" class="block mt-1 w-full" type="text" name="pegawai_ditemui" :value="old('pegawai_ditemui')" required />
+                                <x-text-input id="pegawai_ditemui" class="block mt-1 w-full" type="text" name="pegawai_ditemui" :value="old('pegawai_ditemui', $copiedLaporan->pegawai_ditemui ?? '')" required />
                             </div>
                             <div>
                                 <x-input-label for="kategori" :value="__('Kategori Perjalanan')" />
+                                @php
+                                    $standardKategori = ['Translok Koordinasi', 'Pengawasan / Supervisi Lapangan', 'Verifikasi Data', 'Pendataan Lapangan'];
+                                    $rawKategori = old('kategori', $copiedLaporan->kategori ?? '');
+                                    $isCustomKategori = !empty($rawKategori) && !in_array($rawKategori, $standardKategori);
+                                    $selectedKategori = $isCustomKategori ? 'Custom' : ($rawKategori ?: 'Translok Koordinasi');
+                                    $customKategoriVal = $isCustomKategori ? old('kategori_custom', $rawKategori) : old('kategori_custom', '');
+                                @endphp
                                 <select id="kategori" name="kategori" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required onchange="toggleCustomKategori()">
-                                    <option value="Translok Koordinasi">Translok Koordinasi</option>
-                                    <option value="Pengawasan / Supervisi Lapangan">Pengawasan / Supervisi Lapangan</option>
-                                    <option value="Verifikasi Data">Verifikasi Data</option>
-                                    <option value="Pendataan Lapangan">Pendataan Lapangan</option>
-                                    <option value="Custom">Custom (Isi Sendiri)</option>
+                                    <option value="Translok Koordinasi" {{ $selectedKategori == 'Translok Koordinasi' ? 'selected' : '' }}>Translok Koordinasi</option>
+                                    <option value="Pengawasan / Supervisi Lapangan" {{ $selectedKategori == 'Pengawasan / Supervisi Lapangan' ? 'selected' : '' }}>Pengawasan / Supervisi Lapangan</option>
+                                    <option value="Verifikasi Data" {{ $selectedKategori == 'Verifikasi Data' ? 'selected' : '' }}>Verifikasi Data</option>
+                                    <option value="Pendataan Lapangan" {{ $selectedKategori == 'Pendataan Lapangan' ? 'selected' : '' }}>Pendataan Lapangan</option>
+                                    <option value="Custom" {{ $selectedKategori == 'Custom' ? 'selected' : '' }}>Custom (Isi Sendiri)</option>
                                 </select>
-                                <input type="text" id="kategori_custom" name="kategori_custom" class="block mt-2 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm hidden" placeholder="Masukkan kategori perjalanan">
+                                <input type="text" id="kategori_custom" name="kategori_custom" class="block mt-2 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm {{ $isCustomKategori ? '' : 'hidden' }}" placeholder="Masukkan kategori perjalanan" value="{{ $customKategoriVal }}" {{ $isCustomKategori ? 'required' : '' }}>
                             </div>
                         </div>
 
                         <!-- Kendala -->
                         <div class="mb-4">
                             <x-input-label for="kendala_ditemui" :value="__('Kendala / Masalah yang Ditemukan (Opsional)')" />
-                            <textarea id="kendala_ditemui" name="kendala_ditemui" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" rows="2" placeholder="Contoh: Responden tidak ada di tempat, cuaca buruk, atau biarkan kosong jika lancar.">{{ old('kendala_ditemui') }}</textarea>
+                            <textarea id="kendala_ditemui" name="kendala_ditemui" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" rows="2" placeholder="Contoh: Responden tidak ada di tempat, cuaca buruk, atau biarkan kosong jika lancar.">{{ old('kendala_ditemui', $copiedLaporan->kendala_ditemui ?? '') }}</textarea>
                             <x-input-error :messages="$errors->get('kendala_ditemui')" class="mt-2" />
                         </div>
 
@@ -440,6 +531,113 @@
             }
         }
 
+        // Fitur Copy Laporan Sebelumnya
+        function applyCopyLaporan() {
+            const select = document.getElementById('copy_laporan_select');
+            if (!select || !select.value) {
+                alert('Silakan pilih laporan sebelumnya yang ingin disalin.');
+                return;
+            }
+
+            const selectedOption = select.options[select.selectedIndex];
+            if (!selectedOption) return;
+
+            let report;
+            try {
+                const raw = selectedOption.getAttribute('data-report');
+                report = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            } catch (e) {
+                console.error('Gagal membaca data laporan:', e);
+                return;
+            }
+
+            if (!report) return;
+
+            // 1. Nama Pegawai & NIP
+            const nama = report.nama_pegawai || '';
+            const nip = report.nip_pegawai || '';
+            const checkCustom = document.getElementById('check_custom_pegawai');
+            const selectPegawai = $('#nama_pegawai_select');
+            const customPegawai = document.getElementById('nama_pegawai_custom');
+            const hiddenNama = document.getElementById('nama_pegawai');
+            const inputNip = document.getElementById('nip_pegawai');
+
+            let optionExists = false;
+            selectPegawai.find('option').each(function() {
+                if ($(this).val() === nama && nama !== '') {
+                    optionExists = true;
+                    return false;
+                }
+            });
+
+            if (optionExists) {
+                if (checkCustom) checkCustom.checked = false;
+                toggleCustomPegawai();
+                selectPegawai.val(nama).trigger('change');
+            } else {
+                if (checkCustom) checkCustom.checked = true;
+                toggleCustomPegawai();
+                if (customPegawai) customPegawai.value = nama;
+            }
+            if (hiddenNama) hiddenNama.value = nama;
+            if (inputNip) inputNip.value = nip;
+
+            // 2. Nomor ST & SPD
+            const inputNomorSt = document.getElementById('nomor_st');
+            const inputNomorSpd = document.getElementById('nomor_spd');
+            if (inputNomorSt) inputNomorSt.value = report.nomor_st || '';
+            if (inputNomorSpd) inputNomorSpd.value = report.nomor_spd || '';
+
+            // 3. Tanggal Laporan & Tanggal Perjalanan
+            const inputTglLaporan = document.getElementById('tgl_laporan');
+            const inputTglPerjalanan = document.getElementById('tgl_perjalanan');
+            if (inputTglLaporan && report.tgl_laporan) inputTglLaporan.value = report.tgl_laporan;
+            if (inputTglPerjalanan && report.tgl_perjalanan) inputTglPerjalanan.value = report.tgl_perjalanan;
+
+            // 4. Lokasi & Tujuan Perjalanan
+            const inputLokasi = document.getElementById('lokasi_perjalanan');
+            const inputTujuan = document.getElementById('tujuan_perjalanan');
+            if (inputLokasi) inputLokasi.value = report.lokasi_perjalanan || '';
+            if (inputTujuan) inputTujuan.value = report.tujuan_perjalanan || '';
+
+            // 5. Pegawai Ditemui
+            const inputPegawaiDitemui = document.getElementById('pegawai_ditemui');
+            if (inputPegawaiDitemui) inputPegawaiDitemui.value = report.pegawai_ditemui || '';
+
+            // 6. Kategori
+            const selectKategori = document.getElementById('kategori');
+            const inputKategoriCustom = document.getElementById('kategori_custom');
+            const standardKategori = ['Translok Koordinasi', 'Pengawasan / Supervisi Lapangan', 'Verifikasi Data', 'Pendataan Lapangan'];
+            if (selectKategori) {
+                if (standardKategori.includes(report.kategori)) {
+                    selectKategori.value = report.kategori;
+                    toggleCustomKategori();
+                } else if (report.kategori) {
+                    selectKategori.value = 'Custom';
+                    toggleCustomKategori();
+                    if (inputKategoriCustom) inputKategoriCustom.value = report.kategori;
+                }
+            }
+
+            // 7. Kendala
+            const inputKendala = document.getElementById('kendala_ditemui');
+            if (inputKendala) inputKendala.value = report.kendala_ditemui || '';
+
+            // Update alert notice
+            const alertBox = document.getElementById('copy-alert');
+            if (alertBox) {
+                alertBox.innerHTML = `Isian dari <strong>Nama Pegawai</strong> hingga <strong>Kendala</strong> berhasil disalin dari laporan sebelumnya (<em>${escapeHtml(nama)}</em>). Anda dapat menyesuaikan data sebelum men-generate narasi AI.`;
+                alertBox.classList.remove('hidden');
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Initialize Select2 and NIP autofill
         document.addEventListener('DOMContentLoaded', function() {
             const customInput = document.getElementById('nama_pegawai_custom');
@@ -461,6 +659,18 @@
                         $('#nip_pegawai').val(nip);
                     }
                     syncNamaPegawai();
+                });
+
+                $('#copy_laporan_select').select2({
+                    placeholder: "-- Pilih Laporan Sebelumnya untuk Menyalin Isian --",
+                    allowClear: true,
+                    width: '100%'
+                });
+
+                $('#copy_laporan_select').on('change', function() {
+                    if ($(this).val()) {
+                        applyCopyLaporan();
+                    }
                 });
             }
 

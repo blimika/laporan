@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\HanyaLaporan;
 use App\Models\HanyaLaporanDokumentasi;
+use App\Models\LaporanPerjalanan;
 use App\Models\Pegawai;
 use App\Models\User;
 use App\Services\AiReportGeneratorService;
@@ -41,11 +42,44 @@ class HanyaLaporanController extends Controller
         return view('hanya_laporan.index', compact('laporans', 'sort', 'direction'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $pegawais = Pegawai::all();
 
-        return view('hanya_laporan.create', compact('pegawais'));
+        $copiedLaporan = null;
+        if ($request->filled('copy_from')) {
+            $copiedLaporan = HanyaLaporan::find($request->copy_from);
+        } elseif ($request->filled('copy_from_laporan')) {
+            $lapPerjalanan = LaporanPerjalanan::with(['suratTugas.pegawai', 'suratTugas.spd'])->find($request->copy_from_laporan);
+            if ($lapPerjalanan) {
+                $copiedLaporan = (object) [
+                    'id' => null,
+                    'nama_pegawai' => $lapPerjalanan->suratTugas->pegawai->nama ?? '',
+                    'nip_pegawai' => $lapPerjalanan->suratTugas->pegawai->nip ?? '',
+                    'nomor_st' => $lapPerjalanan->suratTugas->nomor_surat ?? '',
+                    'nomor_spd' => $lapPerjalanan->suratTugas->spd->nomor_spd ?? '',
+                    'tgl_laporan' => $lapPerjalanan->tgl_laporan,
+                    'tgl_perjalanan' => $lapPerjalanan->tgl_perjalanan,
+                    'lokasi_perjalanan' => $lapPerjalanan->lokasi_perjalanan,
+                    'tujuan_perjalanan' => $lapPerjalanan->tujuan_perjalanan,
+                    'pegawai_ditemui' => $lapPerjalanan->pegawai_ditemui,
+                    'kategori' => $lapPerjalanan->kategori,
+                    'kendala_ditemui' => $lapPerjalanan->kendala_ditemui,
+                ];
+            }
+        }
+
+        $previousReports = HanyaLaporan::select([
+            'id', 'nama_pegawai', 'nip_pegawai', 'nomor_st', 'nomor_spd',
+            'tgl_laporan', 'tgl_perjalanan', 'lokasi_perjalanan', 'tujuan_perjalanan',
+            'pegawai_ditemui', 'kategori', 'kendala_ditemui',
+        ])->latest()->take(100)->get();
+
+        if ($copiedLaporan && isset($copiedLaporan->id) && ! $previousReports->contains('id', $copiedLaporan->id)) {
+            $previousReports->prepend($copiedLaporan);
+        }
+
+        return view('hanya_laporan.create', compact('pegawais', 'copiedLaporan', 'previousReports'));
     }
 
     public function generate(Request $request, AiReportGeneratorService $aiService)

@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Anggaran;
 use App\Models\HanyaLaporan;
+use App\Models\LaporanPerjalanan;
+use App\Models\Pegawai;
 use App\Models\Satker;
+use App\Models\SuratTugas;
 use App\Models\User;
 use App\Services\AiReportGeneratorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -229,5 +233,155 @@ class HanyaLaporanTest extends TestCase
         $response->assertViewHas('stats', function ($stats) {
             return $stats['hanya_laporan'] === 2 && $stats['laporan'] >= 2;
         });
+    }
+
+    public function test_hanya_laporan_index_contains_copy_button(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Test',
+            'kode' => '5200',
+        ]);
+        $user = User::create([
+            'name' => 'Tester',
+            'username' => 'tester2',
+            'email' => 'tester2@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+
+        $laporan = HanyaLaporan::create([
+            'nama_pegawai' => 'Budi Santoso',
+            'nip_pegawai' => '198801012010121001',
+            'nomor_st' => 'ST/TEST/099',
+            'tgl_laporan' => now(),
+            'tgl_perjalanan' => now(),
+            'lokasi_perjalanan' => 'Kecamatan Praya',
+            'tujuan_perjalanan' => 'Koordinasi Survei',
+            'pegawai_ditemui' => 'Camat',
+            'kategori' => 'Translok Koordinasi',
+            'kendala_ditemui' => 'Sinyal terbatas',
+            'satker_id' => $satker->id,
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('hanya-laporan.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('hanya-laporan.create', ['copy_from' => $laporan->id]));
+    }
+
+    public function test_hanya_laporan_create_prefills_inputs_from_copy_from_parameter(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Test',
+            'kode' => '5200',
+        ]);
+        $user = User::create([
+            'name' => 'Tester',
+            'username' => 'tester3',
+            'email' => 'tester3@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+
+        $laporan = HanyaLaporan::create([
+            'nama_pegawai' => 'Budi Santoso',
+            'nip_pegawai' => '198801012010121001',
+            'nomor_st' => 'ST/TEST/099',
+            'nomor_spd' => 'SPD/TEST/099',
+            'tgl_laporan' => '2026-10-15',
+            'tgl_perjalanan' => '2026-10-14',
+            'lokasi_perjalanan' => 'Kecamatan Praya',
+            'tujuan_perjalanan' => 'Koordinasi Survei',
+            'pegawai_ditemui' => 'Camat Praya',
+            'kategori' => 'Translok Koordinasi',
+            'kendala_ditemui' => 'Cuaca hujan dan sinyal terbatas',
+            'hasil_perjalanan' => 'Hasil teks lama yang tidak perlu dicopy',
+            'satker_id' => $satker->id,
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('hanya-laporan.create', ['copy_from' => $laporan->id]));
+
+        $response->assertStatus(200);
+        $response->assertSee('value="Budi Santoso"', false);
+        $response->assertSee('value="198801012010121001"', false);
+        $response->assertSee('value="ST/TEST/099"', false);
+        $response->assertSee('value="SPD/TEST/099"', false);
+        $response->assertSee('value="2026-10-15"', false);
+        $response->assertSee('value="2026-10-14"', false);
+        $response->assertSee('value="Kecamatan Praya"', false);
+        $response->assertSee('value="Koordinasi Survei"', false);
+        $response->assertSee('value="Camat Praya"', false);
+        $response->assertSee('Cuaca hujan dan sinyal terbatas');
+        $response->assertDontSee('Hasil teks lama yang tidak perlu dicopy');
+    }
+
+    public function test_hanya_laporan_create_prefills_inputs_from_copy_from_laporan_parameter(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Test',
+            'kode' => '5200',
+        ]);
+        $user = User::create([
+            'name' => 'Tester',
+            'username' => 'tester4',
+            'email' => 'tester4@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+        $pegawai = Pegawai::create([
+            'nama' => 'Ahmad Pegawai',
+            'nip' => '198701012011011001',
+            'jabatan' => 'Pranata Komputer',
+            'satker_id' => $satker->id,
+        ]);
+        $anggaran = Anggaran::create([
+            'mak' => '054.01.GG.1234.524111',
+            'satker_id' => $satker->id,
+        ]);
+        $st = SuratTugas::create([
+            'nomor_surat' => 'ST/LP/2026/01',
+            'tgl_surat' => now(),
+            'tgl_berangkat' => now(),
+            'tgl_kembali' => now(),
+            'tujuan' => 'Desa Penujak',
+            'tugas' => 'Pendataan Lapangan',
+            'pembebanan_anggaran_id' => $anggaran->id,
+            'kepala_pegawai_id' => $pegawai->id,
+            'pegawai_id' => $pegawai->id,
+            'satker_id' => $satker->id,
+            'user_id' => $user->id,
+        ]);
+        $lap = LaporanPerjalanan::create([
+            'surat_tugas_id' => $st->id,
+            'tgl_laporan' => '2026-10-20',
+            'tgl_perjalanan' => '2026-10-19',
+            'lokasi_perjalanan' => 'Desa Penujak',
+            'tujuan_perjalanan' => 'Survei Ubinan',
+            'pegawai_ditemui' => 'Kepala Dusun',
+            'kategori' => 'Pendataan Lapangan',
+            'kendala_ditemui' => 'Jalan becek',
+            'hasil_perjalanan' => 'Hasil narasi lama yang tidak dicopy',
+            'satker_id' => $satker->id,
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('hanya-laporan.create', ['copy_from_laporan' => $lap->id]));
+
+        $response->assertStatus(200);
+        $response->assertSee('value="Ahmad Pegawai"', false);
+        $response->assertSee('value="198701012011011001"', false);
+        $response->assertSee('value="ST/LP/2026/01"', false);
+        $response->assertSee('value="2026-10-20"', false);
+        $response->assertSee('value="2026-10-19"', false);
+        $response->assertSee('value="Desa Penujak"', false);
+        $response->assertSee('value="Survei Ubinan"', false);
+        $response->assertSee('value="Kepala Dusun"', false);
+        $response->assertSee('Jalan becek');
+        $response->assertDontSee('Hasil narasi lama yang tidak dicopy');
     }
 }
