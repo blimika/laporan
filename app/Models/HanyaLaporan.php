@@ -2,22 +2,35 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Traits\HasContext;
 
 class HanyaLaporan extends Model
 {
-    use HasFactory, HasContext;
+    use HasContext, HasFactory;
 
-    protected $guarded = ['id'];
+    protected $guarded = [];
 
     protected function casts(): array
     {
         return [
             'tgl_laporan' => 'date',
             'tgl_perjalanan' => 'date',
+            'ada_dpr' => 'boolean',
+            'nilai_dpr' => 'decimal:2',
+            'ada_pernyataan' => 'boolean',
         ];
+    }
+
+    public function ppkPegawai()
+    {
+        return $this->belongsTo(Pegawai::class, 'ppk_pegawai_id');
+    }
+
+    public function pegawai()
+    {
+        return $this->belongsTo(Pegawai::class, 'nama_pegawai', 'nama');
     }
 
     public function dokumentasi()
@@ -27,6 +40,6 @@ class HanyaLaporan extends Model
 
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

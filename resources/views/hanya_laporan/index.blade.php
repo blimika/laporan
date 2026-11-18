@@ -44,7 +44,7 @@
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'nomor_st', 'direction' => ($sort == 'nomor_st' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
-                                            <span>Nomor ST</span>
+                                            <span>Nomor ST & SPD</span>
                                             @if($sort == 'nomor_st')
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
                                             @endif
@@ -78,7 +78,10 @@
                                             <span class="text-xs text-gray-500">Lap: {{ $lap->tgl_laporan->format('d/m/Y') }}</span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $lap->nomor_st }}
+                                            <div class="font-medium text-gray-900">{{ $lap->nomor_st }}</div>
+                                            <div class="text-xs text-gray-500 font-mono mt-0.5">
+                                                <span class="text-gray-400 font-sans">SPD:</span> {{ $lap->nomor_spd ?: '-' }}
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900">
                                             <div class="font-medium text-gray-900">{{ $lap->nama_pegawai }}</div>
@@ -98,7 +101,9 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
-                                            {{ $lap->user ? $lap->user->name : '-' }}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 font-mono">
+                                                {{ $lap->user ? ($lap->user->username ?? $lap->user->name) : '-' }}
+                                            </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                             <div class="flex justify-center space-x-2">
@@ -326,6 +331,9 @@
                 
                 ${renderRow('Pegawai Ditemui', data.pegawai_ditemui)}
                 ${renderRow('Kategori', data.kategori)}
+                
+                ${renderRow('Lampiran DPR', data.ada_dpr ? `Ya (Rp ${parseInt(data.nilai_dpr || 0).toLocaleString('id-ID')})` : 'Tidak')}
+                ${renderRow('Surat Pernyataan', data.ada_pernyataan ? 'Ya' : 'Tidak')}
                 
                 <div class="col-span-2 mt-2">
                     <p class="text-xs text-gray-500 uppercase font-semibold">Kendala / Masalah yang Ditemukan</p>

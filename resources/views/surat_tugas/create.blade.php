@@ -46,10 +46,18 @@
                                 <x-input-label for="kepala_pegawai_id" :value="__('Penandatangan ST (Kepala Satker)')" />
                                 <select id="kepala_pegawai_id" name="kepala_pegawai_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
                                     <option value="">-- Pilih Kepala Satker --</option>
-                                    @foreach($pegawais as $pegawai)
-                                        <option value="{{ $pegawai->id }}">{{ $pegawai->nama }} ({{ $pegawai->nip }})</option>
-                                    @endforeach
+                                    @forelse($kepalaPegawais as $pegawai)
+                                        <option value="{{ $pegawai->id }}" {{ old('kepala_pegawai_id') == $pegawai->id ? 'selected' : '' }}>
+                                            {{ $pegawai->nama }} ({{ $pegawai->nip }})
+                                            @if(!empty($pegawai->tags))
+                                                [{{ implode(', ', array_map(fn($t) => strtoupper($t), $pegawai->tags)) }}]
+                                            @endif
+                                        </option>
+                                    @empty
+                                        <option value="" disabled class="text-red-500 font-medium">⚠️ Belum ada pegawai bertag Kepala/Plt/Plh (Atur di Data Pegawai)</option>
+                                    @endforelse
                                 </select>
+                                <p class="text-xs text-gray-500 mt-1">Hanya menampilkan pegawai dengan tag Kepala, Plt, atau Plh.</p>
                                 <x-input-error :messages="$errors->get('kepala_pegawai_id')" class="mt-2" />
                             </div>
                         </div>

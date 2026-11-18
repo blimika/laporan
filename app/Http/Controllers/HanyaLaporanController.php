@@ -21,6 +21,7 @@ class HanyaLaporanController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('nomor_st', 'like', "%{$search}%")
+                    ->orWhere('nomor_spd', 'like', "%{$search}%")
                     ->orWhere('tujuan_perjalanan', 'like', "%{$search}%")
                     ->orWhere('nama_pegawai', 'like', "%{$search}%");
             });
@@ -29,7 +30,7 @@ class HanyaLaporanController extends Controller
         $sort = $request->input('sort', 'created_at');
         $direction = $request->input('direction', 'desc');
 
-        $allowedSorts = ['nomor_st', 'nama_pegawai', 'tujuan_perjalanan', 'tgl_perjalanan'];
+        $allowedSorts = ['nomor_st', 'nomor_spd', 'nama_pegawai', 'tujuan_perjalanan', 'tgl_perjalanan'];
         if (in_array($sort, $allowedSorts)) {
             $query->orderBy($sort, $direction);
         } else {
@@ -44,7 +45,8 @@ class HanyaLaporanController extends Controller
 
     public function create(Request $request)
     {
-        $pegawais = Pegawai::all();
+        $pegawais = Pegawai::active()->get();
+        $ppkPegawais = Pegawai::active()->ppk()->get();
 
         $copiedLaporan = null;
         if ($request->filled('copy_from')) {
@@ -65,6 +67,10 @@ class HanyaLaporanController extends Controller
                     'pegawai_ditemui' => $lapPerjalanan->pegawai_ditemui,
                     'kategori' => $lapPerjalanan->kategori,
                     'kendala_ditemui' => $lapPerjalanan->kendala_ditemui,
+                    'ada_dpr' => $lapPerjalanan->suratTugas->spd ? true : false,
+                    'nilai_dpr' => $lapPerjalanan->suratTugas->spd->nilai_dpr ?? null,
+                    'ppk_pegawai_id' => $lapPerjalanan->suratTugas->spd->ppk_pegawai_id ?? null,
+                    'ada_pernyataan' => false,
                 ];
             }
         }
@@ -73,13 +79,14 @@ class HanyaLaporanController extends Controller
             'id', 'nama_pegawai', 'nip_pegawai', 'nomor_st', 'nomor_spd',
             'tgl_laporan', 'tgl_perjalanan', 'lokasi_perjalanan', 'tujuan_perjalanan',
             'pegawai_ditemui', 'kategori', 'kendala_ditemui',
+            'ada_dpr', 'nilai_dpr', 'ppk_pegawai_id', 'ada_pernyataan',
         ])->latest()->take(100)->get();
 
         if ($copiedLaporan && isset($copiedLaporan->id) && ! $previousReports->contains('id', $copiedLaporan->id)) {
             $previousReports->prepend($copiedLaporan);
         }
 
-        return view('hanya_laporan.create', compact('pegawais', 'copiedLaporan', 'previousReports'));
+        return view('hanya_laporan.create', compact('pegawais', 'ppkPegawais', 'copiedLaporan', 'previousReports'));
     }
 
     public function generate(Request $request, AiReportGeneratorService $aiService)
@@ -122,15 +129,39 @@ class HanyaLaporanController extends Controller
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
             'stamp_datetime' => 'nullable|required_with:check_stamp|date',
+            'check_dpr' => 'nullable|boolean',
+            'nilai_dpr' => 'nullable|required_if:check_dpr,1|numeric',
+            'ppk_pegawai_id' => 'nullable|exists:pegawais,id',
+            'check_pernyataan' => 'nullable|boolean',
         ]);
 
-        // Merge custom kategori
-        $dataToSave = $request->except(['_token', 'fotos', 'kategori_custom', 'check_stamp']);
+        // Allowed database columns
+        $dataToSave = $request->only([
+            'nama_pegawai', 'nip_pegawai', 'nomor_st', 'nomor_spd',
+            'tgl_laporan', 'tgl_perjalanan', 'lokasi_perjalanan', 'tujuan_perjalanan',
+            'pegawai_ditemui', 'kategori', 'kendala_ditemui', 'hasil_perjalanan',
+            'stamp_koordinat', 'stamp_datetime',
+        ]);
+
         if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
             $dataToSave['kategori'] = $request->kategori_custom;
         }
 
         $dataToSave['is_stamped'] = $request->has('check_stamp');
+        if (! $request->has('check_stamp')) {
+            $dataToSave['stamp_koordinat'] = null;
+            $dataToSave['stamp_datetime'] = null;
+        }
+
+        $hasDpr = $request->boolean('check_dpr');
+        $dataToSave['ada_dpr'] = $hasDpr;
+        $dataToSave['nilai_dpr'] = $hasDpr ? $request->input('nilai_dpr') : null;
+        $dataToSave['ppk_pegawai_id'] = $hasDpr ? $request->input('ppk_pegawai_id') : null;
+
+        $isOrganic = Pegawai::where('nama', $dataToSave['nama_pegawai'])->exists();
+        $dataToSave['ada_pernyataan'] = ($isOrganic && ! $request->boolean('check_custom_pegawai'))
+            ? $request->boolean('check_pernyataan')
+            : false;
 
         $laporan = HanyaLaporan::create($dataToSave);
 
@@ -151,9 +182,17 @@ class HanyaLaporanController extends Controller
 
     public function edit(HanyaLaporan $hanyaLaporan)
     {
-        $pegawais = Pegawai::all();
+        $pegawais = Pegawai::active()->get();
+        if ($hanyaLaporan->pegawai && ! $pegawais->contains('id', $hanyaLaporan->pegawai->id)) {
+            $pegawais->push($hanyaLaporan->pegawai);
+        }
+        $ppkPegawais = Pegawai::active()->ppk()->get();
+        if ($hanyaLaporan->ppkPegawai && ! $ppkPegawais->contains('id', $hanyaLaporan->ppk_pegawai_id)) {
+            $ppkPegawais->push($hanyaLaporan->ppkPegawai);
+        }
+
         $users = collect();
-        if (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin') {
+        if (auth()->check() && (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')) {
             $userQuery = User::query();
             if (auth()->user()->role === 'admin') {
                 $userQuery->where('satker_id', auth()->user()->satker_id);
@@ -161,7 +200,7 @@ class HanyaLaporanController extends Controller
             $users = $userQuery->get();
         }
 
-        return view('hanya_laporan.edit', compact('hanyaLaporan', 'pegawais', 'users'));
+        return view('hanya_laporan.edit', compact('hanyaLaporan', 'pegawais', 'ppkPegawais', 'users'));
     }
 
     public function update(Request $request, HanyaLaporan $hanyaLaporan)
@@ -182,23 +221,34 @@ class HanyaLaporanController extends Controller
             'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
             'stamp_datetime' => 'nullable|required_with:check_stamp|date',
+            'check_dpr' => 'nullable|boolean',
+            'nilai_dpr' => 'nullable|required_if:check_dpr,1|numeric',
+            'ppk_pegawai_id' => 'nullable|exists:pegawais,id',
+            'check_pernyataan' => 'nullable|boolean',
         ];
 
-        if (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin') {
+        if (auth()->check() && (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')) {
             $rules['user_id'] = 'nullable|exists:users,id';
         }
 
         $validated = $request->validate($rules);
 
-        // Merge custom kategori
-        $dataToUpdate = $request->except(['_token', '_method', 'fotos', 'delete_fotos', 'kategori_custom', 'check_stamp']);
-        if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
-            $dataToUpdate['kategori'] = $request->kategori_custom;
+        // Allowed database columns
+        $allowedFields = [
+            'nama_pegawai', 'nip_pegawai', 'nomor_st', 'nomor_spd',
+            'tgl_laporan', 'tgl_perjalanan', 'lokasi_perjalanan', 'tujuan_perjalanan',
+            'pegawai_ditemui', 'kategori', 'kendala_ditemui', 'hasil_perjalanan',
+            'stamp_koordinat', 'stamp_datetime',
+        ];
+
+        if (auth()->check() && (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin') && $request->filled('user_id')) {
+            $allowedFields[] = 'user_id';
         }
 
-        // Handle user_id update only if filled (to prevent accidental orphaning)
-        if (array_key_exists('user_id', $dataToUpdate) && empty($dataToUpdate['user_id'])) {
-            unset($dataToUpdate['user_id']);
+        $dataToUpdate = $request->only($allowedFields);
+
+        if ($request->kategori === 'Custom' && $request->filled('kategori_custom')) {
+            $dataToUpdate['kategori'] = $request->kategori_custom;
         }
 
         $dataToUpdate['is_stamped'] = $request->has('check_stamp');
@@ -206,6 +256,16 @@ class HanyaLaporanController extends Controller
             $dataToUpdate['stamp_koordinat'] = null;
             $dataToUpdate['stamp_datetime'] = null;
         }
+
+        $hasDpr = $request->boolean('check_dpr');
+        $dataToUpdate['ada_dpr'] = $hasDpr;
+        $dataToUpdate['nilai_dpr'] = $hasDpr ? $request->input('nilai_dpr') : null;
+        $dataToUpdate['ppk_pegawai_id'] = $hasDpr ? $request->input('ppk_pegawai_id') : null;
+
+        $isOrganic = Pegawai::where('nama', $dataToUpdate['nama_pegawai'])->exists();
+        $dataToUpdate['ada_pernyataan'] = ($isOrganic && ! $request->boolean('check_custom_pegawai'))
+            ? $request->boolean('check_pernyataan')
+            : false;
 
         $hanyaLaporan->update($dataToUpdate);
 
@@ -238,7 +298,7 @@ class HanyaLaporanController extends Controller
 
     public function exportPdf(HanyaLaporan $hanyaLaporan)
     {
-        $hanyaLaporan->load('dokumentasi');
+        $hanyaLaporan->load(['dokumentasi', 'ppkPegawai', 'satker', 'pegawai']);
         $pdf = Pdf::loadView('exports.pdf.hanya_laporan', ['laporan' => $hanyaLaporan]);
 
         return $pdf->stream('Hanya_Laporan_'.$hanyaLaporan->id.'.pdf');
@@ -246,7 +306,7 @@ class HanyaLaporanController extends Controller
 
     public function exportWord(HanyaLaporan $hanyaLaporan)
     {
-        $hanyaLaporan->load('dokumentasi');
+        $hanyaLaporan->load(['dokumentasi', 'ppkPegawai', 'satker', 'pegawai']);
         $isWord = true;
         $html = view('exports.pdf.hanya_laporan', ['laporan' => $hanyaLaporan, 'isWord' => $isWord])->render();
 

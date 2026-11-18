@@ -2,17 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pegawai;
+use App\Models\Spd;
+use App\Models\SuratTugas;
+use App\Services\DocumentExportService;
 use Illuminate\Http\Request;
 
 class SpdController extends Controller
 {
-    public function create(\App\Models\SuratTugas $suratTugas)
+    public function create(SuratTugas $suratTugas)
     {
-        $pegawais = \App\Models\Pegawai::all();
-        return view('spd.create', compact('suratTugas', 'pegawais'));
+        $pegawais = Pegawai::active()->get();
+        $ppkPegawais = Pegawai::active()->ppk()->get();
+
+        return view('spd.create', compact('suratTugas', 'pegawais', 'ppkPegawais'));
     }
 
-    public function store(Request $request, \App\Models\SuratTugas $suratTugas)
+    public function store(Request $request, SuratTugas $suratTugas)
     {
         $validated = $request->validate([
             'nomor_spd' => 'required|unique:spds,nomor_spd',
@@ -27,14 +33,19 @@ class SpdController extends Controller
         return redirect()->route('surat-tugas.index')->with('success', 'SPD berhasil dibuat.');
     }
 
-    public function edit(\App\Models\Spd $spd)
+    public function edit(Spd $spd)
     {
-        $pegawais = \App\Models\Pegawai::all();
+        $pegawais = Pegawai::active()->get();
+        $ppkPegawais = Pegawai::active()->ppk()->get();
+        if ($spd->ppkPegawai && ! $ppkPegawais->contains('id', $spd->ppk_pegawai_id)) {
+            $ppkPegawais->push($spd->ppkPegawai);
+        }
         $suratTugas = $spd->suratTugas;
-        return view('spd.edit', compact('spd', 'suratTugas', 'pegawais'));
+
+        return view('spd.edit', compact('spd', 'suratTugas', 'pegawais', 'ppkPegawais'));
     }
 
-    public function update(Request $request, \App\Models\Spd $spd)
+    public function update(Request $request, Spd $spd)
     {
         $validated = $request->validate([
             'nomor_spd' => 'required|unique:spds,nomor_spd,'.$spd->id,
@@ -49,17 +60,17 @@ class SpdController extends Controller
         return redirect()->route('surat-tugas.index')->with('success', 'SPD berhasil diperbarui.');
     }
 
-    public function exportPdf(\App\Models\Spd $spd, \App\Services\DocumentExportService $exportService)
+    public function exportPdf(Spd $spd, DocumentExportService $exportService)
     {
         return $exportService->exportSpd($spd);
     }
 
-    public function exportDpr(\App\Models\Spd $spd, \App\Services\DocumentExportService $exportService)
+    public function exportDpr(Spd $spd, DocumentExportService $exportService)
     {
         return $exportService->exportDpr($spd);
     }
 
-    public function exportPernyataan(\App\Models\Spd $spd, \App\Services\DocumentExportService $exportService)
+    public function exportPernyataan(Spd $spd, DocumentExportService $exportService)
     {
         return $exportService->exportPernyataan($spd);
     }

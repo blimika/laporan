@@ -25,7 +25,7 @@
                             <div class="flex items-center mt-6">
                                 <label class="inline-flex items-center">
                                     <input type="checkbox" name="aktif" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50" {{ $tahun->aktif ? 'checked' : '' }}>
-                                    <span class="ml-2 text-sm text-gray-600">Jadikan Tahun Aktif (Tahun lain otomatis nonaktif)</span>
+                                    <span class="ml-2 text-sm text-gray-600">Jadikan Tahun Aktif (Dapat dipilih saat login)</span>
                                 </label>
                             </div>
                         </div>

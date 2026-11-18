@@ -11,11 +11,35 @@ class DocumentExportService
 {
     public function exportSuratTugas(SuratTugas $suratTugas)
     {
-        $suratTugas->load(['pegawai', 'kepalaPegawai', 'anggaran']);
+        $suratTugas->load(['pegawai', 'kepalaPegawai', 'anggaran', 'satker']);
         $pdf = Pdf::loadView('exports.pdf.surat_tugas', compact('suratTugas'));
 
         $safeName = str_replace(['/', '\\'], '_', $suratTugas->nomor_surat);
+
         return $pdf->stream('surat_tugas_'.$safeName.'.pdf');
+    }
+
+    public function exportSuratTugasGabungan(SuratTugas $suratTugas)
+    {
+        $suratTugas->load([
+            'pegawai',
+            'kepalaPegawai',
+            'anggaran',
+            'satker',
+            'spd.ppkPegawai',
+            'spd.suratTugas.pegawai',
+            'spd.suratTugas.kepalaPegawai',
+            'spd.suratTugas.anggaran',
+            'spd.suratTugas.satker',
+        ]);
+
+        $spd = $suratTugas->spd;
+        $pdf = Pdf::loadView('exports.pdf.surat_tugas_spd_gabungan', compact('suratTugas', 'spd'));
+
+        $safeName = str_replace(['/', '\\'], '_', $suratTugas->nomor_surat);
+        $fileName = $spd ? 'dokumen_lengkap_'.$safeName.'.pdf' : 'surat_tugas_'.$safeName.'.pdf';
+
+        return $pdf->stream($fileName);
     }
 
     public function exportSpd(Spd $spd)
@@ -24,6 +48,7 @@ class DocumentExportService
         $pdf = Pdf::loadView('exports.pdf.spd', compact('spd'));
 
         $safeName = str_replace(['/', '\\'], '_', $spd->nomor_spd);
+
         return $pdf->stream('spd_'.$safeName.'.pdf');
     }
 
@@ -33,6 +58,7 @@ class DocumentExportService
         $pdf = Pdf::loadView('exports.pdf.dpr', compact('spd'));
 
         $safeName = str_replace(['/', '\\'], '_', $spd->nomor_spd);
+
         return $pdf->stream('dpr_'.$safeName.'.pdf');
     }
 
@@ -42,6 +68,7 @@ class DocumentExportService
         $pdf = Pdf::loadView('exports.pdf.pernyataan', compact('spd'));
 
         $safeName = str_replace(['/', '\\'], '_', $spd->nomor_spd);
+
         return $pdf->stream('pernyataan_riil_'.$safeName.'.pdf');
     }
 
@@ -51,6 +78,7 @@ class DocumentExportService
         $pdf = Pdf::loadView('exports.pdf.laporan_perjalanan', compact('laporan'));
 
         $safeName = str_replace(['/', '\\'], '_', $laporan->suratTugas->nomor_surat);
+
         return $pdf->stream('laporan_perjalanan_'.$safeName.'.pdf');
     }
 
@@ -61,8 +89,9 @@ class DocumentExportService
         $html = view('exports.pdf.laporan_perjalanan', compact('laporan', 'isWord'))->render();
 
         $safeName = str_replace(['/', '\\'], '_', $laporan->suratTugas->nomor_surat);
+
         return response($html)
             ->header('Content-Type', 'application/vnd.ms-word')
-            ->header('Content-Disposition', 'attachment; filename="laporan_perjalanan_' . $safeName . '.doc"');
+            ->header('Content-Disposition', 'attachment; filename="laporan_perjalanan_'.$safeName.'.doc"');
     }
 }

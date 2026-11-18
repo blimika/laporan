@@ -142,6 +142,64 @@
                             <x-input-error :messages="$errors->get('kendala_ditemui')" class="mt-2" />
                         </div>
 
+                        <!-- Dokumen Tambahan: DPR & Surat Pernyataan -->
+                        <div class="mb-4 p-4 border border-purple-200 rounded-lg bg-purple-50/50">
+                            <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Lampiran Dokumen Tambahan (Opsional)
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Opsi DPR -->
+                                <div class="p-3 bg-white rounded border border-gray-200 shadow-sm">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="check_dpr" name="check_dpr" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:ring-purple-500" onchange="toggleDprInputs()" {{ old('check_dpr', $hanyaLaporan->ada_dpr) ? 'checked' : '' }}>
+                                        <label for="check_dpr" class="ml-2 text-sm font-semibold text-gray-900 cursor-pointer select-none">
+                                            Buat Daftar Pengeluaran Riil (DPR)
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 ml-6">Centang jika memerlukan lampiran DPR dalam dokumen laporan.</p>
+
+                                    <div id="dpr_inputs" class="mt-3 ml-6 {{ old('check_dpr', $hanyaLaporan->ada_dpr) ? '' : 'hidden' }}">
+                                        <div class="mb-2">
+                                            <x-input-label for="nilai_dpr" :value="__('Nilai Total Pengeluaran Riil (Rp)')" class="text-xs font-semibold" />
+                                            <x-text-input id="nilai_dpr" name="nilai_dpr" class="block mt-1 w-full text-sm" type="number" placeholder="Contoh: 150000" :value="old('nilai_dpr', $hanyaLaporan->nilai_dpr)" />
+                                            <x-input-error :messages="$errors->get('nilai_dpr')" class="mt-1" />
+                                            <span class="text-xs text-gray-400">Masukkan angka total pengeluaran riil tanpa titik/koma</span>
+                                        </div>
+                                        <div>
+                                            <x-input-label for="ppk_pegawai_id" :value="__('Pejabat Pembuat Komitmen (PPK)')" class="text-xs font-semibold" />
+                                            <select id="ppk_pegawai_id" name="ppk_pegawai_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm text-sm">
+                                                <option value="">-- Pilih PPK (Opsional) --</option>
+                                                @forelse($ppkPegawais as $p)
+                                                    <option value="{{ $p->id }}" {{ old('ppk_pegawai_id', $hanyaLaporan->ppk_pegawai_id) == $p->id ? 'selected' : '' }}>
+                                                        {{ $p->nama }} ({{ $p->nip ?? '-' }})
+                                                    </option>
+                                                @empty
+                                                    <option value="" disabled class="text-red-500 font-medium">⚠️ Belum ada pegawai bertag PPK (Atur di Data Pegawai)</option>
+                                                @endforelse
+                                            </select>
+                                            <p class="text-xs text-gray-500 mt-1">Hanya menampilkan pegawai dengan tag PPK.</p>
+                                            <x-input-error :messages="$errors->get('ppk_pegawai_id')" class="mt-1" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Opsi Surat Pernyataan -->
+                                <div id="wrapper_pernyataan_card" class="p-3 bg-white rounded border border-gray-200 shadow-sm {{ $isCustomPegawai ? 'hidden' : '' }}">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="check_pernyataan" name="check_pernyataan" value="1" class="rounded border-gray-300 text-purple-600 shadow-sm focus:ring-purple-500" {{ old('check_pernyataan', $hanyaLaporan->ada_pernyataan) ? 'checked' : '' }}>
+                                        <label for="check_pernyataan" class="ml-2 text-sm font-semibold text-gray-900 cursor-pointer select-none">
+                                            Buat Surat Pernyataan Riil
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 ml-6">Surat pernyataan tidak menggunakan kendaraan dinas (Khusus Pegawai Organik / dalam database).</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Upload Dokumentasi -->
                         <div class="mb-4 p-4 border border-gray-200 rounded bg-gray-50">
                             @if($hanyaLaporan->dokumentasi && $hanyaLaporan->dokumentasi->count() > 0)
@@ -460,10 +518,14 @@
             const customWrapper = document.getElementById('wrapper_custom_pegawai');
             const customInput = document.getElementById('nama_pegawai_custom');
             const nipInput = document.getElementById('nip_pegawai');
+            const wrapperPernyataan = document.getElementById('wrapper_pernyataan_card');
+            const checkPernyataan = document.getElementById('check_pernyataan');
 
             if (isCustom) {
                 selectWrapper.classList.add('hidden');
                 customWrapper.classList.remove('hidden');
+                if (wrapperPernyataan) wrapperPernyataan.classList.add('hidden');
+                if (checkPernyataan) checkPernyataan.checked = false;
                 if (!customInput.value) {
                     customInput.value = $('#nama_pegawai_select').val() || '';
                 }
@@ -471,12 +533,28 @@
             } else {
                 customWrapper.classList.add('hidden');
                 selectWrapper.classList.remove('hidden');
+                if (wrapperPernyataan) wrapperPernyataan.classList.remove('hidden');
                 const selectedOpt = $('#nama_pegawai_select').find('option:selected');
                 if (selectedOpt.length && selectedOpt.data('nip')) {
                     nipInput.value = selectedOpt.data('nip');
                 }
             }
             syncNamaPegawai();
+        }
+
+        // Toggle DPR inputs
+        function toggleDprInputs() {
+            const checkDpr = document.getElementById('check_dpr');
+            const dprInputs = document.getElementById('dpr_inputs');
+            const nilaiInput = document.getElementById('nilai_dpr');
+            if (checkDpr && checkDpr.checked) {
+                if (dprInputs) dprInputs.classList.remove('hidden');
+                if (nilaiInput && !nilaiInput.value) {
+                    nilaiInput.focus();
+                }
+            } else {
+                if (dprInputs) dprInputs.classList.add('hidden');
+            }
         }
 
         // Toggle 8 Jam vs Paragraf Option

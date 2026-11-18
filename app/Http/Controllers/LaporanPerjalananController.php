@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LaporanDokumentasi;
+use App\Models\LaporanPerjalanan;
+use App\Models\SuratTugas;
+use App\Services\AiReportGeneratorService;
+use App\Services\DocumentExportService;
 use Illuminate\Http\Request;
 
 class LaporanPerjalananController extends Controller
@@ -11,31 +16,39 @@ class LaporanPerjalananController extends Controller
      */
     public function index(Request $request)
     {
-        $query = \App\Models\LaporanPerjalanan::with(['suratTugas.pegawai', 'dokumentasi', 'user'])
-                    ->select('laporan_perjalanans.*')
-                    ->leftJoin('surat_tugas', 'laporan_perjalanans.surat_tugas_id', '=', 'surat_tugas.id')
-                    ->leftJoin('pegawais', 'surat_tugas.pegawai_id', '=', 'pegawais.id');
+        $query = LaporanPerjalanan::with(['suratTugas.pegawai', 'suratTugas.spd', 'dokumentasi', 'user'])
+            ->select('laporan_perjalanans.*')
+            ->leftJoin('surat_tugas', 'laporan_perjalanans.surat_tugas_id', '=', 'surat_tugas.id')
+            ->leftJoin('pegawais', 'surat_tugas.pegawai_id', '=', 'pegawais.id')
+            ->leftJoin('spds', 'surat_tugas.id', '=', 'spds.surat_tugas_id');
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('surat_tugas.nomor_surat', 'like', "%{$search}%")
-                  ->orWhere('surat_tugas.tugas', 'like', "%{$search}%")
-                  ->orWhere('surat_tugas.tujuan', 'like', "%{$search}%")
-                  ->orWhere('laporan_perjalanans.kategori', 'like', "%{$search}%")
-                  ->orWhere('pegawais.nama', 'like', "%{$search}%");
+                    ->orWhere('spds.nomor_spd', 'like', "%{$search}%")
+                    ->orWhere('surat_tugas.tugas', 'like', "%{$search}%")
+                    ->orWhere('surat_tugas.tujuan', 'like', "%{$search}%")
+                    ->orWhere('laporan_perjalanans.lokasi_perjalanan', 'like', "%{$search}%")
+                    ->orWhere('laporan_perjalanans.tujuan_perjalanan', 'like', "%{$search}%")
+                    ->orWhere('laporan_perjalanans.kategori', 'like', "%{$search}%")
+                    ->orWhere('pegawais.nama', 'like', "%{$search}%");
             });
         }
 
         $sort = $request->input('sort', 'laporan_perjalanans.created_at');
         $direction = $request->input('direction', 'desc');
-        
+
         $allowedSorts = [
             'tgl_laporan' => 'laporan_perjalanans.tgl_laporan',
+            'tgl_perjalanan' => 'laporan_perjalanans.tgl_perjalanan',
             'lokasi_perjalanan' => 'laporan_perjalanans.lokasi_perjalanan',
+            'tujuan_perjalanan' => 'laporan_perjalanans.tujuan_perjalanan',
             'kategori' => 'laporan_perjalanans.kategori',
             'nomor_surat' => 'surat_tugas.nomor_surat',
-            'nama_pegawai' => 'pegawais.nama'
+            'nomor_st' => 'surat_tugas.nomor_surat',
+            'nomor_spd' => 'spds.nomor_spd',
+            'nama_pegawai' => 'pegawais.nama',
         ];
 
         if (array_key_exists($sort, $allowedSorts)) {
@@ -46,17 +59,19 @@ class LaporanPerjalananController extends Controller
 
         $perPage = $request->input('per_page', 10);
         $laporans = $query->paginate($perPage)->withQueryString();
+
         return view('laporan.index', compact('laporans', 'sort', 'direction'));
     }
 
     public function create()
     {
         // Get Surat Tugas that don't have Laporan yet
-        $suratTugas = \App\Models\SuratTugas::whereDoesntHave('laporanPerjalanan')->with('pegawai')->get();
+        $suratTugas = SuratTugas::whereDoesntHave('laporanPerjalanan')->with('pegawai')->get();
+
         return view('laporan.create', compact('suratTugas'));
     }
 
-    public function generate(Request $request, \App\Services\AiReportGeneratorService $aiService)
+    public function generate(Request $request, AiReportGeneratorService $aiService)
     {
         $data = $request->validate([
             'surat_tugas_id' => 'required|exists:surat_tugas,id',
@@ -71,7 +86,7 @@ class LaporanPerjalananController extends Controller
             'is_8_jam' => 'nullable|boolean',
         ]);
 
-        if ($data['kategori'] === 'Custom' && !empty($data['kategori_custom'])) {
+        if ($data['kategori'] === 'Custom' && ! empty($data['kategori_custom'])) {
             $data['kategori'] = $data['kategori_custom'];
         }
 
@@ -104,7 +119,7 @@ class LaporanPerjalananController extends Controller
             $kategori = $request->kategori_custom;
         }
 
-        $laporan = \App\Models\LaporanPerjalanan::create([
+        $laporan = LaporanPerjalanan::create([
             'surat_tugas_id' => $validated['surat_tugas_id'],
             'tgl_laporan' => $validated['tgl_laporan'],
             'tgl_perjalanan' => $validated['tgl_perjalanan'],
@@ -122,13 +137,13 @@ class LaporanPerjalananController extends Controller
         // Handle foto uploads
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
-                $filename = time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $filename = time().'_'.uniqid().'.'.$foto->getClientOriginalExtension();
                 // Simpan langsung ke folder public/uploads
                 $foto->move(public_path('uploads/dokumentasi'), $filename);
-                
+
                 $laporan->dokumentasi()->create([
-                    'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $kategori,
+                    'file_path' => 'uploads/dokumentasi/'.$filename,
+                    'keterangan_foto' => 'Dokumentasi '.$kategori,
                 ]);
             }
         }
@@ -136,13 +151,14 @@ class LaporanPerjalananController extends Controller
         return redirect()->route('laporan.index')->with('success', 'Laporan beserta dokumentasi berhasil disimpan.');
     }
 
-    public function edit(\App\Models\LaporanPerjalanan $laporan)
+    public function edit(LaporanPerjalanan $laporan)
     {
-        $suratTugas = \App\Models\SuratTugas::where('id', $laporan->surat_tugas_id)->with('pegawai')->get();
+        $suratTugas = SuratTugas::where('id', $laporan->surat_tugas_id)->with('pegawai')->get();
+
         return view('laporan.edit', compact('laporan', 'suratTugas'));
     }
 
-    public function update(Request $request, \App\Models\LaporanPerjalanan $laporan)
+    public function update(Request $request, LaporanPerjalanan $laporan)
     {
         $validated = $request->validate([
             'surat_tugas_id' => 'required|exists:surat_tugas,id',
@@ -182,12 +198,12 @@ class LaporanPerjalananController extends Controller
         // Handle foto uploads
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
-                $filename = time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $filename = time().'_'.uniqid().'.'.$foto->getClientOriginalExtension();
                 $foto->move(public_path('uploads/dokumentasi'), $filename);
-                
+
                 $laporan->dokumentasi()->create([
-                    'file_path' => 'uploads/dokumentasi/' . $filename,
-                    'keterangan_foto' => 'Dokumentasi ' . $kategori,
+                    'file_path' => 'uploads/dokumentasi/'.$filename,
+                    'keterangan_foto' => 'Dokumentasi '.$kategori,
                 ]);
             }
         }
@@ -195,7 +211,7 @@ class LaporanPerjalananController extends Controller
         // Handle foto deletion
         if ($request->has('delete_fotos')) {
             foreach ($request->delete_fotos as $dok_id) {
-                $dok = \App\Models\LaporanDokumentasi::find($dok_id);
+                $dok = LaporanDokumentasi::find($dok_id);
                 if ($dok && $dok->laporan_id == $laporan->id) {
                     if (file_exists(public_path($dok->file_path))) {
                         unlink(public_path($dok->file_path));
@@ -208,17 +224,17 @@ class LaporanPerjalananController extends Controller
         return redirect()->route('laporan.index')->with('success', 'Laporan berhasil diperbarui.');
     }
 
-    public function exportPdf(\App\Models\LaporanPerjalanan $laporan, \App\Services\DocumentExportService $exportService)
+    public function exportPdf(LaporanPerjalanan $laporan, DocumentExportService $exportService)
     {
         return $exportService->exportLaporan($laporan);
     }
 
-    public function exportWord(\App\Models\LaporanPerjalanan $laporan, \App\Services\DocumentExportService $exportService)
+    public function exportWord(LaporanPerjalanan $laporan, DocumentExportService $exportService)
     {
         return $exportService->exportLaporanWord($laporan);
     }
 
-    public function destroy(\App\Models\LaporanPerjalanan $laporan)
+    public function destroy(LaporanPerjalanan $laporan)
     {
         // Hapus file dokumentasi
         foreach ($laporan->dokumentasi as $dok) {

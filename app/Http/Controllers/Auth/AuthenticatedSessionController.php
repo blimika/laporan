@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Satker;
+use App\Models\Tahun;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +18,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        $satkers = \App\Models\Satker::all();
-        $tahuns = \App\Models\Tahun::where('aktif', true)->get();
-        
+        $satkers = Satker::all();
+        $tahuns = Tahun::where('aktif', true)->orderBy('tahun', 'desc')->get();
+        if ($tahuns->isEmpty()) {
+            $tahuns = Tahun::orderBy('tahun', 'desc')->get();
+        }
+
         return view('auth.login', compact('satkers', 'tahuns'));
     }
 
@@ -30,7 +35,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
-        
+
         $user = auth()->user();
         if ($user->role === 'super') {
             // Superadmin views all or we let them have no satker_id initially

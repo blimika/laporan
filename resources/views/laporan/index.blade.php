@@ -9,39 +9,25 @@
         <div class="max-w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Daftar Laporan Perjalanan</h3>
-                        <a href="{{ route('laporan.create') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow">
-                            + Input Laporan AI Baru
-                        </a>
-                    </div>
-
-                    <!-- Search Form -->
-                    <div class="mb-4 bg-gray-50 p-4 rounded-lg border">
-                        <form action="{{ route('laporan.index') }}" method="GET" class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div class="flex items-center space-x-2 w-full sm:w-auto">
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari No. ST, Tujuan, atau Pelaksana..." class="w-full sm:w-64 border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm text-sm">
-                                <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded text-sm">
-                                    Cari
-                                </button>
-                                @if(request('search'))
-                                    <a href="{{ route('laporan.index') }}" class="text-gray-500 hover:text-gray-700 text-sm py-2 px-3 border border-gray-300 rounded hover:bg-gray-100">
-                                        Reset
-                                    </a>
-                                @endif
-                            </div>
-
-                            <div class="flex items-center space-x-2 w-full sm:w-auto">
-                                <label for="per_page" class="text-sm text-gray-700">Tampilkan:</label>
-                                <select name="per_page" id="per_page" onchange="this.form.submit()" class="border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm text-sm py-2">
-                                    <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5</option>
-                                    <option value="10" {{ request('per_page', '10') == '10' ? 'selected' : '' }}>10</option>
-                                    <option value="20" {{ request('per_page') == '20' ? 'selected' : '' }}>20</option>
-                                    <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
-                                    <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
-                                </select>
-                            </div>
+                    <div class="flex justify-between items-center mb-6">
+                        <form method="GET" action="{{ route('laporan.index') }}" class="flex items-center space-x-2">
+                            <x-text-input id="search" name="search" type="text" class="block w-64" placeholder="Cari Pegawai, Tujuan, No ST..." value="{{ request('search') }}" />
+                            <select name="per_page" class="border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" onchange="this.form.submit()">
+                                <option value="5" {{ request('per_page') == 5 ? 'selected' : '' }}>5 baris</option>
+                                <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 baris</option>
+                                <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20 baris</option>
+                                <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 baris</option>
+                                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 baris</option>
+                            </select>
+                            <x-primary-button>Cari</x-primary-button>
+                            @if(request('search'))
+                                <a href="{{ route('laporan.index') }}" class="text-sm text-gray-500 hover:text-gray-700 ml-2">Reset</a>
+                            @endif
                         </form>
+                        <a href="{{ route('laporan.create') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            <span>Input Laporan AI Baru</span>
+                        </a>
                     </div>
 
                     @if(session('success'))
@@ -51,129 +37,156 @@
                     @endif
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 border mt-4">
+                        <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nomor_surat', 'direction' => ($sort == 'nomor_surat' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
-                                            <span>No. ST</span>
-                                            @if($sort == 'nomor_surat')
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'tgl_perjalanan', 'direction' => ($sort == 'tgl_perjalanan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Waktu</span>
+                                            @if($sort == 'tgl_perjalanan')
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
                                             @endif
                                         </a>
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nomor_surat', 'direction' => ($sort == 'nomor_surat' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Nomor ST & SPD</span>
+                                            @if($sort == 'nomor_surat' || $sort == 'nomor_st')
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'nama_pegawai', 'direction' => ($sort == 'nama_pegawai' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
-                                            <span>Pelaksana</span>
+                                            <span>Nama Pegawai</span>
                                             @if($sort == 'nama_pegawai')
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
                                             @endif
                                         </a>
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'lokasi_perjalanan', 'direction' => ($sort == 'lokasi_perjalanan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
-                                            <span>Lokasi</span>
-                                            @if($sort == 'lokasi_perjalanan')
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'tujuan_perjalanan', 'direction' => ($sort == 'tujuan_perjalanan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                            <span>Tujuan Perjalanan</span>
+                                            @if($sort == 'tujuan_perjalanan' || $sort == 'lokasi_perjalanan')
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
                                             @endif
                                         </a>
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'tgl_laporan', 'direction' => ($sort == 'tgl_laporan' && $direction == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center space-x-1 hover:text-gray-700">
-                                            <span>Tanggal</span>
-                                            @if($sort == 'tgl_laporan')
-                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction == 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}"></path></svg>
-                                            @endif
-                                        </a>
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Foto</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pembuat</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse($laporans as $laporan)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $laporan->suratTugas->nomor_surat }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $laporan->suratTugas->pegawai->nama }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            {{ $laporan->lokasi_perjalanan }}
-                                            @if($laporan->stamp_koordinat)
-                                                <a href="https://maps.google.com/?q={{ $laporan->stamp_koordinat }}" target="_blank" class="ml-1 text-red-500 hover:text-red-700 inline-block" title="Buka di Google Maps">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z" />
-                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                </a>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $laporan->tgl_perjalanan ? $laporan->tgl_perjalanan->format('d/m/Y') : ($laporan->suratTugas->tgl_berangkat ? $laporan->suratTugas->tgl_berangkat->format('d/m/Y') : '-') }}<br>
+                                            <span class="text-xs text-gray-500">Lap: {{ $laporan->tgl_laporan ? $laporan->tgl_laporan->format('d/m/Y') : '-' }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <div class="font-medium text-gray-900">{{ $laporan->suratTugas->nomor_surat ?? '-' }}</div>
+                                            <div class="text-xs text-gray-500 font-mono mt-0.5">
+                                                <span class="text-gray-400 font-sans">SPD:</span> {{ $laporan->suratTugas->spd?->nomor_spd ?: '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900">
+                                            <div class="font-medium text-gray-900">{{ $laporan->suratTugas->pegawai->nama ?? '-' }}</div>
+                                            @if($laporan->suratTugas->pegawai?->nip)
+                                                <div class="text-xs text-gray-500 font-mono">{{ $laporan->suratTugas->pegawai->nip }}</div>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $laporan->tgl_laporan->format('d/m/Y') }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @if($laporan->dokumentasi->count() > 0)
-                                                <div class="flex -space-x-2 overflow-hidden cursor-pointer" onclick="showFoto({{ $laporan->dokumentasi->toJson() }}, {{ $laporan->toJson() }})" title="Lihat Foto">
-                                                    @foreach($laporan->dokumentasi->take(3) as $dok)
-                                                        <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover hover:opacity-75" src="{{ asset($dok->file_path) }}" alt="Foto">
-                                                    @endforeach
-                                                    @if($laporan->dokumentasi->count() > 3)
-                                                        <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs text-gray-500 font-bold">
-                                                            +{{ $laporan->dokumentasi->count() - 3 }}
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            @else
-                                                <span class="text-xs text-gray-400 italic">Tidak ada foto</span>
-                                            @endif
+                                        <td class="px-6 py-4 text-sm text-gray-500">
+                                            <div class="font-medium text-gray-900">
+                                                {{ $laporan->lokasi_perjalanan }}
+                                                @if($laporan->stamp_koordinat)
+                                                    <a href="https://maps.google.com/?q={{ $laporan->stamp_koordinat }}" target="_blank" class="ml-1 text-red-500 hover:text-red-700 inline-block" title="Buka di Google Maps">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                            <div class="text-xs">{{ $laporan->tujuan_perjalanan }}</div>
+                                            <div class="mt-1 flex items-center space-x-2">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    {{ $laporan->kategori }}
+                                                </span>
+                                                @if($laporan->dokumentasi->count() > 0)
+                                                    <div class="flex -space-x-1.5 overflow-hidden cursor-pointer" onclick="showFoto({{ $laporan->dokumentasi->toJson() }}, {{ $laporan->toJson() }})" title="Lihat Foto Dokumentasi ({{ $laporan->dokumentasi->count() }})">
+                                                        @foreach($laporan->dokumentasi->take(3) as $dok)
+                                                            <img class="inline-block h-5 w-5 rounded-full ring-1 ring-white object-cover hover:opacity-75" src="{{ asset($dok->file_path) }}" alt="Foto">
+                                                        @endforeach
+                                                        @if($laporan->dokumentasi->count() > 3)
+                                                            <div class="inline-block h-5 w-5 rounded-full ring-1 ring-white bg-gray-200 flex items-center justify-center text-[9px] text-gray-600 font-bold">
+                                                                +{{ $laporan->dokumentasi->count() - 3 }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center space-x-3">
-                                            <!-- Tombol View -->
-                                            <button type="button" data-laporan="{{ $laporan->toJson() }}" data-st="{{ $laporan->suratTugas->toJson() }}" data-pegawai="{{ $laporan->suratTugas->pegawai->toJson() }}" data-dokumentasi="{{ $laporan->dokumentasi->toJson() }}" onclick="showDetail(this)" class="text-blue-600 hover:text-blue-900" title="View Detail">
-                                                <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </button>
-
-                                            <!-- Tombol Copy ke Buat Hanya Laporan -->
-                                            <a href="{{ route('hanya-laporan.create', ['copy_from_laporan' => $laporan->id]) }}" class="text-amber-600 hover:text-amber-900" title="Copy ke Buat Hanya Laporan">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                            </a>
-
-                                            <!-- Tombol Edit -->
-                                            <a href="{{ route('laporan.edit', $laporan->id) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit Laporan">
-                                                <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </a>
-
-                                            <!-- Tombol Hapus -->
-                                            <form action="{{ route('laporan.destroy', $laporan->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus Laporan ini?');" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus Laporan">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                                            @php
+                                                $pembuatUser = $laporan->user ?? $laporan->suratTugas->user;
+                                            @endphp
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 font-mono">
+                                                {{ $pembuatUser ? ($pembuatUser->username ?? $pembuatUser->name) : '-' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                            <div class="flex justify-center space-x-2">
+                                                <!-- View Laporan -->
+                                                <button type="button" data-laporan="{{ $laporan->toJson() }}" data-st="{{ $laporan->suratTugas->toJson() }}" data-spd="{{ $laporan->suratTugas->spd ? $laporan->suratTugas->spd->toJson() : 'null' }}" data-pegawai="{{ $laporan->suratTugas->pegawai->toJson() }}" data-dokumentasi="{{ $laporan->dokumentasi->toJson() }}" onclick="showDetail(this)" class="text-purple-600 hover:text-purple-900" title="Lihat Detail">
                                                     <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                     </svg>
                                                 </button>
-                                            </form>
 
-                                            <!-- Cetak PDF -->
-                                            <a href="{{ route('export.laporan', $laporan->id) }}" class="text-purple-600 hover:text-purple-900" title="Cetak PDF Laporan" target="_blank">
-                                                <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                            </a>
-                                            <!-- Download Word -->
-                                            <a href="{{ route('export.laporan.word', $laporan->id) }}" class="text-blue-600 hover:text-blue-900" title="Download Word" target="_blank">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                </svg>
-                                            </a>
+                                                <!-- Cetak Laporan -->
+                                                <a href="{{ route('export.laporan', $laporan->id) }}" class="text-green-600 hover:text-green-900" title="Cetak Laporan PDF" target="_blank">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                    </svg>
+                                                </a>
+
+                                                <!-- Download Word -->
+                                                <a href="{{ route('export.laporan.word', $laporan->id) }}" class="text-blue-600 hover:text-blue-900" title="Download Word" target="_blank">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                </a>
+
+                                                <!-- Copy Laporan -->
+                                                <a href="{{ route('hanya-laporan.create', ['copy_from_laporan' => $laporan->id]) }}" class="text-amber-600 hover:text-amber-900" title="Copy ke Buat Hanya Laporan">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                </a>
+
+                                                <!-- Edit Laporan -->
+                                                <a href="{{ route('laporan.edit', $laporan->id) }}" class="text-blue-600 hover:text-blue-900" title="Edit Laporan">
+                                                    <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </a>
+
+                                                <!-- Hapus Laporan -->
+                                                <form action="{{ route('laporan.destroy', $laporan->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus laporan ini?');" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus Laporan">
+                                                        <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">Belum ada Laporan.</td>
+                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                            Belum ada data laporan.
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -272,6 +285,7 @@
         function showDetail(buttonElement) {
             const data = JSON.parse(buttonElement.getAttribute('data-laporan'));
             const st = JSON.parse(buttonElement.getAttribute('data-st'));
+            const spd = buttonElement.getAttribute('data-spd') !== 'null' ? JSON.parse(buttonElement.getAttribute('data-spd')) : null;
             const pegawai = JSON.parse(buttonElement.getAttribute('data-pegawai'));
             const dokumentasi = JSON.parse(buttonElement.getAttribute('data-dokumentasi'));
             const content = document.getElementById('detail-content');
@@ -283,8 +297,15 @@
                         </div>`;
             };
             
-            const tglL = new Date(data.tgl_laporan).toLocaleDateString('id-ID');
-            const tglP = new Date(data.tgl_perjalanan).toLocaleDateString('id-ID');
+            const tglL = data.tgl_laporan ? new Date(data.tgl_laporan).toLocaleDateString('id-ID') : '-';
+            const tglP = data.tgl_perjalanan ? new Date(data.tgl_perjalanan).toLocaleDateString('id-ID') : '-';
+
+            let mapHtml = '';
+            if (data.stamp_koordinat) {
+                mapHtml = `<a href="https://maps.google.com/?q=${data.stamp_koordinat}" target="_blank" class="ml-1 text-red-500 hover:text-red-700 inline-block" title="Buka di Google Maps">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                           </a>`;
+            }
 
             let fotosHtml = '';
             const appUrl = "{{ config('app.url') }}";
@@ -314,7 +335,6 @@
                 }
 
                 dokumentasi.forEach(dok => {
-                    // Pastikan url tidak double slash
                     const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
                     fotosHtml += `<div class="w-24 h-24 overflow-hidden rounded border border-gray-300 relative group">
                                     <a href="${baseUrl}/${dok.file_path}" target="_blank" class="block w-full h-full">
@@ -328,13 +348,15 @@
 
             content.innerHTML = `
                 ${renderRow('Nomor Surat Tugas', st.nomor_surat)}
+                ${renderRow('Nomor SPD', spd ? spd.nomor_spd : '-')}
                 ${renderRow('Pelaksana', pegawai.nama)}
+                ${renderRow('NIP', pegawai.nip)}
                 
                 <div class="col-span-2 mt-2 pt-2 border-t border-gray-100"></div>
                 ${renderRow('Tanggal Laporan', tglL)}
                 ${renderRow('Tanggal Perjalanan', tglP)}
                 
-                ${renderRow('Lokasi Perjalanan', data.lokasi_perjalanan + (data.stamp_koordinat ? ` <a href="https://maps.google.com/?q=${data.stamp_koordinat}" target="_blank" class="ml-1 text-red-500 hover:text-red-700 inline-block" title="Buka di Google Maps"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></a>` : ''))}
+                ${renderRow('Lokasi Perjalanan', data.lokasi_perjalanan + mapHtml)}
                 ${renderRow('Tujuan Perjalanan', data.tujuan_perjalanan)}
                 
                 ${renderRow('Pegawai Ditemui', data.pegawai_ditemui)}

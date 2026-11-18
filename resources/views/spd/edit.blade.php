@@ -34,10 +34,15 @@
                             <x-input-label for="ppk_pegawai_id" :value="__('Pejabat Pembuat Komitmen (PPK)')" />
                             <select id="ppk_pegawai_id" name="ppk_pegawai_id" class="block mt-1 w-full border-gray-400 focus:border-black focus:ring-black rounded-md shadow-sm" required>
                                 <option value="">-- Pilih PPK --</option>
-                                @foreach($pegawais as $pegawai)
-                                    <option value="{{ $pegawai->id }}" {{ old('ppk_pegawai_id', $spd->ppk_pegawai_id) == $pegawai->id ? 'selected' : '' }}>{{ $pegawai->nama }} ({{ $pegawai->nip }})</option>
-                                @endforeach
+                                @forelse($ppkPegawais as $pegawai)
+                                    <option value="{{ $pegawai->id }}" {{ old('ppk_pegawai_id', $spd->ppk_pegawai_id) == $pegawai->id ? 'selected' : '' }}>
+                                        {{ $pegawai->nama }} ({{ $pegawai->nip }})
+                                    </option>
+                                @empty
+                                    <option value="" disabled class="text-red-500 font-medium">⚠️ Belum ada pegawai dengan tag PPK. Harap atur di Data Pegawai.</option>
+                                @endforelse
                             </select>
+                            <p class="text-xs text-gray-500 mt-1">Hanya menampilkan pegawai dengan tag PPK.</p>
                             <x-input-error :messages="$errors->get('ppk_pegawai_id')" class="mt-2" />
                         </div>
 

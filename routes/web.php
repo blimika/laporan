@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiProviderController;
 use App\Http\Controllers\AnggaranController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HanyaLaporanController;
 use App\Http\Controllers\LaporanPerjalananController;
 use App\Http\Controllers\PegawaiController;
@@ -11,32 +12,14 @@ use App\Http\Controllers\SpdController;
 use App\Http\Controllers\SuratTugasController;
 use App\Http\Controllers\TahunController;
 use App\Http\Controllers\UserController;
-use App\Models\Anggaran;
-use App\Models\HanyaLaporan;
-use App\Models\LaporanPerjalanan;
-use App\Models\Pegawai;
-use App\Models\SuratTugas;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    $laporanPerjalanan = LaporanPerjalanan::count();
-    $hanyaLaporan = HanyaLaporan::count();
-
-    $stats = [
-        'pegawai' => Pegawai::count(),
-        'anggaran' => Anggaran::count(),
-        'surat_tugas' => SuratTugas::count(),
-        'laporan' => $laporanPerjalanan + $hanyaLaporan,
-        'laporan_perjalanan' => $laporanPerjalanan,
-        'hanya_laporan' => $hanyaLaporan,
-    ];
-
-    return view('dashboard', compact('stats'));
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('test-gd', function () {
     return function_exists('imagecreatefromjpeg') ? 'GD YES' : 'GD NO';
 });
@@ -45,6 +28,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/switch-tahun', function (Request $request) {
+        $request->validate([
+            'tahun_id' => 'required|exists:tahuns,id',
+        ]);
+        session(['tahun_id' => $request->tahun_id]);
+
+        return back()->with('success', 'Tahun anggaran berhasil diubah.');
+    })->name('switch.tahun');
 
     Route::get('/pegawais/template', [PegawaiController::class, 'downloadTemplate'])->name('pegawais.template');
     Route::post('/pegawais/import', [PegawaiController::class, 'import'])->name('pegawais.import');

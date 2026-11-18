@@ -64,11 +64,30 @@
                 @php
                     $satker = \App\Models\Satker::find(session('satker_id'));
                     $tahun = \App\Models\Tahun::find(session('tahun_id'));
+                    $availableTahuns = \App\Models\Tahun::where('aktif', true)->orderBy('tahun', 'desc')->get();
                 @endphp
-                @if($satker && $tahun)
-                <div class="text-xs text-gray-500 me-4 text-right">
-                    <span class="font-bold text-gray-700">{{ $satker->kode }}</span> - {{ $satker->nama }} <br>
-                    Tahun: <span class="font-bold text-gray-700">{{ $tahun->tahun }}</span>
+                @if($satker || $tahun)
+                <div class="text-xs text-gray-500 me-4 text-right flex items-center space-x-3">
+                    @if($satker)
+                    <div>
+                        <span class="font-bold text-gray-700">{{ $satker->kode }}</span> - {{ $satker->nama }}
+                    </div>
+                    @endif
+                    @if($availableTahuns->count() > 1)
+                        <form method="POST" action="{{ route('switch.tahun') }}" class="inline-flex items-center">
+                            @csrf
+                            <label for="nav_tahun_id" class="me-1 font-semibold text-gray-600">Tahun:</label>
+                            <select id="nav_tahun_id" name="tahun_id" onchange="this.form.submit()" class="text-xs py-1 px-2 border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-bold text-gray-800 bg-gray-50">
+                                @foreach($availableTahuns as $t)
+                                    <option value="{{ $t->id }}" {{ session('tahun_id') == $t->id ? 'selected' : '' }}>{{ $t->tahun }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                    @elseif($tahun)
+                        <div>
+                            Tahun: <span class="font-bold text-gray-700">{{ $tahun->tahun }}</span>
+                        </div>
+                    @endif
                 </div>
                 @endif
                 <x-dropdown align="right" width="48">
@@ -164,6 +183,26 @@
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
             </div>
+            @if($satker || $tahun)
+            <div class="px-4 py-2 my-2 bg-gray-50 text-xs rounded border border-gray-100">
+                @if($satker)
+                    <div class="text-gray-600 mb-1"><span class="font-bold text-gray-800">{{ $satker->kode }}</span> - {{ $satker->nama }}</div>
+                @endif
+                @if(isset($availableTahuns) && $availableTahuns->count() > 1)
+                    <form method="POST" action="{{ route('switch.tahun') }}" class="flex items-center space-x-2">
+                        @csrf
+                        <label for="mob_tahun_id" class="font-semibold text-gray-600">Tahun:</label>
+                        <select id="mob_tahun_id" name="tahun_id" onchange="this.form.submit()" class="text-xs py-1 px-2 border-gray-300 rounded shadow-sm">
+                            @foreach($availableTahuns as $t)
+                                <option value="{{ $t->id }}" {{ session('tahun_id') == $t->id ? 'selected' : '' }}>{{ $t->tahun }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                @elseif($tahun)
+                    <div class="text-gray-600">Tahun: <span class="font-bold text-gray-800">{{ $tahun->tahun }}</span></div>
+                @endif
+            </div>
+            @endif
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">

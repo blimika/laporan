@@ -36,6 +36,17 @@
         .info-table td { padding: 1px 0; vertical-align: top; }
         .w-35 { width: 35%; }
         .w-2 { width: 2%; }
+
+        /* ================= DPR & Pernyataan styles ================= */
+        .dpr-bordered { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .dpr-bordered th, .dpr-bordered td { border: 1px solid #000; padding: 6px 10px; }
+        .dpr-sig-container { width: 100%; margin-top: 30px; }
+        .dpr-sig-left { float: left; width: 45%; text-align: center; }
+        .dpr-sig-right { float: right; width: 45%; text-align: center; }
+        .clear { clear: both; }
+        .content-table { width: 100%; margin-bottom: 20px; }
+        .content-table td { padding: 4px 0; vertical-align: top; }
+        .pernyataan-sig-right { float: right; width: 50%; text-align: center; margin-top: 40px; }
     </style>
 </head>
 <body>
@@ -48,6 +59,32 @@
         
         $tglPerjalananStr = $laporan->tgl_perjalanan->format('d') . ' ' . $months[(int)$laporan->tgl_perjalanan->format('m')] . ' ' . $laporan->tgl_perjalanan->format('Y');
         $tglLaporanStr = $laporan->tgl_laporan->format('d') . ' ' . $months[(int)$laporan->tgl_laporan->format('m')] . ' ' . $laporan->tgl_laporan->format('Y');
+
+        if (!function_exists('terbilang_helper')) {
+            function terbilang_helper($angka) {
+                $angka = abs($angka);
+                $baca = array("", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas");
+                $terbilang = "";
+                if ($angka < 12) {
+                    $terbilang = " " . $baca[(int)$angka];
+                } else if ($angka < 20) {
+                    $terbilang = terbilang_helper($angka - 10) . " Belas";
+                } else if ($angka < 100) {
+                    $terbilang = terbilang_helper($angka / 10) . " Puluh " . terbilang_helper($angka % 10);
+                } else if ($angka < 200) {
+                    $terbilang = " Seratus " . terbilang_helper($angka - 100);
+                } else if ($angka < 1000) {
+                    $terbilang = terbilang_helper($angka / 100) . " Ratus " . terbilang_helper($angka % 100);
+                } else if ($angka < 2000) {
+                    $terbilang = " Seribu " . terbilang_helper($angka - 1000);
+                } else if ($angka < 1000000) {
+                    $terbilang = terbilang_helper($angka / 1000) . " Ribu " . terbilang_helper($angka % 1000);
+                } else if ($angka < 1000000000) {
+                    $terbilang = terbilang_helper($angka / 1000000) . " Juta " . terbilang_helper($angka % 1000000);
+                }
+                return trim($terbilang);
+            }
+        }
     @endphp
 
     <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 15px;">
@@ -285,6 +322,144 @@
             </div>
             @endif
         @endforeach
+    @endif
+
+    {{-- ==================== HALAMAN DPR (JIKA AKTIF) ==================== --}}
+    @if($laporan->ada_dpr)
+        @php
+            $nominal = $laporan->nilai_dpr ?? 0;
+            $terbilangStr = terbilang_helper($nominal) . " Rupiah";
+        @endphp
+        <div class="page-break"></div>
+
+        <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 25px;">
+            DAFTAR PENGELUARAN RIIL
+        </div>
+
+        <p style="margin-bottom: 10px;">Yang bertanda tangan di bawah ini :</p>
+
+        <table class="content-table" style="width:100%; margin-bottom: 10px;">
+            <tr><td style="width: 20%;">Nama</td><td style="width: 2%;">:</td><td style="width: 78%;">{{ $laporan->nama_pegawai }}</td></tr>
+            <tr><td>NIP</td><td>:</td><td>{{ $laporan->nip_pegawai ?: '-' }}</td></tr>
+        </table>
+
+        <p style="margin-bottom: 10px; margin-top: 15px;">Berdasarkan Surat Perintah Perjalanan Dinas (SPPD)</p>
+
+        <table class="content-table" style="width:100%; margin-bottom: 15px;">
+            <tr><td style="width: 20%;">Tanggal</td><td style="width: 2%;">:</td><td style="width: 78%;">{{ $tglLaporanStr }}</td></tr>
+            <tr><td>Nomor</td><td>:</td><td>{{ $laporan->nomor_spd ?: $laporan->nomor_st }}</td></tr>
+        </table>
+
+        <p style="margin-bottom: 15px;">dengan ini kami menyatakan dengan sesungguhnya bahwa :</p>
+
+        <table style="width:100%;">
+            <tr>
+                <td width="3%" style="vertical-align:top;">1.</td>
+                <td width="97%" style="vertical-align:top;">Biaya transport pegawai dan/atau biaya penginapan di bawah ini yang tidak diperoleh bukti-bukti pengeluarannya, meliputi :</td>
+            </tr>
+        </table>
+
+        <table class="dpr-bordered">
+            <thead>
+                <tr>
+                    <th width="8%">No.</th>
+                    <th width="62%">Uraian</th>
+                    <th width="30%">Jumlah (Rp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center" style="height: 40px; vertical-align: middle;">1</td>
+                    <td style="vertical-align: middle;">Transport Lokal</td>
+                    <td class="text-center" style="vertical-align: middle;">{{ number_format($nominal, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="text-center">Total</td>
+                    <td class="text-center">{{ number_format($nominal, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="text-center" style="font-style: italic;">{{ $terbilangStr }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table style="width:100%; margin-top: 20px;">
+            <tr>
+                <td width="3%" style="vertical-align:top;">2.</td>
+                <td width="97%" style="vertical-align:top; text-align: justify;">Jumlah uang tersebut pada angka 1 di atas benar-benar dikeluarkan untuk atas perjalanan dinas dimaksud dan apabila di kemudian hari terdapat kelebihan pembayaran, kami bersedia untuk menyetorkan kelebihan tersebut ke Kas Negara.</td>
+            </tr>
+        </table>
+
+        <p style="margin-top: 25px; text-align: justify;">Demikian pernyataan ini kami buat dengan sebenarnya, untuk dipergunakan sebagaimana mestinya.</p>
+
+        <div class="dpr-sig-container">
+            <div class="dpr-sig-left">
+                Mengetahui/Menyetujui<br>
+                Pejabat Pembuat Komitmen,
+                <br><br><br><br><br><br>
+                <strong><u>{{ $laporan->ppkPegawai->nama ?? '.......................................' }}</u></strong><br>
+                NIP. {{ $laporan->ppkPegawai->nip ?? '.......................................' }}
+            </div>
+            <div class="dpr-sig-right">
+                Mataram, {{ $tglLaporanStr }}<br>
+                Pelaksana SPD
+                <br><br><br><br><br><br>
+                <strong><u>{{ $laporan->nama_pegawai }}</u></strong><br>
+                @if(!empty(trim($laporan->nip_pegawai ?? '')) && trim($laporan->nip_pegawai) !== '-')
+                    NIP. {{ $laporan->nip_pegawai }}
+                @else
+                    NIP. .......................................
+                @endif
+            </div>
+        </div>
+        <div class="clear"></div>
+    @endif
+
+    {{-- ==================== HALAMAN SURAT PERNYATAAN (JIKA AKTIF) ==================== --}}
+    @if($laporan->ada_pernyataan)
+        @php
+            $dbPegawai = $laporan->pegawai;
+            $golonganStr = $dbPegawai && $dbPegawai->golongan ? ($dbPegawai->golongan . ' - ' . $dbPegawai->pangkat) : '-';
+            $jabatanStr = $dbPegawai && $dbPegawai->jabatan ? $dbPegawai->jabatan : '-';
+            $satkerName = $laporan->satker->nama ?? 'Badan Pusat Statistik';
+        @endphp
+        <div class="page-break"></div>
+
+        <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 25px;">
+            SURAT PERNYATAAN
+        </div>
+
+        <p style="margin-bottom: 15px;">Yang bertanda tangan di bawah ini :</p>
+
+        <table class="content-table" style="width:100%;">
+            <tr><td style="width: 25%;">Nama</td><td style="width: 2%;">:</td><td style="width: 73%;">{{ $laporan->nama_pegawai }}</td></tr>
+            <tr><td>NIP</td><td>:</td><td>{{ $laporan->nip_pegawai ?: '-' }}</td></tr>
+            <tr><td>Pangkat/Golongan</td><td>:</td><td>{{ $golonganStr }}</td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>{{ $jabatanStr }}</td></tr>
+            <tr><td>Unit Kerja</td><td>:</td><td>{{ $satkerName }}</td></tr>
+        </table>
+
+        <p style="text-align: justify; margin-bottom: 20px;">
+            Menerangkan bahwa dalam rangka melaksanakan perjalanan dinas dalam kota untuk melaksanakan tugas kedinasan sesuai surat tugas nomor: {{ $laporan->nomor_st }} pelaksanaan tanggal {{ $tglPerjalananStr }}, saya benar-benar tidak menggunakan kendaraan dinas.
+        </p>
+
+        <p style="text-align: justify;">
+            Demikian pernyataan ini kami buat dengan sebenar-benarnya untuk dipergunakan sebagaimana mestinya. Apabila terdapat kekeliruan dalam pertanggungjawaban SPD dan mengakibatkan kerugian negara, saya bersedia dituntut sesuai aturan yang berlaku dan mengembalikan biaya transport lokal yang sudah saya terima ke kas negara.
+        </p>
+
+        <div class="pernyataan-sig-right">
+            Mataram, {{ $tglLaporanStr }}<br>
+            Pejabat Negara/Pegawai Negeri<br>
+            Yang Melakukan Perjalanan Dinas
+            <br><br><br><br><br><br>
+            <strong><u>{{ $laporan->nama_pegawai }}</u></strong><br>
+            @if(!empty(trim($laporan->nip_pegawai ?? '')) && trim($laporan->nip_pegawai) !== '-')
+                NIP. {{ $laporan->nip_pegawai }}
+            @else
+                NIP. .......................................
+            @endif
+        </div>
+        <div class="clear"></div>
     @endif
 </body>
 </html>
