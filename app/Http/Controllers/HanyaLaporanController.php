@@ -15,32 +15,121 @@ class HanyaLaporanController extends Controller
 {
     public function index(Request $request)
     {
+        $baseQuery = HanyaLaporan::query();
+
+        $stats = [
+            'total' => (clone $baseQuery)->count(),
+            'with_foto' => (clone $baseQuery)->has('dokumentasi')->count(),
+            'without_foto' => (clone $baseQuery)->doesntHave('dokumentasi')->count(),
+            'with_geotag' => (clone $baseQuery)->whereNotNull('stamp_koordinat')->where('stamp_koordinat', '!=', '')->count(),
+            'with_dpr' => (clone $baseQuery)->where('ada_dpr', true)->count(),
+            'top_kategori' => (clone $baseQuery)->selectRaw('kategori, count(*) as count')
+                ->groupBy('kategori')
+                ->orderByDesc('count')
+                ->first(),
+        ];
+
+        $kategoriList = HanyaLaporan::selectRaw('kategori, count(*) as count')
+            ->groupBy('kategori')
+            ->orderByDesc('count')
+            ->pluck('kategori');
+
         $query = HanyaLaporan::with(['dokumentasi', 'user']);
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('nomor_st', 'like', "%{$search}%")
                     ->orWhere('nomor_spd', 'like', "%{$search}%")
                     ->orWhere('tujuan_perjalanan', 'like', "%{$search}%")
-                    ->orWhere('nama_pegawai', 'like', "%{$search}%");
+                    ->orWhere('lokasi_perjalanan', 'like', "%{$search}%")
+                    ->orWhere('nama_pegawai', 'like', "%{$search}%")
+                    ->orWhere('nip_pegawai', 'like', "%{$search}%")
+                    ->orWhere('kategori', 'like', "%{$search}%")
+                    ->orWhere('pegawai_ditemui', 'like', "%{$search}%")
+                    ->orWhere('kendala_ditemui', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        if ($request->filled('has_foto')) {
+            if ($request->has_foto === 'with_foto') {
+                $query->has('dokumentasi');
+            } elseif ($request->has_foto === 'without_foto') {
+                $query->doesntHave('dokumentasi');
+            }
+        }
+
+        if ($request->filled('has_geotag')) {
+            if ($request->has_geotag === 'with_geotag') {
+                $query->whereNotNull('stamp_koordinat')
+                    ->where('stamp_koordinat', '!=', '');
+            } elseif ($request->has_geotag === 'without_geotag') {
+                $query->where(function ($q) {
+                    $q->whereNull('stamp_koordinat')
+                        ->orWhere('stamp_koordinat', '');
+                });
+            }
+        }
+
+        if ($request->filled('has_dpr')) {
+            if ($request->has_dpr === 'with_dpr') {
+                $query->where('ada_dpr', true);
+            } elseif ($request->has_dpr === 'without_dpr') {
+                $query->where('ada_dpr', false);
+            }
+        }
+
+        if ($request->filled('bulan')) {
+            $query->whereMonth('tgl_perjalanan', $request->bulan);
         }
 
         $sort = $request->input('sort', 'created_at');
         $direction = $request->input('direction', 'desc');
 
-        $allowedSorts = ['nomor_st', 'nomor_spd', 'nama_pegawai', 'tujuan_perjalanan', 'tgl_perjalanan'];
+        $allowedSorts = [
+            'nomor_st',
+            'nomor_spd',
+            'nama_pegawai',
+            'tujuan_perjalanan',
+            'lokasi_perjalanan',
+            'tgl_perjalanan',
+            'tgl_laporan',
+            'kategori',
+            'created_at',
+        ];
+
         if (in_array($sort, $allowedSorts)) {
             $query->orderBy($sort, $direction);
         } else {
             $query->latest();
         }
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [5, 10, 20, 50, 100])) {
+            $perPage = 10;
+        }
+
         $laporans = $query->paginate($perPage)->withQueryString();
 
-        return view('hanya_laporan.index', compact('laporans', 'sort', 'direction'));
+        return view('hanya_laporan.index', compact('laporans', 'sort', 'direction', 'stats', 'kategoriList'));
+    }
+
+    public function show(Request $request, HanyaLaporan $hanyaLaporan)
+    {
+        $hanyaLaporan->load(['dokumentasi', 'ppkPegawai', 'satker', 'pegawai', 'user']);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $hanyaLaporan,
+            ]);
+        }
+
+        return redirect()->route('hanya-laporan.index');
     }
 
     public function create(Request $request)
@@ -296,12 +385,57 @@ class HanyaLaporanController extends Controller
         return redirect()->route('hanya-laporan.index')->with('success', 'Laporan berhasil diperbarui.');
     }
 
-    public function exportPdf(HanyaLaporan $hanyaLaporan)
+    public function exportPdf(Request $request, HanyaLaporan $hanyaLaporan)
     {
         $hanyaLaporan->load(['dokumentasi', 'ppkPegawai', 'satker', 'pegawai']);
-        $pdf = Pdf::loadView('exports.pdf.hanya_laporan', ['laporan' => $hanyaLaporan]);
+        $onlySection = $request->query('only');
+        $pdf = Pdf::loadView('exports.pdf.hanya_laporan', [
+            'laporan' => $hanyaLaporan,
+            'onlySection' => $onlySection,
+        ]);
 
-        return $pdf->stream('Hanya_Laporan_'.$hanyaLaporan->id.'.pdf');
+        $safeName = str_replace(['/', '\\'], '_', $hanyaLaporan->nomor_st);
+
+        return $pdf->stream('Hanya_Laporan_'.$safeName.'.pdf');
+    }
+
+    public function exportLaporanOnlyPdf(HanyaLaporan $hanyaLaporan)
+    {
+        $hanyaLaporan->load(['dokumentasi', 'ppkPegawai', 'satker', 'pegawai']);
+        $pdf = Pdf::loadView('exports.pdf.hanya_laporan', [
+            'laporan' => $hanyaLaporan,
+            'onlySection' => 'laporan',
+        ]);
+
+        $safeName = str_replace(['/', '\\'], '_', $hanyaLaporan->nomor_st);
+
+        return $pdf->stream('Laporan_'.$safeName.'.pdf');
+    }
+
+    public function exportDprPdf(HanyaLaporan $hanyaLaporan)
+    {
+        $hanyaLaporan->load(['dokumentasi', 'ppkPegawai', 'satker', 'pegawai']);
+        $pdf = Pdf::loadView('exports.pdf.hanya_laporan', [
+            'laporan' => $hanyaLaporan,
+            'onlySection' => 'dpr',
+        ]);
+
+        $safeName = str_replace(['/', '\\'], '_', $hanyaLaporan->nomor_st);
+
+        return $pdf->stream('DPR_'.$safeName.'.pdf');
+    }
+
+    public function exportPernyataanPdf(HanyaLaporan $hanyaLaporan)
+    {
+        $hanyaLaporan->load(['dokumentasi', 'ppkPegawai', 'satker', 'pegawai']);
+        $pdf = Pdf::loadView('exports.pdf.hanya_laporan', [
+            'laporan' => $hanyaLaporan,
+            'onlySection' => 'pernyataan',
+        ]);
+
+        $safeName = str_replace(['/', '\\'], '_', $hanyaLaporan->nomor_st);
+
+        return $pdf->stream('Surat_Pernyataan_'.$safeName.'.pdf');
     }
 
     public function exportWord(HanyaLaporan $hanyaLaporan)

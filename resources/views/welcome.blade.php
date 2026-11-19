@@ -106,7 +106,7 @@
 
                         <!-- Main Headline -->
                         <h1 class="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
-                            Otomasi Laporan Dinas & SPPD, <br class="hidden sm:inline">
+                            Otomasi Laporan Translok, <br class="hidden sm:inline">
                             <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">Ditenagai AI</span> Secara Presisi.
                         </h1>
 
@@ -159,7 +159,7 @@
                                 <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                 </span>
-                                <span>Sinkronisasi DIPA / MAK & Ekspor PDF / Word</span>
+                                <span>Ekspor Laporan Format PDF/Word</span>
                             </div>
                         </div>
                     </div>
@@ -308,8 +308,8 @@
                     <p class="text-xs sm:text-sm text-slate-400 font-medium mt-1">ST, SPD, DPR &amp; Laporan</p>
                 </div>
                 <div class="pt-4 md:pt-0">
-                    <p class="text-3xl sm:text-4xl font-black text-emerald-400 font-mono">0%</p>
-                    <p class="text-xs sm:text-sm text-slate-400 font-medium mt-1">Redundansi Data Anggaran</p>
+                    <p class="text-3xl sm:text-4xl font-black text-emerald-400 font-mono">100%</p>
+                    <p class="text-xs sm:text-sm text-slate-400 font-medium mt-1">Akurat &amp; Presisi</p>
                 </div>
             </div>
         </section>

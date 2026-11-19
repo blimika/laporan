@@ -69,12 +69,184 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Top 5 Pegawai Paling Sering Melaksanakan Tugas
-        $topPegawai = Pegawai::withCount('suratTugas')
-            ->having('surat_tugas_count', '>', 0)
-            ->orderByDesc('surat_tugas_count')
-            ->take(5)
-            ->get();
+        // Top 5 Pegawai Teraktif (Dipadukan dari Laporan AI & Hanya Laporan)
+        $pegawaiMap = [];
+
+        // 1. Dari Laporan AI (LaporanPerjalanan -> SuratTugas -> Pegawai)
+        $laporanAiList = LaporanPerjalanan::with('suratTugas.pegawai')->get();
+        foreach ($laporanAiList as $lp) {
+            $p = $lp->suratTugas->pegawai ?? null;
+            if ($p) {
+                $key = 'p_'.$p->id;
+                if (! isset($pegawaiMap[$key])) {
+                    $pegawaiMap[$key] = [
+                        'pegawai' => $p,
+                        'nama' => $p->nama,
+                        'nip' => $p->nip,
+                        'ai_count' => 0,
+                        'hl_count' => 0,
+                        'total_count' => 0,
+                    ];
+                }
+                $pegawaiMap[$key]['ai_count']++;
+                $pegawaiMap[$key]['total_count']++;
+            }
+        }
+
+        // 2. Dari Hanya Laporan
+        $hanyaLaporanList = HanyaLaporan::get();
+        $allPegawais = Pegawai::all();
+        $pegawaiByNip = $allPegawais->whereNotNull('nip')->keyBy('nip');
+        $pegawaiByNama = $allPegawais->keyBy('nama');
+
+        foreach ($hanyaLaporanList as $hl) {
+            $p = null;
+            if (! empty($hl->nip_pegawai) && isset($pegawaiByNip[$hl->nip_pegawai])) {
+                $p = $pegawaiByNip[$hl->nip_pegawai];
+            } elseif (! empty($hl->nama_pegawai) && isset($pegawaiByNama[$hl->nama_pegawai])) {
+                $p = $pegawaiByNama[$hl->nama_pegawai];
+            }
+
+            if ($p) {
+                $key = 'p_'.$p->id;
+                if (! isset($pegawaiMap[$key])) {
+                    $pegawaiMap[$key] = [
+                        'pegawai' => $p,
+                        'nama' => $p->nama,
+                        'nip' => $p->nip,
+                        'ai_count' => 0,
+                        'hl_count' => 0,
+                        'total_count' => 0,
+                    ];
+                }
+                $pegawaiMap[$key]['hl_count']++;
+                $pegawaiMap[$key]['total_count']++;
+            } else {
+                $name = trim($hl->nama_pegawai ?: 'Pegawai');
+                $customKey = 'c_'.md5(strtolower($name));
+                if (! isset($pegawaiMap[$customKey])) {
+                    $pegawaiMap[$customKey] = [
+                        'pegawai' => null,
+                        'nama' => $name,
+                        'nip' => $hl->nip_pegawai ?: '-',
+                        'ai_count' => 0,
+                        'hl_count' => 0,
+                        'total_count' => 0,
+                    ];
+                }
+                $pegawaiMap[$customKey]['hl_count']++;
+                $pegawaiMap[$customKey]['total_count']++;
+            }
+        }
+
+        usort($pegawaiMap, function ($a, $b) {
+            return $b['total_count'] <=> $a['total_count'];
+        });
+
+        $topPegawai = collect(array_map(function ($item) {
+            return (object) [
+                'nama' => $item['nama'],
+                'nip' => $item['nip'],
+                'total_count' => $item['total_count'],
+                'surat_tugas_count' => $item['total_count'],
+                'ai_count' => $item['ai_count'],
+                'hl_count' => $item['hl_count'],
+                'pegawai' => $item['pegawai'],
+            ];
+        }, array_slice($pegawaiMap, 0, 5)));
+
+        // Fallback jika belum ada laporan sama sekali namun sudah ada surat tugas
+        if ($topPegawai->isEmpty()) {
+            $fallbackPegawai = Pegawai::withCount('suratTugas')
+                ->having('surat_tugas_count', '>', 0)
+                ->orderByDesc('surat_tugas_count')
+                ->take(5)
+                ->get();
+
+            if ($fallbackPegawai->isNotEmpty()) {
+                $topPegawai = $fallbackPegawai->map(function ($p) {
+                    return (object) [
+                        'nama' => $p->nama,
+                        'nip' => $p->nip,
+                        'total_count' => $p->surat_tugas_count,
+                        'surat_tugas_count' => $p->surat_tugas_count,
+                        'ai_count' => 0,
+                        'hl_count' => 0,
+                        'pegawai' => $p,
+                    ];
+                });
+            }
+        }
+
+        // Top 5 Lokasi Kunjungan Terbanyak (Instansi / Desa / Tempat dari Laporan AI & Hanya Laporan)
+        $locationMap = [];
+        $addLocation = function ($rawLocation, string $type) use (&$locationMap) {
+            if (! $rawLocation) {
+                return;
+            }
+            $trimmed = trim($rawLocation);
+            if ($trimmed === '') {
+                return;
+            }
+
+            $key = strtolower(preg_replace('/\s+/', ' ', $trimmed));
+            $displayName = ucwords(strtolower($trimmed));
+
+            if (! isset($locationMap[$key])) {
+                $locationMap[$key] = [
+                    'name' => $displayName,
+                    'ai_count' => 0,
+                    'hl_count' => 0,
+                    'total_count' => 0,
+                ];
+            }
+
+            if ($type === 'ai') {
+                $locationMap[$key]['ai_count']++;
+            } else {
+                $locationMap[$key]['hl_count']++;
+            }
+            $locationMap[$key]['total_count']++;
+        };
+
+        foreach (LaporanPerjalanan::whereNotNull('lokasi_perjalanan')->pluck('lokasi_perjalanan') as $loc) {
+            $addLocation($loc, 'ai');
+        }
+
+        foreach (HanyaLaporan::whereNotNull('lokasi_perjalanan')->pluck('lokasi_perjalanan') as $loc) {
+            $addLocation($loc, 'hl');
+        }
+
+        usort($locationMap, function ($a, $b) {
+            return $b['total_count'] <=> $a['total_count'];
+        });
+
+        $topLocations = collect(array_map(function ($item) {
+            return (object) [
+                'name' => $item['name'],
+                'total_count' => $item['total_count'],
+                'ai_count' => $item['ai_count'],
+                'hl_count' => $item['hl_count'],
+            ];
+        }, array_slice($locationMap, 0, 5)));
+
+        // Fallback jika belum ada lokasi laporan, ambil dari tujuan surat tugas
+        if ($topLocations->isEmpty()) {
+            foreach (SuratTugas::whereNotNull('tujuan')->pluck('tujuan') as $tujuan) {
+                $addLocation($tujuan, 'ai');
+            }
+            usort($locationMap, function ($a, $b) {
+                return $b['total_count'] <=> $a['total_count'];
+            });
+            $topLocations = collect(array_map(function ($item) {
+                return (object) [
+                    'name' => $item['name'],
+                    'total_count' => $item['total_count'],
+                    'ai_count' => $item['ai_count'],
+                    'hl_count' => $item['hl_count'],
+                ];
+            }, array_slice($locationMap, 0, 5)));
+        }
 
         // Top 5 Anggaran MAK
         $topAnggaran = Anggaran::withCount('suratTugas')
@@ -161,6 +333,7 @@ class DashboardController extends Controller
             'pendingSpdList',
             'pendingLaporanList',
             'topPegawai',
+            'topLocations',
             'topAnggaran',
             'topCategories',
             'totalKategoriCount',

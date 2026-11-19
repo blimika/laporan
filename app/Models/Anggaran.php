@@ -17,4 +17,9 @@ class Anggaran extends Model
     {
         return $this->hasMany(SuratTugas::class, 'pembebanan_anggaran_id');
     }
+
+    public function spds()
+    {
+        return $this->hasManyThrough(Spd::class, SuratTugas::class, 'pembebanan_anggaran_id', 'surat_tugas_id');
+    }
 }

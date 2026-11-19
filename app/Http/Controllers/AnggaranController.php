@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Anggaran;
+use App\Models\Spd;
+use App\Models\SuratTugas;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\Rule;
 
 class AnggaranController extends Controller implements HasMiddleware
 {
@@ -15,6 +19,7 @@ class AnggaranController extends Controller implements HasMiddleware
                 if (auth()->check() && auth()->user()->role === 'user') {
                     abort(403, 'Anda hanya dapat melihat data.');
                 }
+
                 return $next($request);
             }, except: ['index', 'downloadTemplate', 'show']),
         ];
@@ -25,18 +30,70 @@ class AnggaranController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-        $query = \App\Models\Anggaran::query();
+        $query = Anggaran::query()
+            ->withCount('suratTugas')
+            ->withSum('spds', 'nilai_dpr');
 
+        // Search Filter
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('mak', 'like', "%{$search}%")
-                  ->orWhere('kegiatan_uraian', 'like', "%{$search}%")
-                  ->orWhere('tahun', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('mak', 'like', "%{$search}%")
+                    ->orWhere('kegiatan_uraian', 'like', "%{$search}%")
+                    ->orWhere('output_uraian', 'like', "%{$search}%")
+                    ->orWhere('program_uraian', 'like', "%{$search}%")
+                    ->orWhere('komponen_uraian', 'like', "%{$search}%")
+                    ->orWhere('akun_kode', 'like', "%{$search}%")
+                    ->orWhere('akun_uraian', 'like', "%{$search}%")
+                    ->orWhere('tahun', 'like', "%{$search}%");
+            });
         }
 
-        $perPage = $request->input('per_page', 10);
-        $anggarans = $query->latest()->paginate($perPage)->withQueryString();
-        return view('anggaran.index', compact('anggarans'));
+        // Tahun Filter
+        if ($request->filled('tahun')) {
+            $query->where('tahun', $request->tahun);
+        }
+
+        // Status Penggunaan Filter
+        if ($request->status === 'used') {
+            $query->has('suratTugas');
+        } elseif ($request->status === 'unused') {
+            $query->doesntHave('suratTugas');
+        }
+
+        // Sorting
+        $sort = $request->input('sort', 'created_at');
+        $direction = strtolower($request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sort === 'surat_tugas_count') {
+            $query->orderBy('surat_tugas_count', $direction);
+        } elseif ($sort === 'dpr') {
+            $query->orderBy('spds_sum_nilai_dpr', $direction);
+        } elseif ($sort === 'mak') {
+            $query->orderBy('mak', $direction);
+        } elseif ($sort === 'tahun') {
+            $query->orderBy('tahun', $direction);
+        } else {
+            $query->latest();
+        }
+
+        $perPage = (int) $request->input('per_page', 10);
+        $anggarans = $query->paginate($perPage)->withQueryString();
+
+        // Summary Stats
+        $stats = [
+            'total_mak' => Anggaran::count(),
+            'used_mak' => Anggaran::has('suratTugas')->count(),
+            'total_st' => SuratTugas::whereNotNull('pembebanan_anggaran_id')->count(),
+            'total_dpr' => (float) Spd::whereHas('suratTugas', function ($q) {
+                $q->whereNotNull('pembebanan_anggaran_id');
+            })->sum('nilai_dpr'),
+        ];
+
+        // Available Tahun list for filter
+        $tahunList = Anggaran::select('tahun')->distinct()->orderBy('tahun', 'desc')->pluck('tahun');
+
+        return view('anggaran.index', compact('anggarans', 'stats', 'tahunList', 'sort', 'direction'));
     }
 
     public function create()
@@ -50,10 +107,10 @@ class AnggaranController extends Controller implements HasMiddleware
             'mak' => [
                 'required',
                 'string',
-                \Illuminate\Validation\Rule::unique('anggarans')->where(function ($query) use ($request) {
+                Rule::unique('anggarans')->where(function ($query) use ($request) {
                     return $query->where('tahun', $request->tahun)
-                                 ->where('satker_id', session('satker_id'));
-                })
+                        ->where('satker_id', session('satker_id'));
+                }),
             ],
             'tahun' => 'required|digits:4|integer',
             'program_kode' => 'nullable|string',
@@ -72,34 +129,46 @@ class AnggaranController extends Controller implements HasMiddleware
             'akun_uraian' => 'nullable|string',
         ]);
 
-        \App\Models\Anggaran::create($validated);
+        Anggaran::create($validated);
 
         return redirect()->route('anggarans.index')->with('success', 'Data anggaran berhasil ditambahkan');
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        //
+        $anggaran = Anggaran::withCount('suratTugas')
+            ->withSum('spds', 'nilai_dpr')
+            ->with(['suratTugas' => function ($q) {
+                $q->with(['pegawai', 'spd'])->latest()->take(10);
+            }])
+            ->findOrFail($id);
+
+        if ($request->wantsJson() || $request->ajax() || $request->has('json')) {
+            return response()->json($anggaran);
+        }
+
+        return view('anggaran.edit', compact('anggaran'));
     }
 
     public function edit(string $id)
     {
-        $anggaran = \App\Models\Anggaran::findOrFail($id);
+        $anggaran = Anggaran::findOrFail($id);
+
         return view('anggaran.edit', compact('anggaran'));
     }
 
     public function update(Request $request, string $id)
     {
-        $anggaran = \App\Models\Anggaran::findOrFail($id);
-        
+        $anggaran = Anggaran::findOrFail($id);
+
         $validated = $request->validate([
             'mak' => [
                 'required',
                 'string',
-                \Illuminate\Validation\Rule::unique('anggarans')->where(function ($query) use ($request) {
+                Rule::unique('anggarans')->where(function ($query) use ($request) {
                     return $query->where('tahun', $request->tahun)
-                                 ->where('satker_id', session('satker_id'));
-                })->ignore($id)
+                        ->where('satker_id', session('satker_id'));
+                })->ignore($id),
             ],
             'tahun' => 'required|digits:4|integer',
             'program_kode' => 'nullable|string',
@@ -126,16 +195,16 @@ class AnggaranController extends Controller implements HasMiddleware
     public function downloadTemplate()
     {
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=template_import_anggaran.csv",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=template_import_anggaran.csv',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $columns = ['mak', 'tahun', 'program_kode', 'program_uraian', 'kegiatan_kode', 'kegiatan_uraian', 'output_kode', 'output_uraian', 'suboutput_kode', 'suboutput_uraian', 'komponen_kode', 'komponen_uraian', 'subkomponen_kode', 'subkomponen_uraian', 'akun_kode', 'akun_uraian'];
 
-        $callback = function() use($columns) {
+        $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns, ';');
             fputcsv($file, ['054.01.WA.1234', '2026', '054', 'Program A', 'WA', 'Kegiatan B', '1234', 'Output C', '', '', '', '', '', '', '', ''], ';');
@@ -148,36 +217,38 @@ class AnggaranController extends Controller implements HasMiddleware
     public function import(Request $request)
     {
         $request->validate([
-            'file_csv' => 'required|mimes:csv,txt|max:2048'
+            'file_csv' => 'required|mimes:csv,txt|max:2048',
         ]);
 
         $file = $request->file('file_csv');
         $handle = fopen($file->getRealPath(), 'r');
-        
+
         $header = fgetcsv($handle, 1000, ';'); // We use semicolon in template
-        if (!$header || !in_array('mak', $header) || !in_array('tahun', $header)) {
+        if (! $header || ! in_array('mak', $header) || ! in_array('tahun', $header)) {
             // fallback to comma if semicolon fails
             fclose($handle);
             $handle = fopen($file->getRealPath(), 'r');
             $header = fgetcsv($handle, 1000, ',');
-            if (!$header || !in_array('mak', $header) || !in_array('tahun', $header)) {
+            if (! $header || ! in_array('mak', $header) || ! in_array('tahun', $header)) {
                 return back()->with('error', 'Format kolom CSV tidak valid. Pastikan memakai template.');
             }
         }
 
         $imported = 0;
-        $delimiter = in_array('mak', fgetcsv(fopen($file->getRealPath(), 'r'), 1000, ';')?:[]) ? ';' : ',';
+        $delimiter = in_array('mak', fgetcsv(fopen($file->getRealPath(), 'r'), 1000, ';') ?: []) ? ';' : ',';
 
         while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
-            if(count($header) == count($row)) {
+            if (count($header) == count($row)) {
                 $data = array_combine($header, $row);
-                
-                if (empty($data['mak']) || empty($data['tahun'])) continue;
 
-                \App\Models\Anggaran::updateOrCreate(
+                if (empty($data['mak']) || empty($data['tahun'])) {
+                    continue;
+                }
+
+                Anggaran::updateOrCreate(
                     [
                         'mak' => $data['mak'],
-                        'tahun' => $data['tahun']
+                        'tahun' => $data['tahun'],
                     ],
                     [
                         'program_kode' => $data['program_kode'] ?? null,
@@ -201,12 +272,12 @@ class AnggaranController extends Controller implements HasMiddleware
         }
         fclose($handle);
 
-        return back()->with('success', $imported . ' data anggaran berhasil diimpor.');
+        return back()->with('success', $imported.' data anggaran berhasil diimpor.');
     }
 
     public function destroy(string $id)
     {
-        $anggaran = \App\Models\Anggaran::findOrFail($id);
+        $anggaran = Anggaran::findOrFail($id);
         $anggaran->delete();
 
         return redirect()->route('anggarans.index')->with('success', 'Data anggaran berhasil dihapus');

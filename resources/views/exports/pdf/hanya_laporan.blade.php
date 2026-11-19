@@ -85,8 +85,11 @@
                 return trim($terbilang);
             }
         }
+
+        $onlySection = $onlySection ?? request('only');
     @endphp
 
+    @if(empty($onlySection) || $onlySection === 'laporan')
     <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 15px;">
         LAPORAN PERJALANAN DINAS
     </div>
@@ -323,14 +326,17 @@
             @endif
         @endforeach
     @endif
+    @endif
 
     {{-- ==================== HALAMAN DPR (JIKA AKTIF) ==================== --}}
-    @if($laporan->ada_dpr)
+    @if($laporan->ada_dpr && (empty($onlySection) || $onlySection === 'dpr'))
         @php
             $nominal = $laporan->nilai_dpr ?? 0;
             $terbilangStr = terbilang_helper($nominal) . " Rupiah";
         @endphp
-        <div class="page-break"></div>
+        @if(empty($onlySection))
+            <div class="page-break"></div>
+        @endif
 
         <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 25px;">
             DAFTAR PENGELUARAN RIIL
@@ -416,14 +422,16 @@
     @endif
 
     {{-- ==================== HALAMAN SURAT PERNYATAAN (JIKA AKTIF) ==================== --}}
-    @if($laporan->ada_pernyataan)
+    @if($laporan->ada_pernyataan && (empty($onlySection) || $onlySection === 'pernyataan'))
         @php
             $dbPegawai = $laporan->pegawai;
             $golonganStr = $dbPegawai && $dbPegawai->golongan ? ($dbPegawai->golongan . ' - ' . $dbPegawai->pangkat) : '-';
             $jabatanStr = $dbPegawai && $dbPegawai->jabatan ? $dbPegawai->jabatan : '-';
             $satkerName = $laporan->satker->nama ?? 'Badan Pusat Statistik';
         @endphp
-        <div class="page-break"></div>
+        @if(empty($onlySection))
+            <div class="page-break"></div>
+        @endif
 
         <div class="text-center" style="font-weight: bold; font-size: 12pt; margin-bottom: 25px;">
             SURAT PERNYATAAN

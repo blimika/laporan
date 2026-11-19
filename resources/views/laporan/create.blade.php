@@ -31,7 +31,7 @@
                             <select id="surat_tugas_id" name="surat_tugas_id" class="block mt-1 w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" required onchange="fillSuratTugas(this)">
                                 <option value="">-- Surat Tugas --</option>
                                 @foreach($suratTugas as $st)
-                                    <option value="{{ $st->id }}">{{ $st->nomor_surat }} - {{ $st->pegawai->nama }}</option>
+                                    <option value="{{ $st->id }}" {{ (old('surat_tugas_id', request('surat_tugas_id', request('st_id'))) == $st->id) ? 'selected' : '' }}>{{ $st->nomor_surat }} - {{ $st->pegawai->nama }}</option>
                                 @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('surat_tugas_id')" class="mt-2" />
@@ -164,6 +164,13 @@
                 reprocessImages();
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectEl = document.getElementById('surat_tugas_id');
+            if (selectEl && selectEl.value) {
+                fillSuratTugas(selectEl);
+            }
+        });
 
         async function generateAI() {
             const btn = document.getElementById('btn-generate');

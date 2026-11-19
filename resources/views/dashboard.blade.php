@@ -91,7 +91,7 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Laporan Selesai</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Laporan Selesai (Dibuat)</p>
                             <h4 class="text-2xl font-black text-gray-900 mt-1">{{ number_format($stats['laporan']) }}</h4>
                         </div>
                         <div class="p-3 bg-purple-50 rounded-xl text-purple-600">
@@ -267,112 +267,121 @@
 
             </div>
 
-            <!-- Tabel Data Terbaru & Leaderboard -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Leaderboard & Peringkat: Pegawai Teraktif, 5 Lokasi Terbanyak, dan Pembebanan Anggaran -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                <!-- 2 Kolom: Perjalanan Dinas Terbaru (Surat Tugas) -->
-                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h4 class="text-base font-bold text-gray-900">Surat Tugas & SPD Terbaru</h4>
-                            <p class="text-xs text-gray-500">Daftar penerbitan surat tugas paling mutakhir</p>
-                        </div>
-                        <a href="{{ route('surat-tugas.index') }}" class="text-xs font-semibold text-purple-600 hover:text-purple-800">
-                            Lihat Semua &rarr;
-                        </a>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-100 text-sm">
-                            <thead>
-                                <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                    <th class="py-2.5">Waktu</th>
-                                    <th class="py-2.5">No. ST & SPD</th>
-                                    <th class="py-2.5">Pelaksana</th>
-                                    <th class="py-2.5">Tujuan</th>
-                                    <th class="py-2.5 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-50">
-                                @forelse($recentSuratTugas as $st)
-                                    <tr class="hover:bg-gray-50/80 transition">
-                                        <td class="py-3 whitespace-nowrap text-xs text-gray-700">
-                                            {{ $st->tgl_berangkat->format('d/m/Y') }}
-                                        </td>
-                                        <td class="py-3 text-xs">
-                                            <div class="font-bold text-gray-900">{{ $st->nomor_surat }}</div>
-                                            <div class="text-[11px] text-gray-500 font-mono">
-                                                SPD: {{ $st->spd ? $st->spd->nomor_spd : '-' }}
-                                            </div>
-                                        </td>
-                                        <td class="py-3 text-xs text-gray-800 font-medium">
-                                            {{ $st->pegawai->nama ?? '-' }}
-                                        </td>
-                                        <td class="py-3 text-xs text-gray-600">
-                                            <div class="font-medium text-gray-800">{{ $st->tujuan }}</div>
-                                            <div class="text-[11px] text-gray-500 truncate max-w-[200px]">{{ $st->tugas }}</div>
-                                        </td>
-                                        <td class="py-3 text-center whitespace-nowrap">
-                                            @if($st->spd)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-800">
-                                                    SPD Terbit
-                                                </span>
-                                            @else
-                                                <a href="{{ route('spd.create', $st->id) }}" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200">
-                                                    + Terbitkan SPD
-                                                </a>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="py-6 text-center text-gray-400 text-xs">Belum ada data surat tugas</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 1 Kolom: Leaderboard Pegawai & Ringkasan MAK -->
-                <div class="space-y-6">
-
-                    <!-- Top 5 Pegawai Paling Sering Tugas -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <!-- 1. Pegawai Teraktif (Dipadukan Laporan AI & Hanya Laporan) -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-base font-bold text-gray-900">Pegawai Teraktif</h4>
-                            <span class="text-xs text-gray-500">Frekuensi Tugas</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                </div>
+                                <h4 class="text-base font-bold text-gray-900">Pegawai Teraktif</h4>
+                            </div>
+                            <span class="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                AI + Hanya Laporan
+                            </span>
                         </div>
+
                         @if($topPegawai->count() > 0)
                             <div class="divide-y divide-gray-100">
                                 @foreach($topPegawai as $idx => $p)
-                                    <div class="py-2.5 flex items-center justify-between">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ $idx === 0 ? 'bg-amber-100 text-amber-800' : ($idx === 1 ? 'bg-slate-200 text-slate-800' : 'bg-gray-100 text-gray-700') }}">
+                                    <div class="py-2.5 flex items-center justify-between gap-3">
+                                        <div class="flex items-center space-x-3 min-w-0">
+                                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 {{ $idx === 0 ? 'bg-amber-100 text-amber-800' : ($idx === 1 ? 'bg-slate-200 text-slate-800' : ($idx === 2 ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-700')) }}">
                                                 {{ $idx + 1 }}
                                             </div>
-                                            <div>
-                                                <p class="text-xs font-bold text-gray-900">{{ $p->nama }}</p>
-                                                <p class="text-[11px] text-gray-500 font-mono">{{ $p->nip ?? '-' }}</p>
+                                            <div class="min-w-0">
+                                                <p class="text-xs font-bold text-gray-900 truncate" title="{{ $p->nama }}">{{ $p->nama }}</p>
+                                                <div class="flex items-center gap-1.5 mt-0.5 text-[11px] text-gray-500 font-mono">
+                                                    <span>{{ $p->nip ?? '-' }}</span>
+                                                    @if($p->ai_count > 0 && $p->hl_count > 0)
+                                                        <span class="text-[10px] font-sans text-gray-400 font-normal">({{ $p->ai_count }} AI &bull; {{ $p->hl_count }} HL)</span>
+                                                    @elseif($p->ai_count > 0)
+                                                        <span class="text-[10px] font-sans text-indigo-600 font-normal">({{ $p->ai_count }} Lap AI)</span>
+                                                    @elseif($p->hl_count > 0)
+                                                        <span class="text-[10px] font-sans text-purple-600 font-normal">({{ $p->hl_count }} Hanya Lap)</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
-                                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 font-mono">
-                                            {{ $p->surat_tugas_count }}x
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 font-mono shrink-0">
+                                            {{ $p->total_count }}x
                                         </span>
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-xs text-gray-400 text-center py-4">Belum ada data perjalanan pegawai.</p>
+                            <p class="text-xs text-gray-400 text-center py-6">Belum ada data perjalanan pegawai.</p>
                         @endif
                     </div>
+                </div>
 
-                    <!-- Top MAK Anggaran -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <!-- 2. 5 Lokasi Terbanyak (Instansi / Desa / Tempat dari Laporan AI & Hanya Laporan) -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-base font-bold text-gray-900">Pembebanan Anggaran</h4>
-                            <span class="text-xs text-gray-500">Top MAK</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                </div>
+                                <h4 class="text-base font-bold text-gray-900">5 Lokasi Terbanyak</h4>
+                            </div>
+                            <span class="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                                Instansi / Desa / Tempat
+                            </span>
                         </div>
+
+                        @if($topLocations->count() > 0)
+                            <div class="divide-y divide-gray-100">
+                                @foreach($topLocations as $idx => $loc)
+                                    <div class="py-2.5 flex items-center justify-between gap-3">
+                                        <div class="flex items-center space-x-3 min-w-0">
+                                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 {{ $idx === 0 ? 'bg-rose-100 text-rose-800' : ($idx === 1 ? 'bg-slate-200 text-slate-800' : ($idx === 2 ? 'bg-rose-50 text-rose-700' : 'bg-gray-100 text-gray-700')) }}">
+                                                {{ $idx + 1 }}
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-xs font-bold text-gray-900 truncate" title="{{ $loc->name }}">{{ $loc->name }}</p>
+                                                <div class="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500">
+                                                    @if($loc->ai_count > 0 && $loc->hl_count > 0)
+                                                        <span>{{ $loc->ai_count }} Lap AI &bull; {{ $loc->hl_count }} Hanya Lap</span>
+                                                    @elseif($loc->ai_count > 0)
+                                                        <span class="text-indigo-600">{{ $loc->ai_count }} Laporan AI</span>
+                                                    @else
+                                                        <span class="text-purple-600">{{ $loc->hl_count }} Hanya Laporan</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-50 text-rose-700 font-mono shrink-0">
+                                            {{ $loc->total_count }}x
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-gray-400 text-center py-6">Belum ada data lokasi perjalanan.</p>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- 3. Top MAK Anggaran -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                </div>
+                                <h4 class="text-base font-bold text-gray-900">Pembebanan Anggaran</h4>
+                            </div>
+                            <span class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                Top 5 MAK
+                            </span>
+                        </div>
+
                         @if($topAnggaran->count() > 0)
                             <div class="space-y-3">
                                 @foreach($topAnggaran as $ang)
@@ -384,18 +393,81 @@
                                             </span>
                                         </div>
                                         @if($ang->kegiatan_uraian)
-                                            <p class="text-[11px] text-gray-600 mt-1 truncate">{{ $ang->kegiatan_uraian }}</p>
+                                            <p class="text-[11px] text-gray-600 mt-1 truncate" title="{{ $ang->kegiatan_uraian }}">{{ $ang->kegiatan_uraian }}</p>
                                         @endif
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-xs text-gray-400 text-center py-4">Belum ada pembebanan anggaran.</p>
+                            <p class="text-xs text-gray-400 text-center py-6">Belum ada pembebanan anggaran.</p>
                         @endif
                     </div>
-
                 </div>
 
+            </div>
+
+            <!-- Tabel Surat Tugas & SPD Terbaru (Full Width) -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h4 class="text-base font-bold text-gray-900">Surat Tugas &amp; SPD Terbaru</h4>
+                        <p class="text-xs text-gray-500">Daftar penerbitan surat tugas paling mutakhir</p>
+                    </div>
+                    <a href="{{ route('surat-tugas.index') }}" class="text-xs font-semibold text-purple-600 hover:text-purple-800">
+                        Lihat Semua &rarr;
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                <th class="py-2.5">Waktu</th>
+                                <th class="py-2.5">No. ST &amp; SPD</th>
+                                <th class="py-2.5">Pelaksana</th>
+                                <th class="py-2.5">Tujuan &amp; Tugas</th>
+                                <th class="py-2.5 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @forelse($recentSuratTugas as $st)
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="py-3 whitespace-nowrap text-xs text-gray-700">
+                                        {{ $st->tgl_berangkat->format('d/m/Y') }}
+                                    </td>
+                                    <td class="py-3 text-xs">
+                                        <div class="font-bold text-gray-900">{{ $st->nomor_surat }}</div>
+                                        <div class="text-[11px] text-gray-500 font-mono">
+                                            SPD: {{ $st->spd ? $st->spd->nomor_spd : '-' }}
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-xs text-gray-800 font-medium">
+                                        {{ $st->pegawai->nama ?? '-' }}
+                                    </td>
+                                    <td class="py-3 text-xs text-gray-600">
+                                        <div class="font-medium text-gray-800">{{ $st->tujuan }}</div>
+                                        <div class="text-[11px] text-gray-500">{{ $st->tugas }}</div>
+                                    </td>
+                                    <td class="py-3 text-center whitespace-nowrap">
+                                        @if($st->spd)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-800">
+                                                SPD Terbit
+                                            </span>
+                                        @else
+                                            <a href="{{ route('spd.create', $st->id) }}" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200">
+                                                + Terbitkan SPD
+                                            </a>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="py-6 text-center text-gray-400 text-xs">Belum ada data surat tugas</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Bagian: Hanya Laporan Terbaru -->

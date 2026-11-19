@@ -62,6 +62,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('hanya-laporan/generate', [HanyaLaporanController::class, 'generate'])->name('hanya-laporan.generate');
     Route::get('export/hanya-laporan/{hanyaLaporan}', [HanyaLaporanController::class, 'exportPdf'])->name('export.hanya-laporan');
+    Route::get('export/hanya-laporan/{hanyaLaporan}/laporan', [HanyaLaporanController::class, 'exportLaporanOnlyPdf'])->name('export.hanya-laporan.laporan');
+    Route::get('export/hanya-laporan/{hanyaLaporan}/dpr', [HanyaLaporanController::class, 'exportDprPdf'])->name('export.hanya-laporan.dpr');
+    Route::get('export/hanya-laporan/{hanyaLaporan}/pernyataan', [HanyaLaporanController::class, 'exportPernyataanPdf'])->name('export.hanya-laporan.pernyataan');
     Route::get('export/hanya-laporan/{hanyaLaporan}/word', [HanyaLaporanController::class, 'exportWord'])->name('export.hanya-laporan.word');
     Route::get('test-gd', function () {
         return function_exists('imagecreatefromjpeg') ? 'GD YES' : 'GD NO';

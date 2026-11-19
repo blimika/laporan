@@ -16,6 +16,24 @@ class LaporanPerjalananController extends Controller
      */
     public function index(Request $request)
     {
+        $baseQuery = LaporanPerjalanan::query();
+
+        $stats = [
+            'total' => (clone $baseQuery)->count(),
+            'with_foto' => (clone $baseQuery)->has('dokumentasi')->count(),
+            'without_foto' => (clone $baseQuery)->doesntHave('dokumentasi')->count(),
+            'with_geotag' => (clone $baseQuery)->whereNotNull('stamp_koordinat')->where('stamp_koordinat', '!=', '')->count(),
+            'top_kategori' => (clone $baseQuery)->selectRaw('kategori, count(*) as count')
+                ->groupBy('kategori')
+                ->orderByDesc('count')
+                ->first(),
+        ];
+
+        $kategoriList = LaporanPerjalanan::selectRaw('kategori, count(*) as count')
+            ->groupBy('kategori')
+            ->orderByDesc('count')
+            ->pluck('kategori');
+
         $query = LaporanPerjalanan::with(['suratTugas.pegawai', 'suratTugas.spd', 'dokumentasi', 'user'])
             ->select('laporan_perjalanans.*')
             ->leftJoin('surat_tugas', 'laporan_perjalanans.surat_tugas_id', '=', 'surat_tugas.id')
@@ -23,7 +41,7 @@ class LaporanPerjalananController extends Controller
             ->leftJoin('spds', 'surat_tugas.id', '=', 'spds.surat_tugas_id');
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('surat_tugas.nomor_surat', 'like', "%{$search}%")
                     ->orWhere('spds.nomor_spd', 'like', "%{$search}%")
@@ -32,8 +50,39 @@ class LaporanPerjalananController extends Controller
                     ->orWhere('laporan_perjalanans.lokasi_perjalanan', 'like', "%{$search}%")
                     ->orWhere('laporan_perjalanans.tujuan_perjalanan', 'like', "%{$search}%")
                     ->orWhere('laporan_perjalanans.kategori', 'like', "%{$search}%")
-                    ->orWhere('pegawais.nama', 'like', "%{$search}%");
+                    ->orWhere('laporan_perjalanans.pegawai_ditemui', 'like', "%{$search}%")
+                    ->orWhere('laporan_perjalanans.kendala_ditemui', 'like', "%{$search}%")
+                    ->orWhere('pegawais.nama', 'like', "%{$search}%")
+                    ->orWhere('pegawais.nip', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('kategori')) {
+            $query->where('laporan_perjalanans.kategori', $request->kategori);
+        }
+
+        if ($request->filled('has_foto')) {
+            if ($request->has_foto === 'with_foto') {
+                $query->has('dokumentasi');
+            } elseif ($request->has_foto === 'without_foto') {
+                $query->doesntHave('dokumentasi');
+            }
+        }
+
+        if ($request->filled('has_geotag')) {
+            if ($request->has_geotag === 'with_geotag') {
+                $query->whereNotNull('laporan_perjalanans.stamp_koordinat')
+                    ->where('laporan_perjalanans.stamp_koordinat', '!=', '');
+            } elseif ($request->has_geotag === 'without_geotag') {
+                $query->where(function ($q) {
+                    $q->whereNull('laporan_perjalanans.stamp_koordinat')
+                        ->orWhere('laporan_perjalanans.stamp_koordinat', '');
+                });
+            }
+        }
+
+        if ($request->filled('bulan')) {
+            $query->whereMonth('laporan_perjalanans.tgl_perjalanan', $request->bulan);
         }
 
         $sort = $request->input('sort', 'laporan_perjalanans.created_at');
@@ -49,6 +98,7 @@ class LaporanPerjalananController extends Controller
             'nomor_st' => 'surat_tugas.nomor_surat',
             'nomor_spd' => 'spds.nomor_spd',
             'nama_pegawai' => 'pegawais.nama',
+            'created_at' => 'laporan_perjalanans.created_at',
         ];
 
         if (array_key_exists($sort, $allowedSorts)) {
@@ -57,10 +107,31 @@ class LaporanPerjalananController extends Controller
             $query->latest('laporan_perjalanans.created_at');
         }
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [5, 10, 20, 50, 100])) {
+            $perPage = 10;
+        }
+
         $laporans = $query->paginate($perPage)->withQueryString();
 
-        return view('laporan.index', compact('laporans', 'sort', 'direction'));
+        return view('laporan.index', compact('laporans', 'sort', 'direction', 'stats', 'kategoriList'));
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Request $request, LaporanPerjalanan $laporan)
+    {
+        $laporan->load(['suratTugas.pegawai', 'suratTugas.spd', 'dokumentasi', 'user']);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $laporan,
+            ]);
+        }
+
+        return redirect()->route('laporan.index');
     }
 
     public function create()

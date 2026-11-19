@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Anggaran;
 use App\Models\Pegawai;
+use App\Models\Spd;
 use App\Models\SuratTugas;
 use App\Models\User;
 use App\Services\DocumentExportService;
@@ -16,38 +17,100 @@ class SuratTugasController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SuratTugas::with(['pegawai', 'anggaran', 'spd', 'user']);
+        $baseQuery = SuratTugas::query();
+
+        $stats = [
+            'total_st' => (clone $baseQuery)->count(),
+            'st_with_spd' => (clone $baseQuery)->has('spd')->count(),
+            'st_without_spd' => (clone $baseQuery)->doesntHave('spd')->count(),
+            'st_with_laporan' => (clone $baseQuery)->has('laporanPerjalanan')->count(),
+            'st_without_laporan' => (clone $baseQuery)->doesntHave('laporanPerjalanan')->count(),
+            'total_dpr' => (float) Spd::whereHas('suratTugas')->sum('nilai_dpr'),
+        ];
+
+        $query = SuratTugas::with(['pegawai', 'kepalaPegawai', 'anggaran', 'spd.ppkPegawai', 'laporanPerjalanan', 'user']);
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('nomor_surat', 'like', "%{$search}%")
                     ->orWhere('tugas', 'like', "%{$search}%")
                     ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('uraian_pembebanan', 'like', "%{$search}%")
                     ->orWhereHas('pegawai', function ($q2) use ($search) {
                         $q2->where('nama', 'like', "%{$search}%")
                             ->orWhere('nip', 'like', "%{$search}%");
                     })
                     ->orWhereHas('spd', function ($qSpd) use ($search) {
                         $qSpd->where('nomor_spd', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('anggaran', function ($qAng) use ($search) {
+                        $qAng->where('mak', 'like', "%{$search}%")
+                            ->orWhere('akun_uraian', 'like', "%{$search}%");
                     });
             });
+        }
+
+        if ($request->filled('status_spd')) {
+            if ($request->status_spd === 'with_spd') {
+                $query->has('spd');
+            } elseif ($request->status_spd === 'without_spd') {
+                $query->doesntHave('spd');
+            }
+        }
+
+        if ($request->filled('status_laporan')) {
+            if ($request->status_laporan === 'with_laporan') {
+                $query->has('laporanPerjalanan');
+            } elseif ($request->status_laporan === 'without_laporan') {
+                $query->doesntHave('laporanPerjalanan');
+            }
+        }
+
+        if ($request->filled('anggaran_id')) {
+            $query->where('pembebanan_anggaran_id', $request->anggaran_id);
+        }
+
+        if ($request->filled('bulan')) {
+            $query->whereMonth('tgl_berangkat', $request->bulan);
         }
 
         $sort = $request->input('sort', 'created_at');
         $direction = $request->input('direction', 'desc');
 
-        $allowedSorts = ['nomor_surat', 'tujuan', 'tgl_berangkat'];
+        $allowedSorts = ['nomor_surat', 'tujuan', 'tgl_berangkat', 'created_at'];
         if (in_array($sort, $allowedSorts)) {
             $query->orderBy($sort, $direction);
         } else {
             $query->latest();
         }
 
-        $perPage = $request->input('per_page', 10);
-        $suratTugasList = $query->paginate($perPage)->withQueryString();
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [5, 10, 20, 50, 100])) {
+            $perPage = 10;
+        }
 
-        return view('surat_tugas.index', compact('suratTugasList', 'sort', 'direction'));
+        $suratTugasList = $query->paginate($perPage)->withQueryString();
+        $anggaranList = Anggaran::orderBy('mak')->get();
+
+        return view('surat_tugas.index', compact('suratTugasList', 'sort', 'direction', 'stats', 'anggaranList'));
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Request $request, SuratTugas $suratTuga)
+    {
+        $suratTugas = $suratTuga->load(['pegawai', 'kepalaPegawai', 'anggaran', 'spd.ppkPegawai', 'laporanPerjalanan', 'user']);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $suratTugas,
+            ]);
+        }
+
+        return redirect()->route('surat-tugas.index');
     }
 
     public function create()
