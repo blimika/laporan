@@ -26,7 +26,7 @@
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    + Input Laporan AI Baru
+                    Input Laporan AI Baru
                 </a>
             </div>
         </div>
@@ -52,7 +52,7 @@
 
             <!-- 4 Summary KPI Metric Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
+
                 <!-- Card 1: Total Laporan AI -->
                 <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 hover:shadow-md transition">
                     <div class="flex items-center justify-between">
@@ -159,7 +159,7 @@
             <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-4">
                 <form method="GET" action="{{ route('laporan.index') }}" class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
-                        
+
                         <!-- Search Box -->
                         <div class="lg:col-span-4 relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -167,11 +167,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
                             </div>
-                            <input 
-                                type="text" 
-                                name="search" 
+                            <input
+                                type="text"
+                                name="search"
                                 value="{{ request('search') }}"
-                                placeholder="Cari No ST, SPD, Pegawai, Lokasi, Narasumber..." 
+                                placeholder="Cari No ST, SPD, Pegawai, Lokasi, Narasumber..."
                                 class="w-full pl-9 pr-8 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
                             />
                             @if(request('search'))
@@ -387,7 +387,7 @@
                                     ];
                                 @endphp
                                 <tr class="hover:bg-blue-50/30 transition-colors">
-                                    
+
                                     <!-- Column 1: Waktu & Tanggal -->
                                     <td class="px-5 py-4 whitespace-nowrap text-xs">
                                         <div class="font-semibold text-gray-900 flex items-center gap-1.5">
@@ -448,7 +448,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             </svg>
                                             <span class="truncate" title="{{ $laporan->lokasi_perjalanan }}">{{ $laporan->lokasi_perjalanan }}</span>
-                                            
+
                                             @if($laporan->stamp_koordinat)
                                                 <a href="https://maps.google.com/?q={{ $laporan->stamp_koordinat }}" target="_blank" class="text-rose-500 hover:text-rose-700 ml-1 inline-flex shrink-0" title="Buka Koordinat di Google Maps ({{ $laporan->stamp_koordinat }})">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
@@ -477,10 +477,10 @@
 
                                         <div class="mt-2 flex items-center gap-2">
                                             @if($laporan->dokumentasi->count() > 0)
-                                                <button 
-                                                    type="button" 
+                                                <button
+                                                    type="button"
                                                     onclick="openPhotoLightbox({{ json_encode($modalData) }})"
-                                                    class="inline-flex items-center gap-1.5 group cursor-pointer" 
+                                                    class="inline-flex items-center gap-1.5 group cursor-pointer"
                                                     title="Klik untuk membuka Galeri Foto ({{ $laporan->dokumentasi->count() }} Foto)"
                                                 >
                                                     <div class="flex -space-x-2 overflow-hidden">
@@ -511,12 +511,12 @@
                                     <!-- Column 7: Aksi -->
                                     <td class="px-5 py-4 whitespace-nowrap text-center text-xs">
                                         <div class="flex items-center justify-center gap-1" x-data="{ open: false }">
-                                            
+
                                             <!-- Action 1: Lihat Detail Modal -->
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onclick="openDetailModal({{ json_encode($modalData) }})"
-                                                class="p-1.5 rounded-lg text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition" 
+                                                class="p-1.5 rounded-lg text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition"
                                                 title="Lihat Detail Lengkap Laporan"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -526,10 +526,10 @@
                                             </button>
 
                                             <!-- Action 2: Cetak PDF -->
-                                            <a 
-                                                href="{{ route('export.laporan', $laporan->id) }}" 
-                                                target="_blank" 
-                                                class="p-1.5 rounded-lg text-rose-600 hover:text-rose-900 hover:bg-rose-50 transition" 
+                                            <a
+                                                href="{{ route('export.laporan', $laporan->id) }}"
+                                                target="_blank"
+                                                class="p-1.5 rounded-lg text-rose-600 hover:text-rose-900 hover:bg-rose-50 transition"
                                                 title="Cetak Laporan Resmi (PDF)"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -538,9 +538,9 @@
                                             </a>
 
                                             <!-- Action 3: Download Word -->
-                                            <a 
-                                                href="{{ route('export.laporan.word', $laporan->id) }}" 
-                                                class="p-1.5 rounded-lg text-blue-700 hover:text-blue-900 hover:bg-blue-50 transition" 
+                                            <a
+                                                href="{{ route('export.laporan.word', $laporan->id) }}"
+                                                class="p-1.5 rounded-lg text-blue-700 hover:text-blue-900 hover:bg-blue-50 transition"
                                                 title="Download Laporan Format Word (.docx)"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -549,9 +549,9 @@
                                             </a>
 
                                             <!-- Action 4: Salin ke Hanya Laporan -->
-                                            <a 
-                                                href="{{ route('hanya-laporan.create', ['copy_from_laporan' => $laporan->id]) }}" 
-                                                class="p-1.5 rounded-lg text-amber-600 hover:text-amber-900 hover:bg-amber-50 transition" 
+                                            <a
+                                                href="{{ route('hanya-laporan.create', ['copy_from_laporan' => $laporan->id]) }}"
+                                                class="p-1.5 rounded-lg text-amber-600 hover:text-amber-900 hover:bg-amber-50 transition"
                                                 title="Salin Data ke Modul Hanya Laporan"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -561,10 +561,10 @@
 
                                             <!-- Dropdown Options -->
                                             <div class="relative">
-                                                <button 
-                                                    @click="open = !open" 
-                                                    type="button" 
-                                                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition" 
+                                                <button
+                                                    @click="open = !open"
+                                                    type="button"
+                                                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
                                                     title="Menu Lainnya"
                                                 >
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -572,11 +572,11 @@
                                                     </svg>
                                                 </button>
 
-                                                <div 
-                                                    x-show="open" 
-                                                    @click.outside="open = false" 
-                                                    x-transition 
-                                                    class="absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-20 text-left" 
+                                                <div
+                                                    x-show="open"
+                                                    @click.outside="open = false"
+                                                    x-transition
+                                                    class="absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-20 text-left"
                                                     style="display: none;"
                                                 >
                                                     <div class="py-1">
@@ -664,7 +664,7 @@
 
         <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
             <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-3xl sm:w-full border border-gray-100">
-                
+
                 <!-- Modal Header -->
                 <div class="bg-gradient-to-r from-blue-700 to-indigo-800 px-6 py-5 text-white">
                     <div class="flex items-start justify-between">
@@ -692,7 +692,7 @@
 
                 <!-- Modal Body -->
                 <div class="px-6 py-6 max-h-[70vh] overflow-y-auto space-y-5 text-sm">
-                    
+
                     <!-- Section 1: Informasi Penugasan & Lokasi -->
                     <div class="bg-gray-50/70 rounded-xl p-4 border border-gray-100">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -775,10 +775,10 @@
     <!-- Modal Photo Lightbox -->
     <div id="foto-lightbox-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-foto-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-slate-950/85 backdrop-blur-xs transition-opacity" onclick="closePhotoLightbox()"></div>
-        
+
         <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-6">
             <div class="relative bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all max-w-4xl w-full border border-slate-800 text-white">
-                
+
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800">
                     <div>
                         <h4 class="text-sm font-bold text-white flex items-center gap-2" id="lightbox-title">
@@ -813,7 +813,7 @@
             // Header
             document.getElementById('modal-nomor-st').textContent = data.nomor_st || '-';
             document.getElementById('modal-header-sub').textContent = 'Pelaksana: ' + (data.pegawai?.nama || '-') + ' (NIP: ' + (data.pegawai?.nip || '-') + ') • Pembuat: ' + (data.pembuat || '-');
-            
+
             // Copy ST button
             document.getElementById('modal-copy-st-btn').onclick = function() {
                 navigator.clipboard.writeText(data.nomor_st);
@@ -822,7 +822,7 @@
 
             // Badges
             document.getElementById('modal-badge-kategori').textContent = data.kategori || 'Umum';
-            
+
             const badgeFoto = document.getElementById('modal-badge-foto');
             if (data.dokumentasi && data.dokumentasi.length > 0) {
                 badgeFoto.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-100 border border-emerald-400/30';

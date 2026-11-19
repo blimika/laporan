@@ -137,7 +137,7 @@ class LaporanPerjalananController extends Controller
     public function create()
     {
         // Get Surat Tugas that don't have Laporan yet
-        $suratTugas = SuratTugas::whereDoesntHave('laporanPerjalanan')->with('pegawai')->get();
+        $suratTugas = SuratTugas::whereDoesntHave('laporanPerjalanan')->with(['pegawai', 'anggaran'])->get();
 
         return view('laporan.create', compact('suratTugas'));
     }
@@ -155,6 +155,7 @@ class LaporanPerjalananController extends Controller
             'kategori_custom' => 'nullable|string',
             'kendala_ditemui' => 'nullable|string',
             'is_8_jam' => 'nullable|boolean',
+            'panjang_narasi' => 'nullable|string',
         ]);
 
         if ($data['kategori'] === 'Custom' && ! empty($data['kategori_custom'])) {
@@ -182,7 +183,7 @@ class LaporanPerjalananController extends Controller
             'check_stamp' => 'nullable',
             'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
             'stamp_datetime' => 'nullable|required_with:check_stamp|string',
-            'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
+            'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
         ]);
 
         $kategori = $validated['kategori'];
@@ -244,7 +245,7 @@ class LaporanPerjalananController extends Controller
             'check_stamp' => 'nullable',
             'stamp_koordinat' => 'nullable|required_with:check_stamp|string',
             'stamp_datetime' => 'nullable|required_with:check_stamp|string',
-            'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'fotos.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         $kategori = $validated['kategori'];

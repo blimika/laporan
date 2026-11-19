@@ -11,6 +11,7 @@ use App\Models\SuratTugas;
 use App\Models\User;
 use App\Services\AiReportGeneratorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\ViewErrorBag;
 use ReflectionClass;
 use Tests\TestCase;
@@ -228,7 +229,7 @@ class HanyaLaporanTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('Laporan Dibuat');
+        $response->assertSee('Laporan Selesai (Dibuat)');
         $response->assertSee('Hanya Laporan');
         $response->assertViewHas('stats', function ($stats) {
             return $stats['hanya_laporan'] === 2 && $stats['laporan'] >= 2;
@@ -383,5 +384,173 @@ class HanyaLaporanTest extends TestCase
         $response->assertSee('value="Kepala Dusun"', false);
         $response->assertSee('Jalan becek');
         $response->assertDontSee('Hasil narasi lama yang tidak dicopy');
+    }
+
+    public function test_hanya_laporan_store_accepts_webp_photo(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Test',
+            'kode' => '5200',
+        ]);
+        $user = User::create([
+            'name' => 'Tester Webp',
+            'username' => 'testerwebp',
+            'email' => 'testerwebp@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'webp').'.webp';
+        $im = imagecreatetruecolor(50, 50);
+        imagewebp($im, $tmp);
+        imagedestroy($im);
+        $file = new UploadedFile($tmp, 'kamera_hp.webp', 'image/webp', null, true);
+
+        $response = $this->actingAs($user)->post(route('hanya-laporan.store'), [
+            'nama_pegawai' => 'Dwi Handoko',
+            'nip_pegawai' => '199101012015011001',
+            'nomor_st' => 'ST/WEBP/001',
+            'tgl_laporan' => '2026-11-19',
+            'tgl_perjalanan' => '2026-11-19',
+            'lokasi_perjalanan' => 'Dusun Montong',
+            'tujuan_perjalanan' => 'Supervisi WebP',
+            'pegawai_ditemui' => 'Kaling Montong',
+            'kategori' => 'Pengawasan / Supervisi Lapangan',
+            'hasil_perjalanan' => 'Narasi laporan pengawasan telah selesai.',
+            'fotos' => [$file],
+        ]);
+
+        $response->assertRedirect(route('hanya-laporan.index'));
+        $this->assertDatabaseHas('hanya_laporans', [
+            'nomor_st' => 'ST/WEBP/001',
+            'nama_pegawai' => 'Dwi Handoko',
+        ]);
+
+        $laporan = HanyaLaporan::where('nomor_st', 'ST/WEBP/001')->first();
+        $this->assertNotNull($laporan);
+        $this->assertCount(1, $laporan->dokumentasi);
+        $this->assertStringEndsWith('.webp', $laporan->dokumentasi->first()->file_path);
+
+        // Cleanup saved file
+        if (file_exists(public_path($laporan->dokumentasi->first()->file_path))) {
+            unlink(public_path($laporan->dokumentasi->first()->file_path));
+        }
+        @unlink($tmp);
+    }
+
+    public function test_hanya_laporan_edit_renders_with_rich_sections_and_existing_data(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Lombok Tengah',
+            'kode' => '5202',
+        ]);
+        $user = User::create([
+            'name' => 'Operator AI',
+            'username' => 'operatorai',
+            'email' => 'operatorai@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+        $pegawai = Pegawai::create([
+            'nama' => 'Lalu Irfan, S.Stat',
+            'nip' => '199201012015011002',
+            'satker_id' => $satker->id,
+            'tags' => ['aktif'],
+        ]);
+
+        $laporan = HanyaLaporan::create([
+            'nama_pegawai' => $pegawai->nama,
+            'nip_pegawai' => $pegawai->nip,
+            'nomor_st' => '055/ST/5202/2026',
+            'nomor_spd' => '055/SPD/5202/2026',
+            'tgl_laporan' => '2026-11-18',
+            'tgl_perjalanan' => '2026-11-18',
+            'lokasi_perjalanan' => 'Kecamatan Praya Barat',
+            'tujuan_perjalanan' => 'Supervisi Survei Angkatan Kerja',
+            'pegawai_ditemui' => 'Koordinator Lapangan',
+            'kategori' => 'Pengawasan / Supervisi Lapangan',
+            'kendala_ditemui' => 'Sinyal seluler terbatas di perbukitan',
+            'hasil_perjalanan' => 'Pelaksanaan survei berjalan sesuai SOP yang ditetapkan.',
+            'satker_id' => $satker->id,
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('hanya-laporan.edit', $laporan));
+
+        $response->assertStatus(200);
+        $response->assertSee('Edit Hanya Laporan (Generate AI)');
+        $response->assertSee('Identitas Dokumen Laporan');
+        $response->assertSee('055/ST/5202/2026');
+        $response->assertSee('Lalu Irfan, S.Stat');
+        $response->assertSee('Kecamatan Praya Barat');
+        $response->assertSee('Supervisi Survei Angkatan Kerja');
+        $response->assertSee('Pelaksanaan survei berjalan sesuai SOP yang ditetapkan.');
+    }
+
+    public function test_hanya_laporan_update_successfully_updates_and_handles_photo_deletion(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Lombok Tengah',
+            'kode' => '5202',
+        ]);
+        $user = User::create([
+            'name' => 'Operator AI 2',
+            'username' => 'operatorai2',
+            'email' => 'operatorai2@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+
+        $laporan = HanyaLaporan::create([
+            'nama_pegawai' => 'Baiq Rohani, A.Md.',
+            'nip_pegawai' => '199501012019012001',
+            'nomor_st' => '077/ST/5202/2026',
+            'tgl_laporan' => '2026-11-10',
+            'tgl_perjalanan' => '2026-11-10',
+            'lokasi_perjalanan' => 'Desa Rembitan',
+            'tujuan_perjalanan' => 'Pendataan Desa Wisata',
+            'pegawai_ditemui' => 'Kepala Desa',
+            'kategori' => 'Pendataan Lapangan',
+            'hasil_perjalanan' => 'Hasil teks awal sebelum diedit.',
+            'satker_id' => $satker->id,
+            'user_id' => $user->id,
+        ]);
+
+        // Create a dummy dokumentasi
+        $dok = $laporan->dokumentasi()->create([
+            'file_path' => 'uploads/dokumentasi/dummy_test_photo.jpg',
+            'keterangan_foto' => 'Foto Lama',
+        ]);
+
+        $response = $this->actingAs($user)->put(route('hanya-laporan.update', $laporan), [
+            'nama_pegawai' => 'Baiq Rohani, A.Md.',
+            'nip_pegawai' => '199501012019012001',
+            'nomor_st' => '077/ST/5202/2026/REV',
+            'tgl_laporan' => '2026-11-11',
+            'tgl_perjalanan' => '2026-11-10',
+            'lokasi_perjalanan' => 'Desa Sade & Rembitan',
+            'tujuan_perjalanan' => 'Pendataan Desa Wisata Terpadu',
+            'pegawai_ditemui' => 'Kepala Desa dan Tokoh Adat',
+            'kategori' => 'Pendataan Lapangan',
+            'hasil_perjalanan' => 'Teks narasi hasil editan baru yang lebih komprehensif.',
+            'delete_fotos' => [$dok->id],
+        ]);
+
+        $response->assertRedirect(route('hanya-laporan.index'));
+        $response->assertSessionHas('success', 'Laporan berhasil diperbarui.');
+
+        $this->assertDatabaseHas('hanya_laporans', [
+            'id' => $laporan->id,
+            'nomor_st' => '077/ST/5202/2026/REV',
+            'lokasi_perjalanan' => 'Desa Sade & Rembitan',
+            'hasil_perjalanan' => 'Teks narasi hasil editan baru yang lebih komprehensif.',
+        ]);
+
+        $this->assertDatabaseMissing('hanya_laporan_dokumentasis', [
+            'id' => $dok->id,
+        ]);
     }
 }

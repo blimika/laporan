@@ -93,23 +93,19 @@ class AiReportGeneratorService
                 : 'Error: Anda belum mengisi Google Gemini API Key di pengaturan Profil Anda.';
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='.$apiKey;
+        $models = [
+            'gemini-3.1-flash-lite',
+            'gemini-flash-lite-latest',
+            'gemini-3.5-flash',
+            'gemini-3.8-flash',
+            'gemini-3.5-flash-lite',
+        ];
 
-        try {
-            $response = Http::post($url, [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt],
-                        ],
-                    ],
-                ],
-            ]);
+        foreach ($models as $model) {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=".$apiKey;
 
-            if ($response->failed()) {
-                Log::warning('Gemini 2.5 Flash gagal, mencoba fallback. Error: '.$response->body());
-                $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='.$apiKey;
-                $response = Http::post($url, [
+            try {
+                $response = Http::timeout(25)->post($url, [
                     'contents' => [
                         [
                             'parts' => [
@@ -119,25 +115,21 @@ class AiReportGeneratorService
                     ],
                 ]);
 
-                if ($response->failed()) {
-                    Log::warning('Gemini 3.5 Flash gagal. Error: '.$response->body());
+                if ($response->successful()) {
+                    $result = $response->json();
+                    $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    if (! empty($text)) {
+                        return $text;
+                    }
                 }
+
+                Log::warning("Gemini model {$model} gagal ({$response->status()}), mencoba model berikutnya. Error: ".$response->body());
+            } catch (\Exception $e) {
+                Log::warning("Gemini model {$model} exception: ".$e->getMessage());
             }
-
-            if ($response->successful()) {
-                $result = $response->json();
-
-                return $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
-            }
-
-            Log::error('Gemini API Error: '.$response->body());
-
-            return 'Error: Gagal menghasilkan narasi dari AI.';
-        } catch (\Exception $e) {
-            Log::error('Gemini API Exception: '.$e->getMessage());
-
-            return 'Error: Terjadi kesalahan saat menghubungi API.';
         }
+
+        return 'Error: Gagal menghasilkan narasi dari AI Gemini. Pastikan API Key valid dan memiliki kuota yang cukup.';
     }
 
     /**

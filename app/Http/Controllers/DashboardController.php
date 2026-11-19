@@ -249,8 +249,8 @@ class DashboardController extends Controller
         }
 
         // Top 5 Anggaran MAK
-        $topAnggaran = Anggaran::withCount('suratTugas')
-            ->having('surat_tugas_count', '>', 0)
+        $topAnggaran = Anggaran::has('suratTugas')
+            ->withCount('suratTugas')
             ->orderByDesc('surat_tugas_count')
             ->take(5)
             ->get();

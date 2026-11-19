@@ -20,7 +20,7 @@
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    + Buat Surat Tugas Baru
+                    Buat Surat Tugas Baru
                 </a>
             </div>
         </div>
@@ -46,7 +46,7 @@
 
             <!-- 4 Summary KPI Metric Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
+
                 <!-- Card 1: Total Surat Tugas -->
                 <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 hover:shadow-md transition">
                     <div class="flex items-center justify-between">
@@ -72,7 +72,7 @@
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Penerbitan SPD</p>
                             <h4 class="text-2xl font-black text-emerald-600 mt-1 font-mono">
-                                {{ number_format($stats['st_with_spd']) }} 
+                                {{ number_format($stats['st_with_spd']) }}
                                 <span class="text-xs font-normal text-gray-500">Terbit</span>
                             </h4>
                         </div>
@@ -103,7 +103,7 @@
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Laporan AI Selesai</p>
                             <h4 class="text-2xl font-black text-blue-600 mt-1 font-mono">
-                                {{ number_format($stats['st_with_laporan']) }} 
+                                {{ number_format($stats['st_with_laporan']) }}
                                 <span class="text-xs font-normal text-gray-500">Laporan</span>
                             </h4>
                         </div>
@@ -155,7 +155,7 @@
             <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-4">
                 <form method="GET" action="{{ route('surat-tugas.index') }}" class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
-                        
+
                         <!-- Search Box -->
                         <div class="lg:col-span-4 relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -163,11 +163,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
                             </div>
-                            <input 
-                                type="text" 
-                                name="search" 
+                            <input
+                                type="text"
+                                name="search"
                                 value="{{ request('search') }}"
-                                placeholder="Cari No ST, No SPD, Pegawai, NIP, Tujuan, MAK..." 
+                                placeholder="Cari No ST, No SPD, Pegawai, NIP, Tujuan, MAK..."
                                 class="w-full pl-9 pr-8 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
                             />
                             @if(request('search'))
@@ -334,8 +334,8 @@
                         <tbody class="divide-y divide-gray-100 bg-white">
                             @forelse($suratTugasList as $st)
                                 @php
-                                    $durasi = ($st->tgl_berangkat && $st->tgl_kembali) 
-                                        ? $st->tgl_berangkat->diffInDays($st->tgl_kembali) + 1 
+                                    $durasi = ($st->tgl_berangkat && $st->tgl_kembali)
+                                        ? $st->tgl_berangkat->diffInDays($st->tgl_kembali) + 1
                                         : 1;
 
                                     $modalData = [
@@ -397,7 +397,7 @@
                                     ];
                                 @endphp
                                 <tr class="hover:bg-purple-50/30 transition-colors">
-                                    
+
                                     <!-- Column 1: Waktu & Jadwal -->
                                     <td class="px-5 py-4 whitespace-nowrap text-xs">
                                         <div class="font-semibold text-gray-900 flex items-center gap-1.5">
@@ -541,12 +541,12 @@
                                     <!-- Column 7: Aksi -->
                                     <td class="px-5 py-4 whitespace-nowrap text-center text-xs">
                                         <div class="flex items-center justify-center gap-1.5" x-data="{ open: false }">
-                                            
+
                                             <!-- Quick 1: Lihat Detail Modal -->
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onclick="openDetailModal({{ json_encode($modalData) }})"
-                                                class="p-1.5 rounded-lg text-purple-600 hover:text-purple-900 hover:bg-purple-50 transition" 
+                                                class="p-1.5 rounded-lg text-purple-600 hover:text-purple-900 hover:bg-purple-50 transition"
                                                 title="Lihat Detail Lengkap Surat Tugas & SPD"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -556,10 +556,10 @@
                                             </button>
 
                                             <!-- Quick 2: Cetak PDF Gabungan 1 Tombol -->
-                                            <a 
-                                                href="{{ route('export.surat-tugas', $st->id) }}" 
-                                                target="_blank" 
-                                                class="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 transition" 
+                                            <a
+                                                href="{{ route('export.surat-tugas', $st->id) }}"
+                                                target="_blank"
+                                                class="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 transition"
                                                 title="{{ $st->spd ? 'Cetak / Preview PDF Lengkap (ST, SPD, DPR, Pernyataan)' : 'Cetak / Preview PDF Surat Tugas' }}"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -568,9 +568,9 @@
                                             </a>
 
                                             <!-- Quick 3: Edit Surat Tugas -->
-                                            <a 
-                                                href="{{ route('surat-tugas.edit', $st->id) }}" 
-                                                class="p-1.5 rounded-lg text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition" 
+                                            <a
+                                                href="{{ route('surat-tugas.edit', $st->id) }}"
+                                                class="p-1.5 rounded-lg text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition"
                                                 title="Edit Data Surat Tugas"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -580,10 +580,10 @@
 
                                             <!-- Dropdown Menu for More Options -->
                                             <div class="relative">
-                                                <button 
-                                                    @click="open = !open" 
-                                                    type="button" 
-                                                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition" 
+                                                <button
+                                                    @click="open = !open"
+                                                    type="button"
+                                                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
                                                     title="Menu Lainnya"
                                                 >
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -591,16 +591,16 @@
                                                     </svg>
                                                 </button>
 
-                                                <div 
-                                                    x-show="open" 
-                                                    @click.outside="open = false" 
-                                                    x-transition:enter="transition ease-out duration-100" 
-                                                    x-transition:enter-start="transform opacity-0 scale-95" 
-                                                    x-transition:enter-end="transform opacity-100 scale-100" 
-                                                    x-transition:leave="transition ease-in duration-75" 
-                                                    x-transition:leave-start="transform opacity-100 scale-100" 
-                                                    x-transition:leave-end="transform opacity-0 scale-95" 
-                                                    class="absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-20 text-left" 
+                                                <div
+                                                    x-show="open"
+                                                    @click.outside="open = false"
+                                                    x-transition:enter="transition ease-out duration-100"
+                                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                                    x-transition:leave="transition ease-in duration-75"
+                                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                                    class="absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-20 text-left"
                                                     style="display: none;"
                                                 >
                                                     <!-- SPD Actions -->
@@ -728,7 +728,7 @@
 
         <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
             <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-3xl sm:w-full border border-gray-100">
-                
+
                 <!-- Modal Header -->
                 <div class="bg-gradient-to-r from-purple-700 to-indigo-800 px-6 py-5 text-white">
                     <div class="flex items-start justify-between">
@@ -756,7 +756,7 @@
 
                 <!-- Modal Body -->
                 <div class="px-6 py-6 max-h-[70vh] overflow-y-auto space-y-6 text-sm">
-                    
+
                     <!-- Section 1: Informasi Penugasan & Waktu -->
                     <div class="bg-gray-50/70 rounded-xl p-4 border border-gray-100">
                         <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -781,7 +781,7 @@
 
                     <!-- Section 2: Personel Pelaksana & Penandatangan -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        
+
                         <!-- Pelaksana -->
                         <div class="bg-purple-50/40 rounded-xl p-4 border border-purple-100/60">
                             <h4 class="text-xs font-bold text-purple-900 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
@@ -899,7 +899,7 @@
             // Header
             document.getElementById('modal-nomor-st').textContent = data.nomor_surat || '-';
             document.getElementById('modal-header-sub').textContent = 'Tanggal Surat: ' + (data.tgl_surat || '-') + ' • Pembuat: ' + (data.pembuat || '-');
-            
+
             // Copy button
             document.getElementById('modal-copy-st-btn').onclick = function() {
                 navigator.clipboard.writeText(data.nomor_surat);

@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('tahuns', TahunController::class);
         Route::get('/ai-provider', [AiProviderController::class, 'edit'])->name('ai_provider.edit');
         Route::put('/ai-provider', [AiProviderController::class, 'update'])->name('ai_provider.update');
+        Route::post('/ai-provider/test', [AiProviderController::class, 'testConnection'])->name('ai_provider.test');
     });
 });
 

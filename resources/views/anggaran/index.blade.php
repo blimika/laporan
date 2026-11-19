@@ -31,7 +31,7 @@
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    + Tambah Anggaran
+                    Tambah Anggaran
                 </a>
             </div>
             @endif
@@ -43,7 +43,7 @@
 
             <!-- 4 Summary KPI Stat Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
+
                 <!-- Card 1: Total MAK -->
                 <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 hover:shadow-md transition">
                     <div class="flex items-center justify-between">
@@ -150,22 +150,22 @@
 
             <!-- Main Content Card -->
             <div class="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
-                
+
                 <!-- Search & Filters Bar -->
                 <div class="p-5 border-b border-gray-100 bg-slate-50/50">
                     <form action="{{ route('anggarans.index') }}" method="GET" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
-                            
+
                             <!-- Search Input (lg:col-span-4) -->
                             <div class="lg:col-span-4 relative">
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 </div>
-                                <input 
-                                    type="text" 
-                                    name="search" 
-                                    value="{{ request('search') }}" 
-                                    placeholder="Cari MAK, uraian kegiatan, output, akun..." 
+                                <input
+                                    type="text"
+                                    name="search"
+                                    value="{{ request('search') }}"
+                                    placeholder="Cari MAK, uraian kegiatan, output, akun..."
                                     class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/10 text-xs sm:text-sm bg-white transition"
                                 >
                             </div>
@@ -265,7 +265,7 @@
                         <tbody class="divide-y divide-gray-100 bg-white">
                             @forelse($anggarans as $anggaran)
                                 <tr class="hover:bg-slate-50/80 transition group">
-                                    
+
                                     <!-- Kolom 1: MAK & Akun -->
                                     <td class="px-5 py-4">
                                         <div class="flex items-center gap-1.5">
@@ -273,10 +273,10 @@
                                                 {{ $anggaran->mak }}
                                             </span>
                                             <!-- Copy Button -->
-                                            <button 
-                                                type="button" 
-                                                onclick="copyMak('{{ $anggaran->mak }}', this)" 
-                                                class="text-gray-400 hover:text-indigo-600 p-1 rounded transition" 
+                                            <button
+                                                type="button"
+                                                onclick="copyMak('{{ $anggaran->mak }}', this)"
+                                                class="text-gray-400 hover:text-indigo-600 p-1 rounded transition"
                                                 title="Salin Kode MAK"
                                             >
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -355,12 +355,12 @@
                                     <!-- Kolom 6: Aksi -->
                                     <td class="px-5 py-4 whitespace-nowrap text-center">
                                         <div class="inline-flex items-center gap-1">
-                                            
+
                                             <!-- Tombol View Detail -->
-                                            <button 
-                                                type="button" 
-                                                onclick="loadAnggaranDetail({{ $anggaran->id }})" 
-                                                class="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition" 
+                                            <button
+                                                type="button"
+                                                onclick="loadAnggaranDetail({{ $anggaran->id }})"
+                                                class="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition"
                                                 title="Lihat Struktur Lengkap & Riwayat ST"
                                             >
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -368,9 +368,9 @@
 
                                             @if(auth()->user()->role !== 'user')
                                                 <!-- Tombol Edit -->
-                                                <a 
-                                                    href="{{ route('anggarans.edit', $anggaran->id) }}" 
-                                                    class="p-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition" 
+                                                <a
+                                                    href="{{ route('anggarans.edit', $anggaran->id) }}"
+                                                    class="p-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition"
                                                     title="Edit Data Anggaran"
                                                 >
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -380,9 +380,9 @@
                                                 <form action="{{ route('anggarans.destroy', $anggaran->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data anggaran MAK ini? Pastikan tidak ada surat tugas yang terkait.');" class="inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button 
-                                                        type="submit" 
-                                                        class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition" 
+                                                    <button
+                                                        type="submit"
+                                                        class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition"
                                                         title="Hapus Data Anggaran"
                                                     >
                                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -434,7 +434,7 @@
 
             <!-- Modal Panel -->
             <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-gray-100 relative z-10">
-                
+
                 <!-- Modal Header -->
                 <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-5 text-white flex items-center justify-between">
                     <div>
@@ -487,7 +487,7 @@
                             Struktur Hierarki DIPA
                         </h4>
                         <div class="bg-slate-50 rounded-xl border border-gray-200/80 p-4 space-y-3.5 text-xs">
-                            
+
                             <!-- Program -->
                             <div class="flex items-start gap-3">
                                 <span class="px-2 py-0.5 rounded font-mono font-bold bg-indigo-100 text-indigo-800 text-[11px] shrink-0">Program</span>
@@ -585,11 +585,11 @@
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="document.getElementById('import-modal').classList.add('hidden')"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
+
             <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 relative z-10">
                 <form action="{{ route('anggarans.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    
+
                     <div class="p-6">
                         <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
                             <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -619,11 +619,11 @@
 
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-2">Pilih File CSV (.csv)</label>
-                            <input 
-                                type="file" 
-                                name="file_csv" 
-                                accept=".csv" 
-                                required 
+                            <input
+                                type="file"
+                                name="file_csv"
+                                accept=".csv"
+                                required
                                 class="block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-xl p-1 bg-white cursor-pointer"
                             />
                         </div>
@@ -679,7 +679,7 @@
         function loadAnggaranDetail(id) {
             const modal = document.getElementById('detail-modal');
             const stContainer = document.getElementById('modal-st-list');
-            
+
             // Set loading state
             stContainer.innerHTML = '<div class="p-4 text-center text-gray-400 text-xs">Memuat rincian penugasan...</div>';
             modal.classList.remove('hidden');
@@ -696,7 +696,7 @@
                 document.getElementById('modal-mak-title').innerText = data.mak || '-';
                 document.getElementById('modal-tahun-badge').innerText = 'Tahun ' + (data.tahun || '-');
                 document.getElementById('modal-st-count').innerText = (data.surat_tugas_count || 0) + ' ST';
-                
+
                 const dprSum = data.spds_sum_nilai_dpr ? Number(data.spds_sum_nilai_dpr) : 0;
                 document.getElementById('modal-dpr-total').innerText = 'Rp ' + dprSum.toLocaleString('id-ID');
 

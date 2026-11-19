@@ -16,6 +16,7 @@
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         <!-- @vite(['resources/css/app.css', 'resources/js/app.js']) -->
         <style>
+            [x-cloak] { display: none !important; }
             /* Select2 Override for Input Borders */
             .select2-container--default .select2-selection--single,
             .select2-container--default .select2-selection--multiple {

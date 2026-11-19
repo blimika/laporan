@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Anggaran;
+use App\Models\Satker;
 use App\Models\Spd;
 use App\Models\SuratTugas;
+use App\Models\Tahun;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -98,11 +100,21 @@ class AnggaranController extends Controller implements HasMiddleware
 
     public function create()
     {
-        return view('anggaran.create');
+        $tahunObj = session('tahun_id') ? Tahun::find(session('tahun_id')) : null;
+        $selectedTahun = $tahunObj ? (string) $tahunObj->tahun : (string) date('Y');
+        $satkerObj = session('satker_id') ? Satker::find(session('satker_id')) : null;
+
+        return view('anggaran.create', compact('selectedTahun', 'tahunObj', 'satkerObj'));
     }
 
     public function store(Request $request)
     {
+        // Pastikan tahun selalu terikat pada tahun aktif dari sesi login jika tersedia
+        $tahunObj = session('tahun_id') ? Tahun::find(session('tahun_id')) : null;
+        if ($tahunObj) {
+            $request->merge(['tahun' => (int) $tahunObj->tahun]);
+        }
+
         $validated = $request->validate([
             'mak' => [
                 'required',
@@ -147,27 +159,45 @@ class AnggaranController extends Controller implements HasMiddleware
             return response()->json($anggaran);
         }
 
-        return view('anggaran.edit', compact('anggaran'));
+        $tahunObj = session('tahun_id') ? Tahun::find(session('tahun_id')) : null;
+        $selectedTahun = $anggaran->tahun ?: ($tahunObj ? (string) $tahunObj->tahun : (string) date('Y'));
+        $satkerObj = session('satker_id') ? Satker::find(session('satker_id')) : ($anggaran->satker ?? null);
+
+        return view('anggaran.edit', compact('anggaran', 'selectedTahun', 'tahunObj', 'satkerObj'));
     }
 
     public function edit(string $id)
     {
-        $anggaran = Anggaran::findOrFail($id);
+        $anggaran = Anggaran::withCount('suratTugas')
+            ->withSum('spds', 'nilai_dpr')
+            ->findOrFail($id);
 
-        return view('anggaran.edit', compact('anggaran'));
+        $tahunObj = session('tahun_id') ? Tahun::find(session('tahun_id')) : null;
+        $selectedTahun = $anggaran->tahun ?: ($tahunObj ? (string) $tahunObj->tahun : (string) date('Y'));
+        $satkerObj = session('satker_id') ? Satker::find(session('satker_id')) : ($anggaran->satker ?? null);
+
+        return view('anggaran.edit', compact('anggaran', 'selectedTahun', 'tahunObj', 'satkerObj'));
     }
 
     public function update(Request $request, string $id)
     {
         $anggaran = Anggaran::findOrFail($id);
 
+        // Jika tahun tidak dikirim atau readonly, pertahankan tahun anggaran yang sudah ada
+        if (! $request->filled('tahun')) {
+            $request->merge(['tahun' => (int) $anggaran->tahun]);
+        }
+
         $validated = $request->validate([
             'mak' => [
                 'required',
                 'string',
-                Rule::unique('anggarans')->where(function ($query) use ($request) {
-                    return $query->where('tahun', $request->tahun)
-                        ->where('satker_id', session('satker_id'));
+                Rule::unique('anggarans')->where(function ($query) use ($request, $anggaran) {
+                    $targetTahun = $request->tahun ?? $anggaran->tahun;
+                    $targetSatker = session('satker_id') ?? $anggaran->satker_id;
+
+                    return $query->where('tahun', $targetTahun)
+                        ->where('satker_id', $targetSatker);
                 })->ignore($id),
             ],
             'tahun' => 'required|digits:4|integer',
