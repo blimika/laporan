@@ -9,6 +9,7 @@ use App\Models\SuratTugas;
 use App\Models\User;
 use App\Services\DocumentExportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class SuratTugasController extends Controller
 {
@@ -117,9 +118,10 @@ class SuratTugasController extends Controller
     {
         $pegawais = Pegawai::active()->get();
         $kepalaPegawais = Pegawai::active()->kepala()->get();
+        $ppkPegawais = Pegawai::active()->ppk()->get();
         $anggarans = Anggaran::all();
 
-        return view('surat_tugas.create', compact('pegawais', 'kepalaPegawais', 'anggarans'));
+        return view('surat_tugas.create', compact('pegawais', 'kepalaPegawais', 'ppkPegawais', 'anggarans'));
     }
 
     public function store(Request $request)
@@ -130,14 +132,49 @@ class SuratTugasController extends Controller
             'kepala_pegawai_id' => 'required|exists:pegawais,id',
             'pembebanan_anggaran_id' => 'required|exists:anggarans,id',
             'uraian_pembebanan' => 'required|string',
+            'spd_template' => 'nullable|in:template_1,template_2',
             'tujuan' => 'required|string',
             'tugas' => 'required|string',
             'tgl_surat' => 'required|date',
             'tgl_berangkat' => 'required|date',
             'tgl_kembali' => 'required|date|after_or_equal:tgl_berangkat',
+            'nilai_dpr' => 'nullable',
+            'ppk_pegawai_id' => 'nullable|exists:pegawais,id',
+            'kendaraan' => 'nullable|string',
         ]);
 
-        SuratTugas::create($validated);
+        if (empty($validated['spd_template'])) {
+            $validated['spd_template'] = 'template_2';
+        }
+
+        $stData = Arr::except($validated, ['nilai_dpr', 'ppk_pegawai_id', 'kendaraan']);
+        $suratTugas = SuratTugas::create($stData);
+
+        if ($suratTugas->spd_template === 'template_2') {
+            $ppkId = $request->ppk_pegawai_id
+                ?: (Pegawai::active()->ppk()->where('satker_id', $suratTugas->satker_id)->value('id')
+                    ?? Pegawai::active()->ppk()->value('id')
+                    ?? $suratTugas->kepala_pegawai_id);
+
+            $safeNomor = 'T2/'.str_replace(['/', '\\', ' '], '-', $suratTugas->nomor_surat);
+            if (Spd::where('nomor_spd', $safeNomor)->exists()) {
+                $safeNomor .= '-'.$suratTugas->id;
+            }
+
+            $nilaiDpr = null;
+            if ($request->filled('nilai_dpr')) {
+                $cleanVal = str_replace(['.', ','], ['', '.'], (string) $request->nilai_dpr);
+                $nilaiDpr = is_numeric($cleanVal) ? (float) $cleanVal : null;
+            }
+
+            $suratTugas->spd()->create([
+                'nomor_spd' => $safeNomor,
+                'ppk_pegawai_id' => $ppkId,
+                'kendaraan' => $request->kendaraan ?: 'Kendaraan Umum',
+                'tgl_dpr' => $suratTugas->tgl_kembali,
+                'nilai_dpr' => $nilaiDpr,
+            ]);
+        }
 
         return redirect()->route('surat-tugas.index')->with('success', 'Surat Tugas berhasil dibuat.');
     }
@@ -152,6 +189,10 @@ class SuratTugasController extends Controller
         if ($suratTuga->kepalaPegawai && ! $kepalaPegawais->contains('id', $suratTuga->kepala_pegawai_id)) {
             $kepalaPegawais->push($suratTuga->kepalaPegawai);
         }
+        $ppkPegawais = Pegawai::active()->ppk()->get();
+        if ($suratTuga->spd && $suratTuga->spd->ppkPegawai && ! $ppkPegawais->contains('id', $suratTuga->spd->ppk_pegawai_id)) {
+            $ppkPegawais->push($suratTuga->spd->ppkPegawai);
+        }
         $anggarans = Anggaran::all();
         $suratTugas = $suratTuga; // Alias the variable to match our standard naming
 
@@ -162,7 +203,7 @@ class SuratTugasController extends Controller
             $users = User::where('satker_id', auth()->user()->satker_id)->get();
         }
 
-        return view('surat_tugas.edit', compact('suratTugas', 'pegawais', 'kepalaPegawais', 'anggarans', 'users'));
+        return view('surat_tugas.edit', compact('suratTugas', 'pegawais', 'kepalaPegawais', 'ppkPegawais', 'anggarans', 'users'));
     }
 
     public function update(Request $request, SuratTugas $suratTuga)
@@ -175,22 +216,69 @@ class SuratTugasController extends Controller
             'kepala_pegawai_id' => 'required|exists:pegawais,id',
             'pembebanan_anggaran_id' => 'required|exists:anggarans,id',
             'uraian_pembebanan' => 'required|string',
+            'spd_template' => 'nullable|in:template_1,template_2',
             'tujuan' => 'required|string',
             'tugas' => 'required|string',
             'tgl_surat' => 'required|date',
             'tgl_berangkat' => 'required|date',
             'tgl_kembali' => 'required|date|after_or_equal:tgl_berangkat',
             'user_id' => 'nullable|exists:users,id',
+            'nilai_dpr' => 'nullable',
+            'ppk_pegawai_id' => 'nullable|exists:pegawais,id',
+            'kendaraan' => 'nullable|string',
         ]);
 
-        $suratTugas->update($validated);
+        if (empty($validated['spd_template'])) {
+            $validated['spd_template'] = $suratTugas->spd_template ?? 'template_2';
+        }
+
+        $stData = Arr::except($validated, ['nilai_dpr', 'ppk_pegawai_id', 'kendaraan']);
+        $suratTugas->update($stData);
+
+        if ($suratTugas->spd_template === 'template_2') {
+            $nilaiDpr = null;
+            if ($request->filled('nilai_dpr')) {
+                $cleanVal = str_replace(['.', ','], ['', '.'], (string) $request->nilai_dpr);
+                $nilaiDpr = is_numeric($cleanVal) ? (float) $cleanVal : null;
+            }
+
+            $ppkId = $request->ppk_pegawai_id
+                ?: ($suratTugas->spd ? $suratTugas->spd->ppk_pegawai_id : null)
+                ?: (Pegawai::active()->ppk()->where('satker_id', $suratTugas->satker_id)->value('id')
+                    ?? Pegawai::active()->ppk()->value('id')
+                    ?? $suratTugas->kepala_pegawai_id);
+
+            if ($suratTugas->spd) {
+                $suratTugas->spd->update([
+                    'ppk_pegawai_id' => $ppkId,
+                    'tgl_dpr' => $suratTugas->tgl_kembali,
+                    'nilai_dpr' => $nilaiDpr,
+                    'kendaraan' => $request->kendaraan ?: ($suratTugas->spd->kendaraan ?: 'Kendaraan Umum'),
+                ]);
+            } else {
+                $safeNomor = 'T2/'.str_replace(['/', '\\', ' '], '-', $suratTugas->nomor_surat);
+                if (Spd::where('nomor_spd', $safeNomor)->exists()) {
+                    $safeNomor .= '-'.$suratTugas->id;
+                }
+
+                $suratTugas->spd()->create([
+                    'nomor_spd' => $safeNomor,
+                    'ppk_pegawai_id' => $ppkId,
+                    'kendaraan' => $request->kendaraan ?: 'Kendaraan Umum',
+                    'tgl_dpr' => $suratTugas->tgl_kembali,
+                    'nilai_dpr' => $nilaiDpr,
+                ]);
+            }
+        }
 
         return redirect()->route('surat-tugas.index')->with('success', 'Surat Tugas berhasil diperbarui.');
     }
 
-    public function exportPdf(SuratTugas $suratTugas, DocumentExportService $exportService)
+    public function exportPdf(Request $request, SuratTugas $suratTugas, DocumentExportService $exportService)
     {
-        return $exportService->exportSuratTugasGabungan($suratTugas);
+        $template = $request->query('template', $suratTugas->spd_template ?? 'template_2');
+
+        return $exportService->exportSuratTugasGabungan($suratTugas, $template);
     }
 
     public function destroy(SuratTugas $suratTuga)

@@ -34,12 +34,43 @@
                 <a href="{{ route('surat-tugas.index') }}" class="inline-flex items-center px-3.5 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-xs transition">
                     Batal & Kembali
                 </a>
-                <a href="{{ route('export.spd', $spd) }}" target="_blank" class="inline-flex items-center px-3.5 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-semibold shadow-xs transition">
-                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Cetak Lembar SPD
-                </a>
+
+                <!-- Cetak SPD Dropdown (Template 1 & Template 2) -->
+                <div class="relative inline-block text-left" x-data="{ openSpdPrint: false }" @click.outside="openSpdPrint = false">
+                    <button type="button" @click="openSpdPrint = !openSpdPrint" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        <span>Cetak SPD</span>
+                        <svg class="w-3 h-3 text-emerald-200 transition-transform duration-150" :class="{ 'rotate-180': openSpdPrint }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    <div x-show="openSpdPrint" x-cloak class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-30 divide-y divide-gray-100">
+                        <div class="px-3.5 py-2">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pilih Template Cetak SPD</p>
+                        </div>
+                        <div class="py-1">
+                            <a href="{{ route('export.spd', ['spd' => $spd, 'template' => 'template_1']) }}" target="_blank" class="flex items-start gap-3 px-3.5 py-2.5 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition group">
+                                <span class="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg group-hover:bg-emerald-200 transition mt-0.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </span>
+                                <div>
+                                    <div class="font-bold text-gray-900 group-hover:text-emerald-900">Template 1 (Standar)</div>
+                                    <div class="text-[11px] text-gray-500 mt-0.5">Format lengkap 2 lembar LKPP/Kemenkeu dengan tabel 10 poin & lembar 2.</div>
+                                </div>
+                            </a>
+                            <a href="{{ route('export.spd', ['spd' => $spd, 'template' => 'template_2']) }}" target="_blank" class="flex items-start gap-3 px-3.5 py-2.5 text-xs text-gray-700 hover:bg-indigo-50 hover:text-indigo-900 transition group">
+                                <span class="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg group-hover:bg-indigo-200 transition mt-0.5">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </span>
+                                <div>
+                                    <div class="font-bold text-gray-900 group-hover:text-indigo-900">Template 2 (Lampiran ST)</div>
+                                    <div class="text-[11px] text-gray-500 mt-0.5">Format lampiran ST 2 kolom x 2 baris ringkas, tanpa nomor SPD.</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </x-slot>

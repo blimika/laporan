@@ -553,18 +553,21 @@
                             </label>
 
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5" id="narasi-card-options">
-                                <label class="narasi-card relative flex flex-col p-3 rounded-xl border border-indigo-200 bg-white hover:border-indigo-500 cursor-pointer transition shadow-2xs">
+                                <label class="narasi-card relative flex flex-col p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 hover:border-indigo-600 cursor-pointer transition shadow-2xs">
                                     <input type="radio" name="panjang_narasi_radio" value="minimal_2" class="sr-only" checked onchange="selectNarasiRadio('minimal_2')">
-                                    <span class="text-xs font-bold text-gray-900">Ringkas</span>
+                                    <span class="text-xs font-bold text-gray-900 flex items-center justify-between">
+                                        Ringkas
+                                        <span class="narasi-dot w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                                    </span>
                                     <span class="text-[11px] text-indigo-700 font-semibold mt-0.5">Min. 2 Paragraf</span>
                                     <span class="text-[10px] text-gray-400 mt-1 leading-tight">Cocok untuk monitoring singkat & tugas rutin.</span>
                                 </label>
 
-                                <label class="narasi-card relative flex flex-col p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 hover:border-indigo-600 cursor-pointer transition shadow-2xs">
+                                <label class="narasi-card relative flex flex-col p-3 rounded-xl border border-indigo-200 bg-white hover:border-indigo-500 cursor-pointer transition shadow-2xs">
                                     <input type="radio" name="panjang_narasi_radio" value="3_paragraf" class="sr-only" onchange="selectNarasiRadio('3_paragraf')">
                                     <span class="text-xs font-bold text-gray-900 flex items-center justify-between">
                                         Standar
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                                        <span class="narasi-dot w-1.5 h-1.5 rounded-full bg-indigo-600 hidden"></span>
                                     </span>
                                     <span class="text-[11px] text-indigo-700 font-semibold mt-0.5">3 Paragraf</span>
                                     <span class="text-[10px] text-gray-400 mt-1 leading-tight">Format resmi: Pendahuluan, Isi, Kesimpulan.</span>
@@ -572,15 +575,18 @@
 
                                 <label class="narasi-card relative flex flex-col p-3 rounded-xl border border-indigo-200 bg-white hover:border-indigo-500 cursor-pointer transition shadow-2xs">
                                     <input type="radio" name="panjang_narasi_radio" value="lebih" class="sr-only" onchange="selectNarasiRadio('lebih')">
-                                    <span class="text-xs font-bold text-gray-900">Mendalam</span>
+                                    <span class="text-xs font-bold text-gray-900 flex items-center justify-between">
+                                        Mendalam
+                                        <span class="narasi-dot w-1.5 h-1.5 rounded-full bg-indigo-600 hidden"></span>
+                                    </span>
                                     <span class="text-[11px] text-indigo-700 font-semibold mt-0.5">4+ Paragraf</span>
                                     <span class="text-[10px] text-gray-400 mt-1 leading-tight">Analisis lengkap, data komprehensif & evaluasi.</span>
                                 </label>
                             </div>
 
                             <select id="panjang_narasi" name="panjang_narasi" class="sr-only">
-                                <option value="minimal_2">Minimal 2 Paragraf (Standar Ringkas)</option>
-                                <option value="3_paragraf" selected>3 Paragraf (Lengkap)</option>
+                                <option value="minimal_2" selected>Minimal 2 Paragraf (Standar Ringkas)</option>
+                                <option value="3_paragraf">3 Paragraf (Lengkap)</option>
                                 <option value="lebih">Lebih dari 2 Paragraf (Mendalam / 4+ Paragraf)</option>
                             </select>
                         </div>
@@ -972,10 +978,13 @@
             const cards = document.querySelectorAll('#narasi-card-options .narasi-card');
             cards.forEach(card => {
                 const radio = card.querySelector('input[type="radio"]');
+                const dot = card.querySelector('.narasi-dot');
                 if (radio && radio.value === val) {
                     card.className = 'narasi-card relative flex flex-col p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 hover:border-indigo-600 cursor-pointer transition shadow-2xs';
+                    if (dot) dot.classList.remove('hidden');
                 } else {
                     card.className = 'narasi-card relative flex flex-col p-3 rounded-xl border border-indigo-200 bg-white hover:border-indigo-500 cursor-pointer transition shadow-2xs';
+                    if (dot) dot.classList.add('hidden');
                 }
             });
         }

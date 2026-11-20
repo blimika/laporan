@@ -553,4 +553,85 @@ class HanyaLaporanTest extends TestCase
             'id' => $dok->id,
         ]);
     }
+
+    public function test_hanya_laporan_create_page_defaults_to_ringkas_2_paragraf(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Lombok Tengah',
+            'kode' => '5202',
+        ]);
+
+        $user = User::create([
+            'name' => 'Operator AI Studio',
+            'username' => 'operatoraistudio',
+            'email' => 'operatoraistudio@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('hanya-laporan.create'));
+        $response->assertStatus(200);
+
+        $html = $response->getContent();
+
+        // Must display AI Report Studio
+        $this->assertStringContainsString('AI Report Studio', $html);
+        $this->assertStringContainsString('Ringkas', $html);
+        $this->assertStringContainsString('Min. 2 Paragraf', $html);
+
+        // Ringkas radio must be checked and have active styling
+        $this->assertMatchesRegularExpression('/<label class="narasi-card[^"]*border-2 border-purple-600 bg-purple-50\/50[^"]*">\s*<input type="radio" name="panjang_narasi_radio" value="minimal_2"[^>]*checked/', $html);
+
+        // Standar 3 Paragraf must NOT have active border
+        $this->assertMatchesRegularExpression('/<label class="narasi-card[^"]*border border-purple-200 bg-white[^"]*">\s*<input type="radio" name="panjang_narasi_radio" value="3_paragraf"/', $html);
+    }
+
+    public function test_hanya_laporan_edit_page_renders_studio_and_defaults_to_ringkas(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Lombok Tengah',
+            'kode' => '5202',
+        ]);
+
+        $user = User::create([
+            'name' => 'Operator AI Edit',
+            'username' => 'operatoraiedit',
+            'email' => 'operatoraiedit@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+        ]);
+
+        $laporan = HanyaLaporan::create([
+            'nama_pegawai' => 'Lalu Wahyu, S.Tr.Stat',
+            'nip_pegawai' => '199601012020011001',
+            'nomor_st' => '099/ST/5202/2026',
+            'tgl_laporan' => '2026-11-15',
+            'tgl_perjalanan' => '2026-11-15',
+            'lokasi_perjalanan' => 'Kecamatan Janapria',
+            'tujuan_perjalanan' => 'Pengawasan Sensus Pertanian',
+            'pegawai_ditemui' => 'Kortim Lapangan',
+            'kategori' => 'Pendataan Lapangan',
+            'hasil_perjalanan' => 'Pengawasan telah dilaksanakan di 5 blok sensus dengan lancar.',
+            'satker_id' => $satker->id,
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('hanya-laporan.edit', $laporan));
+        $response->assertStatus(200);
+
+        $html = $response->getContent();
+
+        // Must display AI Report Studio identical with create page
+        $this->assertStringContainsString('AI Report Studio', $html);
+        $this->assertStringContainsString('Ringkas', $html);
+        $this->assertStringContainsString('Min. 2 Paragraf', $html);
+
+        // Ringkas radio must be checked and have active styling
+        $this->assertMatchesRegularExpression('/<label class="narasi-card[^"]*border-2 border-purple-600 bg-purple-50\/50[^"]*">\s*<input type="radio" name="panjang_narasi_radio" value="minimal_2"[^>]*checked/', $html);
+
+        // Existing report text must be preserved
+        $this->assertStringContainsString('Pengawasan telah dilaksanakan di 5 blok sensus dengan lancar.', $html);
+    }
 }

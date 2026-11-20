@@ -621,102 +621,166 @@
                 </div>
 
                 <!-- ======================================================== -->
-                <!-- SECTION 5: AI STUDIO & HASIL NARASI LAPORAN -->
+                <!-- SECTION 5: STUDIO AI GENERATOR (GEMINI AI REPORT ENGINE) -->
                 <!-- ======================================================== -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-xs p-6 md:p-7">
-                    <div class="flex items-center gap-2.5 mb-5 pb-3 border-b border-gray-100">
-                        <span class="w-7 h-7 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center">5</span>
+                <div class="bg-gradient-to-br from-purple-50/90 via-indigo-50/50 to-white rounded-2xl border-2 border-purple-300/80 shadow-md p-6 md:p-8">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-purple-200">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shadow-xs">
+                                5
+                            </span>
+                            <div>
+                                <h3 class="text-base font-extrabold text-gray-900 flex items-center gap-2">
+                                    <span>AI Report Studio</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-900">
+                                        Gemini AI ✨
+                                    </span>
+                                </h3>
+                                <p class="text-xs text-purple-800/80">Sesuaikan preferensi narasi, lalu biarkan AI menyusun atau merevisi laporan dinas secara otomatis.</p>
+                            </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="flex items-center gap-2 text-xs font-semibold text-purple-700 bg-white/80 border border-purple-200 px-3 py-1.5 rounded-xl shadow-2xs self-start sm:self-auto">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            AI Generator Siap Digunakan
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Parameter AI -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Panjang Narasi -->
                         <div>
-                            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                AI Studio & Hasil Narasi Laporan
-                                <span class="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-purple-200">
-                                    Gemini 2.5 Pro
-                                </span>
-                            </h3>
-                            <p class="text-xs text-gray-500">Sesuaikan parameter struktur narasi atau biarkan AI menyusun ulang draft laporan kedinasan yang komprehensif.</p>
-                        </div>
-                    </div>
-
-                    <!-- Parameter Pengaturan AI Studio -->
-                    <div class="p-5 rounded-2xl bg-gradient-to-br from-purple-50/80 via-indigo-50/40 to-white border border-purple-200/80 mb-6 space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-center">
-                            <!-- Pilihan Panjang Paragraf -->
-                            <div id="narasi-card-options">
-                                <label for="panjang_narasi" class="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-1.5">
-                                    Panjang Narasi Laporan AI
-                                </label>
-                                <select id="panjang_narasi" name="panjang_narasi" class="block w-full border-purple-300 focus:border-purple-600 focus:ring-purple-600 rounded-xl shadow-xs text-xs font-medium bg-white">
-                                    <option value="minimal_2">Standar Ringkas (Minimal 2 Paragraf)</option>
-                                    <option value="3_paragraf">Lengkap (Tepat 3 Paragraf Terstruktur)</option>
-                                    <option value="lebih">Mendalam & Komprehensif (4+ Paragraf)</option>
-                                </select>
-                                <p class="text-[11px] text-purple-700/80 mt-1">Mengontrol kedalaman dan banyaknya paragraf narasi hasil perjalanan.</p>
-                            </div>
-
-                            <!-- Opsi Perjadin 8 Jam -->
-                            <div class="p-3.5 bg-white rounded-xl border border-purple-200/80 shadow-2xs">
-                                <div class="flex items-start gap-2.5">
-                                    <input type="checkbox" id="is_8_jam" name="is_8_jam" value="1" class="w-4 h-4 rounded border-purple-300 text-purple-600 shadow-xs focus:ring-purple-500 mt-0.5 cursor-pointer" onchange="toggle8JamOption()">
-                                    <div>
-                                        <label for="is_8_jam" class="text-xs font-bold text-gray-900 cursor-pointer block">
-                                            Format Khusus Perjadin 8 Jam (Tabel Jadwal Kegiatan)
-                                        </label>
-                                        <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
-                                            AI akan menyusun tabel jadwal kegiatan terperinci dari pukul 08.00 s.d. 17.00 WITA.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Trigger Generate AI -->
-                        <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
-                            <button type="button" id="btn-generate" onclick="generateAI()" class="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-md hover:shadow-purple-600/30 inline-flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer">
-                                <svg class="w-4 h-4 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                <span>Generate Ulang dengan AI ✨</span>
-                            </button>
-
-                            <div id="loading-indicator" class="hidden flex items-center gap-2 text-xs font-semibold text-purple-700 bg-purple-100/70 px-3.5 py-2 rounded-xl">
-                                <svg class="animate-spin h-4 w-4 text-purple-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>Sedang menyusun narasi laporan... Mohon tunggu.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Area Hasil Narasi Laporan -->
-                    <div id="hasil-container" class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <label for="hasil_perjalanan" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Teks Narasi Hasil Laporan <span class="text-rose-500">*</span>
+                            <label for="panjang_narasi" class="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-2">
+                                Panjang & Kedalaman Narasi AI
                             </label>
                             
-                            <!-- Badges & Tools -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5" id="narasi-card-options">
+                                <label class="narasi-card relative flex flex-col p-3 rounded-xl border-2 border-purple-600 bg-purple-50/50 hover:border-purple-600 cursor-pointer transition shadow-2xs">
+                                    <input type="radio" name="panjang_narasi_radio" value="minimal_2" class="sr-only" checked onchange="selectNarasiRadio('minimal_2')">
+                                    <span class="text-xs font-bold text-gray-900 flex items-center justify-between">
+                                        Ringkas
+                                        <span class="narasi-dot w-1.5 h-1.5 rounded-full bg-purple-600"></span>
+                                    </span>
+                                    <span class="text-[11px] text-purple-700 font-semibold mt-0.5">Min. 2 Paragraf</span>
+                                    <span class="text-[10px] text-gray-400 mt-1 leading-tight">Cocok untuk monitoring singkat & tugas rutin.</span>
+                                </label>
+
+                                <label class="narasi-card relative flex flex-col p-3 rounded-xl border border-purple-200 bg-white hover:border-purple-500 cursor-pointer transition shadow-2xs">
+                                    <input type="radio" name="panjang_narasi_radio" value="3_paragraf" class="sr-only" onchange="selectNarasiRadio('3_paragraf')">
+                                    <span class="text-xs font-bold text-gray-900 flex items-center justify-between">
+                                        Standar
+                                        <span class="narasi-dot w-1.5 h-1.5 rounded-full bg-purple-600 hidden"></span>
+                                    </span>
+                                    <span class="text-[11px] text-purple-700 font-semibold mt-0.5">3 Paragraf</span>
+                                    <span class="text-[10px] text-gray-400 mt-1 leading-tight">Format resmi: Pendahuluan, Isi, Kesimpulan.</span>
+                                </label>
+
+                                <label class="narasi-card relative flex flex-col p-3 rounded-xl border border-purple-200 bg-white hover:border-purple-500 cursor-pointer transition shadow-2xs">
+                                    <input type="radio" name="panjang_narasi_radio" value="lebih" class="sr-only" onchange="selectNarasiRadio('lebih')">
+                                    <span class="text-xs font-bold text-gray-900 flex items-center justify-between">
+                                        Mendalam
+                                        <span class="narasi-dot w-1.5 h-1.5 rounded-full bg-purple-600 hidden"></span>
+                                    </span>
+                                    <span class="text-[11px] text-purple-700 font-semibold mt-0.5">4+ Paragraf</span>
+                                    <span class="text-[10px] text-gray-400 mt-1 leading-tight">Analisis lengkap, data komprehensif & evaluasi.</span>
+                                </label>
+                            </div>
+
+                            <select id="panjang_narasi" name="panjang_narasi" class="sr-only">
+                                <option value="minimal_2" selected>Minimal 2 Paragraf (Standar Ringkas)</option>
+                                <option value="3_paragraf">3 Paragraf (Lengkap)</option>
+                                <option value="lebih">Lebih dari 2 Paragraf (Mendalam / 4+ Paragraf)</option>
+                            </select>
+                        </div>
+
+                        <!-- Mode Perjadin 8 Jam -->
+                        <div>
+                            <label class="block text-xs font-bold text-purple-950 uppercase tracking-wider mb-2">
+                                Format Khusus Perjalanan Dinas
+                            </label>
+
+                            <div class="p-4 rounded-xl border border-purple-200 bg-white hover:border-purple-300 transition shadow-2xs">
+                                <label class="flex items-start gap-3 cursor-pointer select-none">
+                                    <div class="pt-0.5">
+                                        <input type="checkbox" id="is_8_jam" name="is_8_jam" value="1" class="w-4 h-4 rounded border-gray-300 text-purple-600 shadow-xs focus:ring-purple-500" onchange="toggle8JamOption()">
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-bold text-gray-900">Perjadin 8 Jam (Jadwal & Matriks Waktu)</span>
+                                            <span class="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">08.00 - 17.00 WITA</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            AI otomatis menyusun tabel markdown aktivitas jam-per-jam dari pagi hingga sore hari sesuai standar SOP SPPD satu hari penuh.
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tip Informatif Box -->
+                    <div class="mb-6 p-4 rounded-xl bg-purple-100/60 border border-purple-200/80 text-xs text-purple-900 flex items-start gap-3">
+                        <svg class="w-5 h-5 text-purple-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="leading-relaxed">
+                            <strong>Cara Kerja AI:</strong> AI menganalisis data <em>Tujuan</em>, <em>Lokasi</em>, <em>Pihak yang Ditemui</em>, <em>Kategori</em>, dan <em>Kendala</em> yang Anda masukkan di atas untuk menyusun narasi kedinasan formal, terstruktur, dan akuntabel. Anda selalu dapat merevisi hasil narasi sebelum menyimpannya.
+                        </div>
+                    </div>
+
+                    <!-- Tombol Generate AI -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <button type="button" id="btn-generate" onclick="generateAI()" class="w-full sm:w-auto bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-3.5 px-8 rounded-xl shadow-md hover:shadow-lg hover:shadow-purple-600/30 inline-flex items-center justify-center gap-2.5 transition active:scale-95 group">
+                            <svg class="w-5 h-5 text-yellow-300 group-hover:rotate-12 transition-transform duration-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="text-sm tracking-wide">Generate Ulang dengan AI ✨</span>
+                        </button>
+
+                        <div id="loading-indicator" class="hidden flex items-center gap-3 text-xs text-purple-800 font-semibold bg-white px-4 py-2.5 rounded-xl border border-purple-200 shadow-xs">
+                            <svg class="animate-spin h-4 w-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="loading-text">Sedang menyusun laporan dinas dengan AI...</span>
+                        </div>
+                    </div>
+
+                    <!-- HASIL DRAFT AI (REVIEW & EDIT) -->
+                    <div id="hasil-container" class="mt-7 pt-6 border-t border-purple-200/80">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                            <div>
+                                <label for="hasil_perjalanan" class="block text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                                    <span>Teks Narasi Laporan Hasil AI</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                        Siap Diedit & Ditinjau
+                                    </span>
+                                </label>
+                                <p class="text-xs text-gray-500">Silakan tinjau dan sempurnakan teks di bawah ini bila diperlukan sebelum disimpan.</p>
+                            </div>
+
+                            <!-- Tools Bar: Copy & Stats -->
                             <div class="flex items-center gap-2">
-                                <span id="word-count-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
-                                    0 Kata
+                                <span id="word-count" class="text-[11px] font-mono text-gray-500 bg-white px-2 py-1 rounded-lg border border-gray-200">
+                                    0 kata
                                 </span>
-                                <span id="char-count-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                                    0 Karakter
-                                </span>
-                                <button type="button" id="btn-copy-narasi" onclick="copyHasilNarasi()" class="text-xs font-semibold text-purple-700 hover:text-purple-900 flex items-center gap-1 px-2 py-0.5 rounded hover:bg-purple-50 transition" title="Salin seluruh teks narasi ke clipboard">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button type="button" onclick="copyHasilNarasi()" id="btn-copy" class="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 px-3 py-1.5 rounded-lg shadow-2xs transition active:scale-95">
+                                    <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                                     </svg>
-                                    Salin Narasi
+                                    <span id="btn-copy-text">Salin Teks</span>
+                                </button>
+                                <button type="button" onclick="generateAI()" class="inline-flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-1.5 rounded-lg transition active:scale-95" title="Generate ulang teks laporan">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    Regenerate
                                 </button>
                             </div>
                         </div>
 
-                        <textarea id="hasil_perjalanan" name="hasil_perjalanan" rows="12" class="block w-full border-gray-300 focus:border-purple-600 focus:ring-purple-600 rounded-xl shadow-xs text-sm leading-relaxed font-sans" placeholder="Hasil narasi perjalanan dinas akan otomatis terisi di sini setelah klik tombol 'Generate dengan AI'. Anda bebas menyunting atau menambahkan detail sebelum menyimpan." required oninput="updateWordCount()">{{ old('hasil_perjalanan', $hanyaLaporan->hasil_perjalanan) }}</textarea>
-                        
-                        <p class="text-[11px] text-gray-400">
-                            💡 Narasi ini akan dicetak pada lembar resmi laporan perjalanan dinas. Anda dapat menyunting kalimat secara manual sebelum menekan tombol simpan.
-                        </p>
+                        <div class="relative">
+                            <textarea id="hasil_perjalanan" name="hasil_perjalanan" rows="12" class="block w-full border-gray-300 focus:border-purple-600 focus:ring-purple-600 rounded-2xl shadow-inner text-sm leading-relaxed p-4 font-sans bg-white" placeholder="Narasi AI akan otomatis terisi di sini setelah Anda mengklik tombol Generate di atas..." required oninput="updateWordCount()">{{ old('hasil_perjalanan', $hanyaLaporan->hasil_perjalanan) }}</textarea>
+                        </div>
                         <x-input-error :messages="$errors->get('hasil_perjalanan')" class="mt-1.5" />
                     </div>
                 </div>
@@ -1065,9 +1129,30 @@
         // ==========================================
         // AI GENERATION STUDIO
         // ==========================================
+        function selectNarasiRadio(val) {
+            const select = document.getElementById('panjang_narasi');
+            if (select) select.value = val;
+
+            document.querySelectorAll('.narasi-card').forEach(card => {
+                const radio = card.querySelector('input[type="radio"]');
+                const dot = card.querySelector('.narasi-dot');
+                if (radio && radio.value === val) {
+                    radio.checked = true;
+                    card.classList.add('border-2', 'border-purple-600', 'bg-purple-50/50');
+                    card.classList.remove('border-purple-200', 'bg-white');
+                    if (dot) dot.classList.remove('hidden');
+                } else {
+                    card.classList.remove('border-2', 'border-purple-600', 'bg-purple-50/50');
+                    card.classList.add('border-purple-200', 'bg-white');
+                    if (dot) dot.classList.add('hidden');
+                }
+            });
+        }
+
         async function generateAI() {
             const btn = document.getElementById('btn-generate');
             const indicator = document.getElementById('loading-indicator');
+            const loadingText = document.getElementById('loading-text');
             const hasilTextarea = document.getElementById('hasil_perjalanan');
 
             syncNamaPegawai();
@@ -1083,8 +1168,21 @@
             }
 
             btn.disabled = true;
-            btn.classList.add('opacity-50');
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
             indicator.classList.remove('hidden');
+
+            const loadingMessages = [
+                'Menyiapkan konteks perjalanan dinas...',
+                'Menghubungi AI Gemini...',
+                'Menyusun narasi laporan kedinasan...',
+                'Memoles struktur dan format laporan...'
+            ];
+            let msgIdx = 0;
+            if (loadingText) loadingText.innerText = loadingMessages[0];
+            const msgTimer = setInterval(() => {
+                msgIdx = (msgIdx + 1) % loadingMessages.length;
+                if (loadingText) loadingText.innerText = loadingMessages[msgIdx];
+            }, 1800);
 
             try {
                 const formData = new FormData(form);
@@ -1123,41 +1221,40 @@
             } catch (error) {
                 alert(error.message || 'Terjadi kendala saat menghubungi server AI.');
             } finally {
+                clearInterval(msgTimer);
                 btn.disabled = false;
-                btn.classList.remove('opacity-50');
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 indicator.classList.add('hidden');
             }
         }
 
         function updateWordCount() {
-            const text = document.getElementById('hasil_perjalanan').value.trim();
-            const words = text ? text.split(/\s+/).length : 0;
-            const chars = text.length;
-            document.getElementById('word-count-badge').textContent = `${words} Kata`;
-            document.getElementById('char-count-badge').textContent = `${chars} Karakter`;
+            const val = document.getElementById('hasil_perjalanan')?.value || '';
+            const count = val.trim() ? val.trim().split(/\s+/).filter(Boolean).length : 0;
+            const counterEl = document.getElementById('word-count');
+            if (counterEl) {
+                counterEl.innerText = `${count} kata`;
+            }
         }
 
         function copyHasilNarasi() {
-            const text = document.getElementById('hasil_perjalanan').value;
-            if (!text) {
-                alert('Belum ada teks narasi laporan untuk disalin.');
+            const val = document.getElementById('hasil_perjalanan')?.value || '';
+            if (!val.trim()) {
+                alert('Belum ada teks laporan yang dapat disalin.');
                 return;
             }
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(() => {
-                    const btn = document.getElementById('btn-copy-narasi');
-                    const origHtml = btn.innerHTML;
-                    btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-600 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Tersalin!`;
-                    setTimeout(() => { btn.innerHTML = origHtml; }, 2000);
+                navigator.clipboard.writeText(val).then(() => {
+                    const btnText = document.getElementById('btn-copy-text');
+                    if (btnText) {
+                        btnText.innerText = 'Tersalin!';
+                        setTimeout(() => { btnText.innerText = 'Salin Teks'; }, 2000);
+                    }
+                }).catch(() => {
+                    alert('Gagal menyalin teks ke clipboard.');
                 });
             } else {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                alert('Teks narasi berhasil disalin ke clipboard.');
+                alert('Browser Anda tidak mendukung fitur salin clipboard otomatis.');
             }
         }
 

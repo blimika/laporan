@@ -348,6 +348,7 @@
                                         'tujuan' => $st->tujuan,
                                         'tugas' => $st->tugas,
                                         'uraian_pembebanan' => $st->uraian_pembebanan,
+                                        'spd_template' => $st->spd_template ?? 'template_2',
                                         'pembuat' => $st->user ? ($st->user->username ?? $st->user->name) : '-',
                                         'pegawai' => [
                                             'nama' => $st->pegawai->nama ?? '-',
@@ -374,7 +375,8 @@
                                             'nilai_dpr_formatted' => 'Rp ' . number_format($st->spd->nilai_dpr, 0, ',', '.'),
                                             'ppk_nama' => $st->spd->ppkPegawai->nama ?? '-',
                                             'ppk_nip' => $st->spd->ppkPegawai->nip ?? '-',
-                                            'export_spd_url' => route('export.spd', $st->spd->id),
+                                            'export_spd_url' => route('export.spd', ['spd' => $st->spd->id, 'template' => 'template_1']),
+                                            'export_spd_template2_url' => route('export.spd', ['spd' => $st->spd->id, 'template' => 'template_2']),
                                             'export_dpr_url' => route('export.dpr', $st->spd->id),
                                             'export_pernyataan_url' => route('export.pernyataan', $st->spd->id),
                                             'edit_spd_url' => route('spd.edit', $st->spd->id),
@@ -424,24 +426,51 @@
 
                                     <!-- Column 2: Nomor ST & SPD -->
                                     <td class="px-5 py-4 text-xs">
-                                        <div class="flex items-center gap-1.5">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
                                             <span class="font-bold text-gray-900 font-mono tracking-tight">{{ $st->nomor_surat }}</span>
                                             <button type="button" onclick="navigator.clipboard.writeText('{{ $st->nomor_surat }}'); alert('Nomor ST disalin!');" class="text-gray-300 hover:text-purple-600 transition" title="Salin Nomor ST">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                             </button>
+                                            @if(($st->spd_template ?? 'template_2') === 'template_2')
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200" title="Format SPD: Template 2 (Lampiran Surat Tugas)">
+                                                    T2
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200" title="Format SPD: Template 1 (Standar LKPP)">
+                                                    T1
+                                                </span>
+                                            @endif
                                         </div>
 
                                         <div class="mt-1.5">
-                                            @if($st->spd)
-                                                <a href="{{ route('export.spd', $st->spd->id) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition" title="Klik untuk cetak / preview SPD">
-                                                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                    SPD: {{ $st->spd->nomor_spd }}
-                                                </a>
+                                            @if(($st->spd_template ?? 'template_2') === 'template_2')
+                                                @if($st->spd)
+                                                    <div class="inline-flex items-center gap-1">
+                                                        <a href="{{ route('export.spd', ['spd' => $st->spd->id, 'template' => 'template_2']) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200 transition" title="Cetak SPD (Template 2 - Terbit Otomatis)">
+                                                            <svg class="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                            SPD Terbit (T2)
+                                                        </a>
+                                                    </div>
+                                                @else
+                                                    <a href="{{ route('spd.create', $st->id) }}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded border border-amber-200 transition" title="Belum ada SPD, klik untuk terbitkan">
+                                                        <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        + Terbitkan SPD (T2)
+                                                    </a>
+                                                @endif
                                             @else
-                                                <a href="{{ route('spd.create', $st->id) }}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded border border-amber-200 transition" title="Belum ada SPD, klik untuk terbitkan sekarang">
-                                                    <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                    + Terbitkan SPD
-                                                </a>
+                                                @if($st->spd)
+                                                    <div class="inline-flex items-center gap-1">
+                                                        <a href="{{ route('export.spd', ['spd' => $st->spd->id, 'template' => 'template_1']) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition" title="Cetak SPD (Template 1 - Standar LKPP)">
+                                                            <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                            SPD: {{ $st->spd->nomor_spd }} (T1)
+                                                        </a>
+                                                    </div>
+                                                @else
+                                                    <a href="{{ route('spd.create', $st->id) }}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded border border-amber-200 transition" title="Belum ada SPD, klik untuk terbitkan sekarang">
+                                                        <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        + Terbitkan SPD (T1)
+                                                    </a>
+                                                @endif
                                             @endif
                                         </div>
 
@@ -610,9 +639,13 @@
                                                                 <svg class="mr-3 h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                                 Edit SPD & DPR
                                                             </a>
-                                                            <a href="{{ route('export.spd', $st->spd->id) }}" target="_blank" class="group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-50">
+                                                            <a href="{{ route('export.spd', ['spd' => $st->spd->id, 'template' => 'template_1']) }}" target="_blank" class="group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-50">
                                                                 <svg class="mr-3 h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                                                Cetak Lembar SPD (PDF)
+                                                                <span>Cetak SPD <span class="font-semibold text-emerald-700">(Template 1)</span></span>
+                                                            </a>
+                                                            <a href="{{ route('export.spd', ['spd' => $st->spd->id, 'template' => 'template_2']) }}" target="_blank" class="group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-indigo-50">
+                                                                <svg class="mr-3 h-4 w-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                                <span>Cetak SPD <span class="font-semibold text-indigo-700">(Template 2 - Lampiran ST)</span></span>
                                                             </a>
                                                             <a href="{{ route('export.dpr', $st->spd->id) }}" target="_blank" class="group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-50">
                                                                 <svg class="mr-3 h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -848,12 +881,16 @@
                                 <p class="text-emerald-600 font-black font-mono text-sm mt-0.5" id="modal-spd-dpr">-</p>
                             </div>
                             <div>
-                                <span class="text-gray-400">Mata Anggaran Kegiatan (MAK):</span>
-                                <p class="text-indigo-700 font-mono font-medium mt-0.5" id="modal-anggaran-mak">-</p>
+                                <span class="text-gray-400">Format SPD:</span>
+                                <p class="text-gray-900 font-semibold text-xs mt-0.5" id="modal-spd-template">-</p>
                             </div>
                             <div>
                                 <span class="text-gray-400">Pejabat Pembuat Komitmen (PPK):</span>
                                 <p class="text-gray-800 font-semibold mt-0.5" id="modal-ppk-nama">-</p>
+                            </div>
+                            <div class="col-span-1 md:col-span-2">
+                                <span class="text-gray-400">Mata Anggaran Kegiatan (MAK):</span>
+                                <p class="text-indigo-700 font-mono font-medium mt-0.5" id="modal-anggaran-mak">-</p>
                             </div>
                             <div class="col-span-1 md:col-span-2">
                                 <span class="text-gray-400">Uraian Beban Anggaran:</span>
@@ -907,13 +944,16 @@
             };
 
             // Status Badges
+            const isT2 = (data.spd_template || 'template_2') === 'template_2';
             const statusSpdEl = document.getElementById('modal-status-spd');
             if (data.spd) {
-                statusSpdEl.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-100 border border-emerald-400/30';
-                statusSpdEl.textContent = 'SPD Terbit';
+                statusSpdEl.className = isT2
+                    ? 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-100 border border-indigo-400/30'
+                    : 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-100 border border-emerald-400/30';
+                statusSpdEl.textContent = isT2 ? 'SPD Terbit (T2)' : 'SPD Terbit (T1)';
             } else {
                 statusSpdEl.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-100 border border-amber-400/30';
-                statusSpdEl.textContent = 'Belum Ada SPD';
+                statusSpdEl.textContent = isT2 ? 'Belum Ada SPD (T2)' : 'Belum Ada SPD (T1)';
             }
 
             const statusLapEl = document.getElementById('modal-status-laporan');
@@ -943,6 +983,13 @@
             document.getElementById('modal-anggaran-mak').textContent = data.anggaran?.mak || '-';
             document.getElementById('modal-anggaran-uraian').textContent = data.anggaran?.uraian || data.uraian_pembebanan || '-';
 
+            const spdTemplateEl = document.getElementById('modal-spd-template');
+            if (spdTemplateEl) {
+                spdTemplateEl.innerHTML = isT2
+                    ? '<span class="inline-flex items-center gap-1.5 text-indigo-700 font-semibold"><span class="px-1.5 py-0.5 bg-indigo-100 rounded text-[10px] font-bold">T2</span> Template 2 (Lampiran ST)</span>'
+                    : '<span class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold"><span class="px-1.5 py-0.5 bg-emerald-100 rounded text-[10px] font-bold">T1</span> Template 1 (Standar LKPP)</span>';
+            }
+
             const spdActions = document.getElementById('modal-spd-actions');
             if (data.spd) {
                 document.getElementById('modal-spd-nomor').textContent = data.spd.nomor_spd || '-';
@@ -950,9 +997,12 @@
                 document.getElementById('modal-ppk-nama').textContent = (data.spd.ppk_nama || '-') + (data.spd.ppk_nip ? ' (NIP: ' + data.spd.ppk_nip + ')' : '');
 
                 spdActions.innerHTML = `
-                    <div class="flex items-center gap-1.5">
-                        <a href="${data.spd.export_spd_url}" target="_blank" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200 text-[11px] font-semibold transition">
-                            PDF SPD
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <a href="${data.spd.export_spd_url}" target="_blank" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200 text-[11px] font-semibold transition" title="Template 1 (Standar 2 Lembar)">
+                            PDF SPD (T1)
+                        </a>
+                        <a href="${data.spd.export_spd_template2_url}" target="_blank" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[11px] font-semibold transition" title="Template 2 (Lampiran Surat Tugas)">
+                            PDF SPD (T2)
                         </a>
                         <a href="${data.spd.export_dpr_url}" target="_blank" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200 text-[11px] font-semibold transition">
                             PDF DPR

@@ -60,9 +60,12 @@ class SpdController extends Controller
         return redirect()->route('surat-tugas.index')->with('success', 'SPD berhasil diperbarui.');
     }
 
-    public function exportPdf(Spd $spd, DocumentExportService $exportService)
+    public function exportPdf(Request $request, Spd $spd, DocumentExportService $exportService)
     {
-        return $exportService->exportSpd($spd);
+        $defaultTemplate = $spd->suratTugas->spd_template ?? 'template_1';
+        $template = $request->query('template', $defaultTemplate);
+
+        return $exportService->exportSpd($spd, $template);
     }
 
     public function exportDpr(Spd $spd, DocumentExportService $exportService)

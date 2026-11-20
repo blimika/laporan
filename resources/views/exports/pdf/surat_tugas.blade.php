@@ -45,6 +45,17 @@
             // Pecah nama menjadi 2 baris (instansi dan nama kota/kab)
             $instansi = 'BADAN PUSAT STATISTIK';
             $daerah = str_replace('BADAN PUSAT STATISTIK ', '', $satkerName);
+            $tempatKedudukan = trim(preg_replace('/^(BPS\s+|BADAN\s+PUSAT\s+STATISTIK\s+)?(KOTA\s+|KABUPATEN\s+|KAB\.\s+|PROVINSI\s+)?/i', '', $suratTugas->satker->nama ?? 'Mataram')) ?: 'Mataram';
+
+            $kepalaPegawai = $suratTugas->kepalaPegawai ?? null;
+            $jabatanPenandatangan = 'Kepala';
+            if ($kepalaPegawai) {
+                if ($kepalaPegawai->hasTag('plh') || stripos($kepalaPegawai->jabatan ?? '', 'plh') !== false) {
+                    $jabatanPenandatangan = 'Plh. Kepala';
+                } elseif ($kepalaPegawai->hasTag('plt') || stripos($kepalaPegawai->jabatan ?? '', 'plt') !== false) {
+                    $jabatanPenandatangan = 'Plt. Kepala';
+                }
+            }
         @endphp
         <div class="instansi-header" style="margin-top: 5px;">{{ $instansi }}<br>{{ $daerah }}</div>
     </div>
@@ -56,7 +67,7 @@
 
     <div style="margin-top: 30px;">
         <p>Yang bertandatangan di bawah ini:</p>
-        <p class="text-center" style="font-weight: bold; margin-top:20px; margin-bottom:20px;">KEPALA {{ $satkerName }}</p>
+        <p class="text-center" style="font-weight: bold; margin-top:20px; margin-bottom:20px;">{{ ucwords(strtolower($jabatanPenandatangan . ' ' . $satkerName)) }}</p>
         <p>Memberi tugas kepada:</p>
     </div>
 
@@ -100,8 +111,8 @@
     </div>
 
     <div class="signature">
-        Mataram, {{ $tglSuratStr }}<br>
-        Kepala {{ $instansi }}<br>
+        {{ $tempatKedudukan }}, {{ $tglSuratStr }}<br>
+        {{ $jabatanPenandatangan }} Badan Pusat Statistik<br>
         {{ ucwords(strtolower($daerah)) }}
         <br><br><br><br><br>
         <strong><u>{{ $suratTugas->kepalaPegawai->nama ?? '.......................................' }}</u></strong><br>

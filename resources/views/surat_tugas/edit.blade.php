@@ -449,6 +449,136 @@
                 </div>
 
                 <!-- ======================================================== -->
+                <!-- LANGKAH 4: FORMAT SURAT PERJALANAN DINAS (SPD) & BIAYA RIIL -->
+                <!-- ======================================================== -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-xs p-6 md:p-7" x-data="{ spdTemplate: '{{ old('spd_template', $suratTugas->spd_template ?? 'template_2') }}' }">
+                    <div class="flex items-center gap-2.5 mb-5 pb-3 border-b border-gray-100">
+                        <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">4</span>
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-900">Format Surat Perjalanan Dinas (SPD)</h3>
+                            <p class="text-xs text-gray-500">Pilih format SPD untuk penugasan ini. Template 2 dipilih secara default dan otomatis menerbitkan SPD.</p>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Template Radio Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                        <!-- Template 2 (Default) -->
+                        <label 
+                            class="relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition"
+                            :class="spdTemplate === 'template_2' ? 'border-indigo-600 bg-indigo-50/40 shadow-xs ring-1 ring-indigo-500/20' : 'border-gray-200 hover:border-gray-300 bg-white'"
+                        >
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <input 
+                                        type="radio" 
+                                        name="spd_template" 
+                                        value="template_2" 
+                                        x-model="spdTemplate" 
+                                        class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                                    >
+                                    <span class="text-xs font-extrabold text-gray-900 flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200">T2</span>
+                                        Template 2 (Lampiran ST)
+                                    </span>
+                                </div>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                    Otomatis Terbit & Default
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600 leading-relaxed pl-6">
+                                Format 1 lembar ringkas (2 kolom x 2 baris) tanpa nomor SPD. SPD langsung otomatis diperbarui / diterbitkan bersama surat tugas.
+                            </p>
+                        </label>
+
+                        <!-- Template 1 -->
+                        <label 
+                            class="relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition"
+                            :class="spdTemplate === 'template_1' ? 'border-emerald-600 bg-emerald-50/40 shadow-xs ring-1 ring-emerald-500/20' : 'border-gray-200 hover:border-gray-300 bg-white'"
+                        >
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <input 
+                                        type="radio" 
+                                        name="spd_template" 
+                                        value="template_1" 
+                                        x-model="spdTemplate" 
+                                        class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                                    >
+                                    <span class="text-xs font-extrabold text-gray-900 flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">T1</span>
+                                        Template 1 (Standar)
+                                    </span>
+                                </div>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    Standar LKPP
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600 leading-relaxed pl-6">
+                                Format resmi 2 lembar standar LKPP/Kemenkeu. Parameter nomor SPD dan rincian lengkap dikelola via menu SPD.
+                            </p>
+                        </label>
+                    </div>
+
+                    <!-- Input Total Biaya Riil / Nilai DPR (Otomatis muncul jika Template 2) -->
+                    <div x-show="spdTemplate === 'template_2'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="pt-4 border-t border-gray-100">
+                        <div class="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-4 sm:p-5 rounded-xl border border-indigo-200/80 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="p-1.5 bg-indigo-600 text-white rounded-lg">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </span>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Rincian Otomatis SPD & Biaya Riil (DPR)</h4>
+                                        <p class="text-[11px] text-gray-500">SPD otomatis aktif. Tanggal DPR otomatis disamakan dengan tanggal kembali surat tugas.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Input Nilai DPR -->
+                                <div>
+                                    <label for="nilai_dpr" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                        Total Biaya Riil / Nilai DPR (Rp)
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 font-bold text-xs">
+                                            Rp
+                                        </div>
+                                        <input 
+                                            id="nilai_dpr" 
+                                            type="text" 
+                                            name="nilai_dpr" 
+                                            value="{{ old('nilai_dpr', $suratTugas->spd && $suratTugas->spd->nilai_dpr !== null ? number_format($suratTugas->spd->nilai_dpr, 0, ',', '.') : '150.000') }}" 
+                                            placeholder="0" 
+                                            class="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 rounded-xl text-sm font-semibold text-gray-900 shadow-xs transition"
+                                            oninput="formatRupiahInput(this)"
+                                        />
+                                    </div>
+                                    <p class="text-[11px] text-gray-400 mt-1">Biaya transport lokal / pengeluaran riil untuk rincian DPR.</p>
+                                    <x-input-error :messages="$errors->get('nilai_dpr')" class="mt-1" />
+                                </div>
+
+                                <!-- Pejabat Pembuat Komitmen (PPK) -->
+                                <div>
+                                    <label for="ppk_pegawai_id" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                        Pejabat Pembuat Komitmen (PPK)
+                                    </label>
+                                    <select id="ppk_pegawai_id" name="ppk_pegawai_id" class="block w-full px-3 py-2.5 bg-white border border-gray-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 rounded-xl text-xs text-gray-900 shadow-xs transition">
+                                        @foreach($ppkPegawais as $ppk)
+                                            <option value="{{ $ppk->id }}" {{ old('ppk_pegawai_id', $suratTugas->spd->ppk_pegawai_id ?? '') == $ppk->id ? 'selected' : '' }}>
+                                                {{ $ppk->nama }} (NIP. {{ $ppk->nip }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-[11px] text-gray-400 mt-1">Pejabat pengesah Daftar Pengeluaran Riil (DPR).</p>
+                                    <x-input-error :messages="$errors->get('ppk_pegawai_id')" class="mt-1" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================================================== -->
                 <!-- PENGATURAN KEPEMILIKAN USER (ADMIN & SUPERADMIN ONLY) -->
                 <!-- ======================================================== -->
                 @if(isset($users) && $users->isNotEmpty())
@@ -652,6 +782,15 @@
                 box.removeClass('hidden');
             } else {
                 box.addClass('hidden');
+            }
+        }
+
+        function formatRupiahInput(input) {
+            let val = input.value.replace(/[^0-9]/g, '');
+            if (val) {
+                input.value = new Intl.NumberFormat('id-ID').format(val);
+            } else {
+                input.value = '';
             }
         }
 

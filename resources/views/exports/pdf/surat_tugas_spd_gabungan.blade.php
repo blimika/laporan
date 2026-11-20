@@ -149,6 +149,38 @@
             text-align: justify;
         }
 
+        /* ================= SPD Template 2 (Lampiran ST) Styles ================= */
+        .doc-spd-t2 {
+            font-size: 10pt;
+            line-height: 1.25;
+            padding: 0 10px;
+        }
+        .doc-spd-t2 .header-lampiran {
+            margin-bottom: 12px;
+        }
+        .doc-spd-t2 table.spd-grid {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin-top: 10px;
+        }
+        .doc-spd-t2 table.spd-grid > tbody > tr > td {
+            border: 1px solid #000;
+            vertical-align: top;
+            padding: 10px 12px;
+            width: 50%;
+            box-sizing: border-box;
+        }
+        .doc-spd-t2 table.inner-info {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9.5pt;
+        }
+        .doc-spd-t2 table.inner-info td {
+            padding: 1px 0;
+            vertical-align: top;
+        }
+
         /* ================= DPR Styles ================= */
         .doc-dpr {
             font-size: 11pt;
@@ -228,7 +260,7 @@
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
-        
+
         $tglBerangkatStr = $suratTugas->tgl_berangkat->format('d') . ' ' . $months[(int)$suratTugas->tgl_berangkat->format('m')] . ' ' . $suratTugas->tgl_berangkat->format('Y');
         $tglKembaliStr = $suratTugas->tgl_kembali->format('d') . ' ' . $months[(int)$suratTugas->tgl_kembali->format('m')] . ' ' . $suratTugas->tgl_kembali->format('Y');
         $tglSuratStr = $suratTugas->tgl_surat->format('d') . ' ' . $months[(int)$suratTugas->tgl_surat->format('m')] . ' ' . $suratTugas->tgl_surat->format('Y');
@@ -237,6 +269,18 @@
         $satkerName = str_replace('BPS ', 'BADAN PUSAT STATISTIK ', $satkerName);
         $instansi = 'BADAN PUSAT STATISTIK';
         $daerah = str_replace('BADAN PUSAT STATISTIK ', '', $satkerName);
+        $tempatKedudukan = trim(preg_replace('/^(BPS\s+|BADAN\s+PUSAT\s+STATISTIK\s+)?(KOTA\s+|KABUPATEN\s+|KAB\.\s+|PROVINSI\s+)?/i', '', $suratTugas->satker->nama ?? 'Mataram')) ?: 'Mataram';
+        $tujuan = $suratTugas->tujuan ?? $tempatKedudukan;
+
+        $kepalaPegawai = $suratTugas->kepalaPegawai ?? null;
+        $jabatanPenandatangan = 'Kepala';
+        if ($kepalaPegawai) {
+            if ($kepalaPegawai->hasTag('plh') || stripos($kepalaPegawai->jabatan ?? '', 'plh') !== false) {
+                $jabatanPenandatangan = 'Plh. Kepala';
+            } elseif ($kepalaPegawai->hasTag('plt') || stripos($kepalaPegawai->jabatan ?? '', 'plt') !== false) {
+                $jabatanPenandatangan = 'Plt. Kepala';
+            }
+        }
 
         if (!function_exists('terbilang_helper')) {
             function terbilang_helper($angka) {
@@ -279,7 +323,7 @@
 
         <div style="margin-top: 30px;">
             <p>Yang bertandatangan di bawah ini:</p>
-            <p class="text-center" style="font-weight: bold; margin-top:20px; margin-bottom:20px;">KEPALA {{ $satkerName }}</p>
+            <p class="text-center" style="font-weight: bold; margin-top:20px; margin-bottom:20px;">{{ ucwords(strtolower($jabatanPenandatangan . ' ' . $satkerName)) }}</p>
             <p>Memberi tugas kepada:</p>
         </div>
 
@@ -323,8 +367,8 @@
         </div>
 
         <div class="signature">
-            Mataram, {{ $tglSuratStr }}<br>
-            Kepala {{ $instansi }}<br>
+            {{ $tempatKedudukan }}, {{ $tglSuratStr }}<br>
+            {{ $jabatanPenandatangan }} Badan Pusat Statistik<br>
             {{ ucwords(strtolower($daerah)) }}
             <br><br><br><br><br>
             <strong><u>{{ $suratTugas->kepalaPegawai->nama ?? '.......................................' }}</u></strong><br>
@@ -336,13 +380,122 @@
     @if($spd)
         <div class="page-break"></div>
 
-        @php
-            $lamaHari = $spd->suratTugas->tgl_berangkat->diffInDays($spd->suratTugas->tgl_kembali) + 1;
-            $makFull = $spd->suratTugas->anggaran->mak ?? '-';
-            $uraianFull = $spd->suratTugas->uraian_pembebanan ?? '-';
-        @endphp
+        @if(($spdTemplate ?? 'template_1') === 'template_2')
+            {{-- ==================== HALAMAN 2: SPD TEMPLATE 2 (LAMPIRAN SURAT TUGAS) ==================== --}}
+            <div class="doc-spd-t2">
+                <div class="header-lampiran">
+                    <div style="font-size: 10.5pt; margin-bottom: 2px;">Lampiran Surat Tugas</div>
+                    <table style="border-collapse: collapse; font-size: 10pt;">
+                        <tr>
+                            <td style="width: 58px; padding: 1px 0;">Nomor</td>
+                            <td style="width: 15px; text-align: center; padding: 1px 0;">:</td>
+                            <td style="padding: 1px 0;">{{ $suratTugas->nomor_surat }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1px 0;">Tanggal</td>
+                            <td style="text-align: center; padding: 1px 0;">:</td>
+                            <td style="padding: 1px 0;">{{ $tglSuratStr }}</td>
+                        </tr>
+                    </table>
+                </div>
 
-        {{-- ==================== HALAMAN 2: SPD LEMBAR 1 ==================== --}}
+                <table class="spd-grid">
+                    <tbody>
+                        {{-- BARIS 1 --}}
+                        <tr>
+                            {{-- Kolom 1 Baris 1: KOSONG (sesuai instruksi) --}}
+                            <td style="height: 220px; width: 50%; vertical-align: top; padding: 10px 12px; border: 1px solid #000;">
+                                {{-- Kolom 1 Baris 1 dibiarkan kosong --}}
+                            </td>
+
+                            {{-- Kolom 2 Baris 1: Pindahan isi Kolom 1 Baris 1, TANPA Romawi I, Penandatangan sesuai Kepala/Plh/Plt --}}
+                            <td style="height: 220px; width: 50%; vertical-align: top; padding: 10px 12px; border: 1px solid #000;">
+                                <table class="inner-info">
+                                    <tr>
+                                        <td style="width: 125px; vertical-align: top;">
+                                            Berangkat dari<br>
+                                            <span style="font-size: 8.5pt;">(tempat kedudukan)</span>
+                                        </td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tempatKedudukan }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;">Ke</td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tujuan }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;">Pada Tanggal</td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tglBerangkatStr }}</td>
+                                    </tr>
+                                </table>
+
+                                <div style="margin-top: 20px; margin-left: 5px; font-size: 9.5pt; line-height: 1.3;">
+                                    {{ $jabatanPenandatangan }} Badan Pusat Statistik<br>
+                                    {{ ucwords(strtolower($daerah)) }}
+                                    <div style="height: 65px;"></div>
+                                    <strong><u>{{ $suratTugas->kepalaPegawai->nama ?? '.......................................' }}</u></strong><br>
+                                    NIP. {{ $suratTugas->kepalaPegawai->nip ?? '.......................................' }}
+                                </div>
+                            </td>
+                        </tr>
+
+                        {{-- BARIS 2 --}}
+                        <tr>
+                            {{-- Kolom 1 Baris 2: Sesuai Gambar 3, TANPA Romawi II --}}
+                            <td style="height: 280px; width: 50%; vertical-align: top; padding: 10px 12px; border: 1px solid #000;">
+                                <table class="inner-info">
+                                    <tr>
+                                        <td style="width: 95px; vertical-align: top;">Tiba di</td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tujuan }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;">Pada Tanggal</td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tglBerangkatStr }}</td>
+                                    </tr>
+                                </table>
+                                <div style="height: 250px;"></div>
+                            </td>
+
+                            {{-- Kolom 2 Baris 2: Sesuai Gambar 3 --}}
+                            <td style="height: 280px; width: 50%; vertical-align: top; padding: 10px 12px; border: 1px solid #000;">
+                                <table class="inner-info">
+                                    <tr>
+                                        <td style="width: 95px; vertical-align: top;">Berangkat dari</td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tujuan }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;">Ke</td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tempatKedudukan }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: top;">Pada Tanggal</td>
+                                        <td style="width: 15px; text-align: center; vertical-align: top;">:</td>
+                                        <td style="vertical-align: top;">{{ $tglKembaliStr }}</td>
+                                    </tr>
+                                </table>
+                                <div style="height: 180px;"></div>
+                                <div style="text-align: center;">
+                                    <span style="color: #777; font-size: 8.5pt; letter-spacing: 0.5px;">............................................................</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        @else
+            @php
+                $lamaHari = $spd->suratTugas->tgl_berangkat->diffInDays($spd->suratTugas->tgl_kembali) + 1;
+                $makFull = $spd->suratTugas->anggaran->mak ?? '-';
+                $uraianFull = $spd->suratTugas->uraian_pembebanan ?? '-';
+            @endphp
+
+            {{-- ==================== HALAMAN 2: SPD LEMBAR 1 ==================== --}}
         <div class="doc-spd">
             <div class="logo-container">
                 <img src="{{ public_path('logobps.jpg') }}" alt="Logo BPS" style="width: 80px; height: auto; margin-bottom: 0px;">
@@ -557,7 +710,7 @@
                     </tr>
                 </table>
                 <div style="margin-top: 15px; margin-left: 15px;">
-                    Kepala {{ $instansi }}<br>
+                    {{ $jabatanPenandatangan }} Badan Pusat Statistik<br>
                     {{ ucwords(strtolower($daerah)) }}<br><br><br><br><br>
                     <strong><u>{{ $spd->suratTugas->kepalaPegawai->nama ?? '.......................................' }}</u></strong><br>
                     NIP. {{ $spd->suratTugas->kepalaPegawai->nip ?? '.......................................' }}
@@ -648,6 +801,7 @@
                 </tr>
             </table>
         </div>
+        @endif
 
         <div class="page-break"></div>
 
@@ -661,28 +815,28 @@
             <div class="text-center title">DAFTAR PENGELUARAN RIIL</div>
 
             <p style="margin-bottom: 10px;">Yang bertanda tangan di bawah ini :</p>
-            
+
             <table class="content-table" style="width:100%; margin-bottom: 10px;">
                 <tr><td class="w-20">Nama</td><td class="w-2">:</td><td class="w-78">{{ $spd->suratTugas->pegawai->nama }}</td></tr>
                 <tr><td>NIP</td><td>:</td><td>{{ $spd->suratTugas->pegawai->nip }}</td></tr>
             </table>
-            
+
             <p style="margin-bottom: 10px; margin-top: 15px;">Berdasarkan Surat Perintah Perjalanan Dinas (SPPD)</p>
-            
+
             <table class="content-table" style="width:100%; margin-bottom: 15px;">
                 <tr><td class="w-20">Tanggal</td><td class="w-2">:</td><td class="w-78">{{ $tglSuratStr }}</td></tr>
                 <tr><td>Nomor</td><td>:</td><td>{{ $spd->nomor_spd }}</td></tr>
             </table>
 
             <p style="margin-bottom: 15px;">dengan ini kami menyatakan dengan sesungguhnya bahwa :</p>
-            
+
             <table style="width:100%;">
                 <tr>
                     <td width="3%" style="vertical-align:top;">1.</td>
                     <td width="97%" style="vertical-align:top;">Biaya transport pegawai dan/atau biaya penginapan di bawah ini yang tidak diperoleh bukti-bukti pengeluarannya, meliputi :</td>
                 </tr>
             </table>
-            
+
             <table class="bordered">
                 <thead>
                     <tr>
@@ -742,7 +896,7 @@
             <div class="text-center title">SURAT PERNYATAAN</div>
 
             <p style="margin-bottom: 15px;">Yang bertanda tangan di bawah ini :</p>
-            
+
             <table class="content-table">
                 <tr><td class="w-25">Nama</td><td class="w-2">:</td><td class="w-73">{{ $spd->suratTugas->pegawai->nama }}</td></tr>
                 <tr><td>NIP</td><td>:</td><td>{{ $spd->suratTugas->pegawai->nip }}</td></tr>
@@ -750,11 +904,11 @@
                 <tr><td>Jabatan</td><td>:</td><td>{{ $spd->suratTugas->pegawai->jabatan }}</td></tr>
                 <tr><td>Unit Kerja</td><td>:</td><td>{{ $spd->suratTugas->satker->nama ?? 'Instansi' }}</td></tr>
             </table>
-            
+
             <p style="text-align: justify; margin-bottom: 20px;">
                 Menerangkan bahwa dalam rangka melaksanakan perjalanan dinas dalam kota untuk melaksanakan tugas kedinasan sesuai surat tugas nomor: {{ $spd->suratTugas->nomor_surat }} pelaksanaan tanggal {{ $tglBerangkatStr }}, saya benar-benar tidak menggunakan kendaraan dinas.
             </p>
-            
+
             <p style="text-align: justify;">
                 Demikian pernyataan ini kami buat dengan sebenar-benarnya untuk dipergunakan sebagaimana mestinya. Apabila terdapat kekeliruan dalam pertanggungjawaban SPD dan mengakibatkan kerugian negara, saya bersedia dituntut sesuai aturan yang berlaku dan mengembalikan biaya transport lokal yang sudah saya terima ke kas negara.
             </p>
