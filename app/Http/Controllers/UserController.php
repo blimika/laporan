@@ -25,6 +25,7 @@ class UserController extends Controller
             'super' => (clone $baseQuery)->where('role', 'super')->count(),
             'admin' => (clone $baseQuery)->where('role', 'admin')->count(),
             'user' => (clone $baseQuery)->where('role', 'user')->count(),
+            'active_recently' => (clone $baseQuery)->whereNotNull('last_login_at')->count(),
         ];
 
         $query = User::with('satker');
@@ -55,7 +56,7 @@ class UserController extends Controller
         // Sorting
         $sort = $request->input('sort', 'created_at');
         $direction = $request->input('direction', 'desc');
-        $allowedSorts = ['name', 'username', 'email', 'role', 'created_at'];
+        $allowedSorts = ['name', 'username', 'email', 'role', 'created_at', 'last_login_at'];
 
         if (in_array($sort, $allowedSorts)) {
             $query->orderBy($sort, $direction === 'asc' ? 'asc' : 'desc');

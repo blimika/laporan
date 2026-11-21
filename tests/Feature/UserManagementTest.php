@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Satker;
+use App\Models\Tahun;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -193,5 +194,119 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $admin->id,
         ]);
+    }
+
+    public function test_user_management_displays_last_login_date_and_ip(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Lombok Tengah',
+            'kode' => '5202',
+        ]);
+
+        $admin = User::create([
+            'name' => 'Admin Utama',
+            'username' => 'adminutama',
+            'email' => 'adminutama@bps.go.id',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+            'last_login_at' => now(),
+            'last_login_ip' => '127.0.0.1',
+        ]);
+
+        $userWithLogin = User::create([
+            'name' => 'User Telah Login',
+            'username' => 'usertelahlogin',
+            'email' => 'login@bps.go.id',
+            'password' => bcrypt('password'),
+            'role' => 'user',
+            'satker_id' => $satker->id,
+            'last_login_at' => now()->subDay(),
+            'last_login_ip' => '192.168.1.105',
+        ]);
+
+        $userNeverLoggedIn = User::create([
+            'name' => 'User Belum Pernah Login',
+            'username' => 'userbelumlogin',
+            'email' => 'belum@bps.go.id',
+            'password' => bcrypt('password'),
+            'role' => 'user',
+            'satker_id' => $satker->id,
+            'last_login_at' => null,
+            'last_login_ip' => null,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Login Terakhir');
+        $response->assertSee('192.168.1.105');
+        $response->assertSee('Belum pernah login');
+
+        // Test sorting by last_login_at
+        $sortDescResponse = $this->actingAs($admin)->get(route('admin.users.index', ['sort' => 'last_login_at', 'direction' => 'desc']));
+        $sortDescResponse->assertStatus(200);
+        $sortDescResponse->assertSeeInOrder(['Admin Utama', 'User Telah Login']);
+
+        // Test edit page displays last login
+        $editResponse = $this->actingAs($admin)->get(route('admin.users.edit', $userWithLogin->id));
+        $editResponse->assertStatus(200);
+        $editResponse->assertSee('Login Terakhir:');
+        $editResponse->assertSee('192.168.1.105');
+    }
+
+    public function test_dashboard_displays_last_login_widget_for_admin_only(): void
+    {
+        $satker = Satker::create([
+            'nama' => 'BPS Lombok Tengah',
+            'kode' => '5202',
+        ]);
+
+        $tahun = Tahun::create([
+            'tahun' => '2026',
+            'aktif' => true,
+        ]);
+
+        $admin = User::create([
+            'name' => 'Admin Dashboard',
+            'username' => 'admindash',
+            'email' => 'admindash@bps.go.id',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'satker_id' => $satker->id,
+            'last_login_at' => now(),
+            'last_login_ip' => '172.16.0.10',
+        ]);
+
+        $normalUser = User::create([
+            'name' => 'User Biasa',
+            'username' => 'userbiasa',
+            'email' => 'userbiasa@bps.go.id',
+            'password' => bcrypt('password'),
+            'role' => 'user',
+            'satker_id' => $satker->id,
+            'last_login_at' => now()->subHours(3),
+            'last_login_ip' => '10.0.0.5',
+        ]);
+
+        // When admin visits dashboard:
+        $adminDashboardResponse = $this->actingAs($admin)
+            ->withSession(['satker_id' => $satker->id, 'tahun_id' => $tahun->id])
+            ->get(route('dashboard'));
+
+        $adminDashboardResponse->assertStatus(200);
+        $adminDashboardResponse->assertSee('Aktivitas Login Terakhir Pengguna (Last Login)');
+        $adminDashboardResponse->assertSee('Khusus Admin');
+        $adminDashboardResponse->assertSee('172.16.0.10');
+        $adminDashboardResponse->assertSee('10.0.0.5');
+
+        // When regular user visits dashboard:
+        $userDashboardResponse = $this->actingAs($normalUser)
+            ->withSession(['satker_id' => $satker->id, 'tahun_id' => $tahun->id])
+            ->get(route('dashboard'));
+
+        $userDashboardResponse->assertStatus(200);
+        $userDashboardResponse->assertDontSee('Aktivitas Login Terakhir Pengguna (Last Login)');
+        $userDashboardResponse->assertDontSee('Khusus Admin');
     }
 }

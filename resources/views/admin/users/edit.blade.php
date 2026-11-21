@@ -66,6 +66,20 @@
                             <span>•</span>
                             <span class="text-gray-400">Bergabung {{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}</span>
                         </div>
+                        @if($user->last_login_at)
+                            <div class="flex items-center gap-2 mt-2 text-xs text-indigo-700 bg-indigo-50/80 border border-indigo-100 rounded-lg px-2.5 py-1 w-fit">
+                                <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Login Terakhir: <strong>{{ $user->last_login_at->translatedFormat('d M Y, H:i') }}</strong> ({{ $user->last_login_at->diffForHumans() }})</span>
+                                <span class="text-indigo-300">•</span>
+                                <span class="font-mono">IP: <strong>{{ $user->last_login_ip ?: '-' }}</strong></span>
+                            </div>
+                        @else
+                            <div class="mt-2 text-[11px] text-gray-400 italic">
+                                Belum pernah login ke sistem
+                            </div>
+                        @endif
                     </div>
                 </div>
 

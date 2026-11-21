@@ -37,6 +37,13 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = auth()->user();
+        if ($user) {
+            $user->forceFill([
+                'last_login_at' => now(),
+                'last_login_ip' => $request->ip(),
+            ])->save();
+        }
+
         if ($user->role === 'super') {
             // Superadmin views all or we let them have no satker_id initially
             // For now, set it to null so they see everything, or they can switch later

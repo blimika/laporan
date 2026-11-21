@@ -36,7 +36,7 @@
     </x-slot>
 
     <div class="py-8 bg-gray-50/60 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             <!-- Alerts Notifikasi -->
             @if(session('success'))
@@ -140,6 +140,8 @@
                 <!-- FILTER & SEARCH BAR -->
                 <div class="p-5 border-b border-gray-100 bg-gray-50/50">
                     <form action="{{ route('admin.users.index') }}" method="GET" class="space-y-3">
+                        <input type="hidden" name="sort" value="{{ $sort }}">
+                        <input type="hidden" name="direction" value="{{ $direction }}">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
                             
                             <!-- Search Input (col-span-5) -->
@@ -210,11 +212,48 @@
                     <table class="min-w-full divide-y divide-gray-100 text-sm">
                         <thead class="bg-gray-50/80">
                             <tr class="text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th scope="col" class="py-3.5 px-6">Pengguna</th>
-                                <th scope="col" class="py-3.5 px-6">Kontak & Email</th>
-                                <th scope="col" class="py-3.5 px-6">Peran (Role)</th>
+                                <th scope="col" class="py-3.5 px-6">
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => ($sort === 'name' && $direction === 'asc') ? 'desc' : 'asc']) }}" class="inline-flex items-center gap-1 group hover:text-indigo-600 transition" title="Urutkan berdasarkan Nama Pengguna">
+                                        <span>Pengguna</span>
+                                        @if($sort === 'name')
+                                            <span class="text-indigo-600 font-bold">{{ $direction === 'asc' ? '▲' : '▼' }}</span>
+                                        @else
+                                            <svg class="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                                        @endif
+                                    </a>
+                                </th>
+                                <th scope="col" class="py-3.5 px-6">Kontak &amp; Email</th>
+                                <th scope="col" class="py-3.5 px-6">
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'role', 'direction' => ($sort === 'role' && $direction === 'asc') ? 'desc' : 'asc']) }}" class="inline-flex items-center gap-1 group hover:text-indigo-600 transition" title="Urutkan berdasarkan Role">
+                                        <span>Peran (Role)</span>
+                                        @if($sort === 'role')
+                                            <span class="text-indigo-600 font-bold">{{ $direction === 'asc' ? '▲' : '▼' }}</span>
+                                        @else
+                                            <svg class="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th scope="col" class="py-3.5 px-6">Satuan Kerja</th>
-                                <th scope="col" class="py-3.5 px-6">Terdaftar Sejak</th>
+                                <th scope="col" class="py-3.5 px-6">
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'last_login_at', 'direction' => ($sort === 'last_login_at' && $direction === 'desc') ? 'asc' : 'desc']) }}" class="inline-flex items-center gap-1 group hover:text-indigo-600 transition" title="Urutkan berdasarkan Waktu Login Terakhir">
+                                        <span>Login Terakhir</span>
+                                        @if($sort === 'last_login_at')
+                                            <span class="text-indigo-600 font-bold">{{ $direction === 'asc' ? '▲' : '▼' }}</span>
+                                        @else
+                                            <svg class="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                                        @endif
+                                    </a>
+                                </th>
+                                <th scope="col" class="py-3.5 px-6">
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => ($sort === 'created_at' && $direction === 'desc') ? 'asc' : 'desc']) }}" class="inline-flex items-center gap-1 group hover:text-indigo-600 transition" title="Urutkan berdasarkan Tanggal Registrasi">
+                                        <span>Terdaftar Sejak</span>
+                                        @if($sort === 'created_at')
+                                            <span class="text-indigo-600 font-bold">{{ $direction === 'asc' ? '▲' : '▼' }}</span>
+                                        @else
+                                            <svg class="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th scope="col" class="py-3.5 px-6 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -300,6 +339,35 @@
                                         @endif
                                     </td>
 
+                                    <!-- Login Terakhir (Tanggal & IP) -->
+                                    <td class="py-4 px-6 whitespace-nowrap text-xs">
+                                        @if($row->last_login_at)
+                                            <div>
+                                                <div class="flex items-center gap-1.5 font-bold text-gray-900">
+                                                    <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>{{ $row->last_login_at->translatedFormat('d M Y, H:i') }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <span class="text-[10px] text-gray-500">{{ $row->last_login_at->diffForHumans() }}</span>
+                                                    <span class="text-gray-300">•</span>
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 font-mono text-[10px] border border-gray-200" title="Alamat IP Login Terakhir">
+                                                        <svg class="w-3 h-3 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                        </svg>
+                                                        IP: {{ $row->last_login_ip ?: '-' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="flex items-center gap-1.5 text-gray-400">
+                                                <span class="w-2 h-2 rounded-full bg-gray-300 shrink-0"></span>
+                                                <span class="text-[11px] italic">Belum pernah login</span>
+                                            </div>
+                                        @endif
+                                    </td>
+
                                     <!-- Terdaftar Sejak -->
                                     <td class="py-4 px-6 whitespace-nowrap text-xs text-gray-500">
                                         <div class="font-medium text-gray-800">{{ $row->created_at ? $row->created_at->format('d M Y') : '-' }}</div>
@@ -337,7 +405,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                         <div class="max-w-sm mx-auto space-y-2">
                                             <div class="w-12 h-12 mx-auto rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Tahun;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,24 +20,32 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $tahun = Tahun::create(['tahun' => '2026', 'aktif' => true]);
+        $user = User::factory()->create(['username' => 'testuser']);
 
-        $response = $this->post('/login', [
-            'email' => $user->email,
+        $response = $this->withServerVariables(['REMOTE_ADDR' => '10.20.30.40'])->post('/login', [
+            'username' => 'testuser',
             'password' => 'password',
+            'tahun_id' => $tahun->id,
         ]);
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+
+        $user->refresh();
+        $this->assertNotNull($user->last_login_at);
+        $this->assertEquals('10.20.30.40', $user->last_login_ip);
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
-        $user = User::factory()->create();
+        $tahun = Tahun::create(['tahun' => '2026', 'aktif' => true]);
+        $user = User::factory()->create(['username' => 'testuser']);
 
         $this->post('/login', [
-            'email' => $user->email,
+            'username' => 'testuser',
             'password' => 'wrong-password',
+            'tahun_id' => $tahun->id,
         ]);
 
         $this->assertGuest();

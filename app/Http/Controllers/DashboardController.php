@@ -10,6 +10,7 @@ use App\Models\Satker;
 use App\Models\Spd;
 use App\Models\SuratTugas;
 use App\Models\Tahun;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -157,8 +158,8 @@ class DashboardController extends Controller
 
         // Fallback jika belum ada laporan sama sekali namun sudah ada surat tugas
         if ($topPegawai->isEmpty()) {
-            $fallbackPegawai = Pegawai::withCount('suratTugas')
-                ->having('surat_tugas_count', '>', 0)
+            $fallbackPegawai = Pegawai::has('suratTugas')
+                ->withCount('suratTugas')
                 ->orderByDesc('surat_tugas_count')
                 ->take(5)
                 ->get();
@@ -324,6 +325,20 @@ class DashboardController extends Controller
             'anggaran' => $totalAnggaran,
         ];
 
+        $isAdmin = auth()->check() && in_array(auth()->user()->role, ['admin', 'super']);
+        $recentLogins = collect();
+
+        if ($isAdmin) {
+            $isSuper = auth()->user()->role === 'super';
+            $loginQuery = User::whereNotNull('last_login_at')->with('satker');
+
+            if (! $isSuper && auth()->user()->satker_id) {
+                $loginQuery->where('satker_id', auth()->user()->satker_id);
+            }
+
+            $recentLogins = $loginQuery->orderByDesc('last_login_at')->take(6)->get();
+        }
+
         return view('dashboard', compact(
             'stats',
             'currentSatker',
@@ -338,7 +353,9 @@ class DashboardController extends Controller
             'topCategories',
             'totalKategoriCount',
             'monthlyCounts',
-            'maxMonthlyValue'
+            'maxMonthlyValue',
+            'isAdmin',
+            'recentLogins'
         ));
     }
 }

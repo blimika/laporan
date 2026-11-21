@@ -46,6 +46,16 @@
                             <p class="text-purple-100/80 text-sm mt-1 max-w-2xl leading-relaxed">
                                 Kelola administrasi perjalanan dinas secara otomatis, terintegrasi, dan cepat. Dari penerbitan Surat Tugas, SPD, DPR, hingga Laporan Narasi AI lengkap dalam hitungan detik.
                             </p>
+                            @if(in_array(auth()->user()->role, ['admin', 'super']) && auth()->user()->last_login_at)
+                                <div class="mt-3 inline-flex items-center gap-2 text-xs text-purple-200 bg-white/10 px-3 py-1.5 rounded-lg border border-purple-400/20 backdrop-blur-xs">
+                                    <svg class="w-3.5 h-3.5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Login Terakhir Anda: <strong>{{ auth()->user()->last_login_at->translatedFormat('d M Y, H:i') }}</strong> ({{ auth()->user()->last_login_at->diffForHumans() }})</span>
+                                    <span class="text-purple-300/60">•</span>
+                                    <span class="font-mono">IP: <strong>{{ auth()->user()->last_login_ip ?: '-' }}</strong></span>
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <div class="flex md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-2 border-t md:border-t-0 border-white/10 pt-4 md:pt-0">
@@ -405,6 +415,166 @@
                 </div>
 
             </div>
+
+            <!-- WIDGET LAST LOGIN (KHUSUS ADMINISTRATOR) -->
+            @if($isAdmin)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="text-base font-bold text-gray-900">Aktivitas Login Terakhir Pengguna (Last Login)</h4>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                        <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                        Khusus Admin
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    Rekam jejak waktu login dan alamat IP akses pengguna{{ auth()->user()->role === 'super' ? ' seluruh satuan kerja' : ' satuan kerja Anda' }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-indigo-600 border border-gray-200 rounded-lg text-xs font-semibold transition">
+                                <span>Buka Manajemen Pengguna</span>
+                                <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    @if($recentLogins->isNotEmpty())
+                        <div class="overflow-x-auto mt-4">
+                            <table class="min-w-full divide-y divide-gray-100 text-sm">
+                                <thead>
+                                    <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                        <th class="py-2.5">Pengguna</th>
+                                        <th class="py-2.5">Peran (Role)</th>
+                                        @if(auth()->user()->role === 'super')
+                                            <th class="py-2.5">Satuan Kerja</th>
+                                        @endif
+                                        <th class="py-2.5">Waktu Login Terakhir</th>
+                                        <th class="py-2.5">Alamat IP (IP Address)</th>
+                                        <th class="py-2.5 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    @foreach($recentLogins as $userLogin)
+                                        @php
+                                            $initials = collect(explode(' ', $userLogin->name))->map(fn($w) => mb_substr($w, 0, 1))->take(2)->join('');
+                                            $avatarColor = match($userLogin->role) {
+                                                'super' => 'bg-purple-100 text-purple-700 border-purple-200',
+                                                'admin' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                                default => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                            };
+                                            $isToday = $userLogin->last_login_at && $userLogin->last_login_at->isToday();
+                                        @endphp
+                                        <tr class="hover:bg-gray-50/80 transition">
+                                            <!-- Pengguna -->
+                                            <td class="py-3 whitespace-nowrap">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-8 h-8 rounded-lg {{ $avatarColor }} border font-extrabold text-[11px] flex items-center justify-center shrink-0 uppercase">
+                                                        {{ $initials ?: 'U' }}
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                                                            <span>{{ $userLogin->name }}</span>
+                                                            @if($userLogin->id === auth()->id())
+                                                                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Anda</span>
+                                                            @endif
+                                                        </div>
+                                                        <div class="text-[11px] text-gray-400 font-mono">
+                                                            <span>@</span>{{ $userLogin->username }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <!-- Role -->
+                                            <td class="py-3 whitespace-nowrap text-xs">
+                                                @if($userLogin->role === 'super')
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                                        Super Admin
+                                                    </span>
+                                                @elseif($userLogin->role === 'admin')
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                        Admin Satker
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        User (Operator)
+                                                    </span>
+                                                @endif
+                                            </td>
+
+                                            @if(auth()->user()->role === 'super')
+                                                <!-- Satker -->
+                                                <td class="py-3 whitespace-nowrap text-xs text-gray-600">
+                                                    {{ $userLogin->satker ? $userLogin->satker->nama : 'Semua Satker' }}
+                                                </td>
+                                            @endif
+
+                                            <!-- Waktu Login -->
+                                            <td class="py-3 whitespace-nowrap text-xs">
+                                                <div class="font-bold text-gray-900 flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>{{ $userLogin->last_login_at->translatedFormat('d M Y, H:i') }}</span>
+                                                </div>
+                                                <div class="text-[10px] text-gray-400 mt-0.5">
+                                                    {{ $userLogin->last_login_at->diffForHumans() }}
+                                                </div>
+                                            </td>
+
+                                            <!-- Alamat IP -->
+                                            <td class="py-3 whitespace-nowrap text-xs">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-100 text-gray-800 font-mono text-xs border border-gray-200">
+                                                    <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    {{ $userLogin->last_login_ip ?: '-' }}
+                                                </span>
+                                            </td>
+
+                                            <!-- Status -->
+                                            <td class="py-3 text-center whitespace-nowrap">
+                                                @if($isToday)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                                                        Hari Ini
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600">
+                                                        Tercatat
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="py-8 text-center text-gray-400">
+                            <div class="w-10 h-10 mx-auto rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mb-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <p class="text-xs font-semibold text-gray-600">Belum ada riwayat aktivitas login</p>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Riwayat tanggal dan IP login akan otomatis tercatat saat pengguna masuk ke sistem.</p>
+                        </div>
+                    @endif
+                </div>
+            @endif
 
             <!-- Tabel Surat Tugas & SPD Terbaru (Full Width) -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
